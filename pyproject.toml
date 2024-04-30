@@ -1,0 +1,28 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pingintel-api"
+dynamic = ["version"]
+authors = [
+  { name="Scott Stafford", email="scott@pingintel.com" },
+]
+description = "Python-based API for Ping Data Intelligence APIs"
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+Homepage = "https://github.com/pingintel/pingintel-api"
+Issues = "https://github.com/pingintel/pingintel-api"
+
+[tool.hatch.version]
+path = "src/pingintel_api/__about__.py"
+
+[project.scripts]
+sovfixerapi = "pingintel_api.sovfixerapi_cmd:main"
