@@ -21,7 +21,7 @@ import click
 import requests
 from requests.exceptions import HTTPError
 
-from ping_sovfixer_api.sov_fixer_api_client import fix_sov
+from pingintel_api.sov_fixer_api_client import fix_sov
 
 logger = logging.getLogger(__name__)
 

@@ -39,11 +39,42 @@ def raise_for_status(response: requests.Response):
 
 
 class SOVFixerAPIClient:
-    def __init__(self, api_url, token=None):
+    def __init__(
+        self, api_url: str | None, environment: str | None = "prod", token=None
+    ):
+        if api_url is not None:
+            if environment == "prod":
+                api_url = "https://api.sovfixer.com"
+            elif environment == "prod2":
+                api_url = "https://api2.sovfixer.com"
+            elif environment == "prodeu":
+                api_url = "https://api.eu.sovfixer.com"
+            elif environment == "local":
+                api_url = "http://api-local.sovfixer.com"
+            elif environment == "local2":
+                api_url = "http://localhost:8000"
+            else:
+                api_url = f"https://api-{environment}.sovfixer.com"
+
+        if token is None:
+            if environment in ["staging", "staging2"]:
+                serverspace = "stg"
+            elif environment in ["prod", "prod2"]:
+                serverspace = "prd"
+            elif environment in ["prodeu", "prodeu2"]:
+                serverspace = "prdeu"
+            elif environment in ["dev", "dev2"]:
+                serverspace = "dev"
+            elif environment in ["local", "local2"]:
+                serverspace = "local"
+            else:
+                raise ValueError("Unknown environment and missing token.")
+            token = os.environ.get(f"PING_{serverspace}_AUTH_TOKEN".upper())
+
         if token is None:
             token = os.environ.get("SOVFIXER_AUTH_TOKEN")
         if token is None:
-            raise click.ClickException(
+            raise ValueError(
                 "Need --auth-token or SOVFIXER_AUTH_TOKEN environment variable set."
             )
         assert api_url

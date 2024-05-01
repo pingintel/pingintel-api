@@ -1,6 +1,11 @@
-# ping-sovfixer-python-api-client
-Python-based API for Ping's SOV Fixer.
+# pingintel-api
+Python-based API for Ping Data Technology products.
 
 
+Usage:
 
-fromn ping_sovfixer_api import PingSOVFixerAPIClient
+```python
+from pingintel_api import PingSOVFixerAPIClient
+
+PingSOVFixerAPIClient(
+```
