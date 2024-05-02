@@ -1,11 +1,13 @@
 # pingintel-api
 Python-based API for Ping Data Technology products.
 
+### Usage
 
-Usage:
+To submit an SOV to Ping SOV Fixer and poll for completion:
 
 ```python
-from pingintel_api import PingSOVFixerAPIClient
+from pingintel_api import SOVFixerAPIClient
 
-PingSOVFixerAPIClient(
+api_client = SOVFixerAPIClient()
+api_client.fix_sov("test_sov.xlsx")
 ```
