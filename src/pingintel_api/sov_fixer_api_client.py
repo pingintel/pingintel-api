@@ -7,10 +7,11 @@ import os
 import pprint
 import time
 from timeit import default_timer as timer
-
+from typing import overload, IO, TypedDict, NotRequired
 import click
 import requests
 from requests.exceptions import HTTPError
+from . import constants as c
 
 logger = logging.getLogger(__name__)
 
@@ -38,11 +39,55 @@ def raise_for_status(response: requests.Response):
     raise HTTPError(error_msg, response=response)
 
 
+def is_fileobj(source):
+    return hasattr(source, "read")
+
+
+class FixSOVResponseRequest(TypedDict):
+    status: c.SOV_STATUS
+    requested_at: str
+    progress_started_at: str
+    completed_at: str | None
+    last_health_check_time: str
+    last_health_status: str
+    pct_complete: int
+
+
+class FixSOVResponseResultOutput(TypedDict):
+    url: str
+    description: str
+    filename: str
+
+
+class FixSOVResponseResult(TypedDict):
+    message: str
+    status: c.SOV_RESULT_STATUS
+    outputs: list[FixSOVResponseResultOutput]
+
+
+class FixSOVResponse(TypedDict):
+    request: FixSOVResponseRequest
+    result: NotRequired[FixSOVResponseResult]
+
+
 class SOVFixerAPIClient:
+    SOV_STATUS = c.SOV_STATUS
+    SOV_RESULT_STATUS = c.SOV_RESULT_STATUS
+
+    @overload
+    def __init__(self, api_url: str, token=None) -> None: ...
+
+    @overload
+    def __init__(self, environment: str = "prod", token=None) -> None: ...
+
     def __init__(
-        self, api_url: str | None, environment: str | None = "prod", token=None
+        self,
+        api_url: str | None = None,
+        environment: str | None = "prod",
+        token=None,
     ):
-        if api_url is not None:
+        if api_url is None:
+            assert environment, "Need either api_url or environment."
             if environment == "prod":
                 api_url = "https://api.sovfixer.com"
             elif environment == "prod2":
@@ -89,8 +134,9 @@ class SOVFixerAPIClient:
 
     def fix_sov_async_start(
         self,
-        filename,
+        file: IO[bytes] | str,
         document_type,
+        filename=None,
         callback_url=None,
         output_formats=None,
         client_ref=None,
@@ -99,10 +145,17 @@ class SOVFixerAPIClient:
     ):
         url = self.api_url + "/api/v1/sov"
 
-        if not os.path.exists(filename):
-            raise click.ClickException(f"Path {filename} does not exist.")
+        if is_fileobj(file):
+            if filename is None:
+                raise ValueError("Need filename if file is a file object.")
 
-        files = {"file": open(filename, "rb")}
+            files = {"file": (filename, file)}
+        else:
+            if not os.path.exists(file):
+                raise click.ClickException(f"Path {file} does not exist.")
+
+            files = {"file": open(file, "rb")}
+
         data = {}
         if callback_url:
             data["callback_url"] = callback_url
@@ -134,7 +187,7 @@ class SOVFixerAPIClient:
         )
         return response_data
 
-    def fix_sov_async_check_progress(self, sovid_or_start_ret):
+    def fix_sov_async_check_progress(self, sovid_or_start_ret) -> FixSOVResponse:
         if isinstance(sovid_or_start_ret, dict):
             sov_id = sovid_or_start_ret["id"]
         else:
@@ -147,8 +200,8 @@ class SOVFixerAPIClient:
         # pprint.pprint(response.json())
         raise_for_status(response)
 
-        response_data = response.json()
-        request_status = response_data["request"]["status"]
+        response_data: FixSOVResponse = response.json()
+        # request_status = response_data["request"]["status"]
         return response_data
 
     def fix_sov_download(
