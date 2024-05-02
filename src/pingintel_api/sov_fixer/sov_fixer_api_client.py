@@ -6,131 +6,26 @@ import logging
 import os
 import pprint
 import time
-from timeit import default_timer as timer
 from typing import overload, IO, TypedDict, NotRequired
 import click
 import requests
-from requests.exceptions import HTTPError
-from . import constants as c
+
+from pingintel_api.api_client_base import APIClientBase
+from .. import constants as c
+from . import types as t
+from ..utils import is_fileobj, raise_for_status, log
 
 logger = logging.getLogger(__name__)
 
 
-global start_time
-start_time = None
+class SOVFixerAPIClient(APIClientBase):
+    api_subdomain = "api"
+    api_base_domain = "sovfixer.com"
+    auth_token_env_name = "SOVFIXER_AUTH_TOKEN"
+    product = "sovfixer"
 
-
-def log(msg):
-    global start_time
-    if start_time is None:
-        start_time = timer()
-    elapsed = timer() - start_time
-    timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
-    click.echo(f"[{timestamp} T+{elapsed:.1f}s] {msg}")
-
-
-def raise_for_status(response: requests.Response):
-    if response.ok:
-        return
-
-    error_msg = response.text
-    log(f"{response.status_code} {response.reason}: {error_msg}")
-
-    raise HTTPError(error_msg, response=response)
-
-
-def is_fileobj(source):
-    return hasattr(source, "read")
-
-
-class FixSOVResponseRequest(TypedDict):
-    status: c.SOV_STATUS
-    requested_at: str
-    progress_started_at: str
-    completed_at: str | None
-    last_health_check_time: str
-    last_health_status: str
-    pct_complete: int
-
-
-class FixSOVResponseResultOutput(TypedDict):
-    url: str
-    description: str
-    filename: str
-
-
-class FixSOVResponseResult(TypedDict):
-    message: str
-    status: c.SOV_RESULT_STATUS
-    outputs: list[FixSOVResponseResultOutput]
-
-
-class FixSOVResponse(TypedDict):
-    request: FixSOVResponseRequest
-    result: NotRequired[FixSOVResponseResult]
-
-
-class SOVFixerAPIClient:
-    SOV_STATUS = c.SOV_STATUS
-    SOV_RESULT_STATUS = c.SOV_RESULT_STATUS
-
-    @overload
-    def __init__(self, api_url: str, auth_token=None) -> None: ...
-
-    @overload
-    def __init__(self, environment: str = "prod", auth_token=None) -> None: ...
-
-    def __init__(
-        self,
-        api_url: str | None = None,
-        environment: str | None = "prod",
-        auth_token=None,
-    ):
-        if api_url is None:
-            assert environment, "Need either api_url or environment."
-            if environment == "prod":
-                api_url = "https://api.sovfixer.com"
-            elif environment == "prod2":
-                api_url = "https://api2.sovfixer.com"
-            elif environment == "prodeu":
-                api_url = "https://api.eu.sovfixer.com"
-            elif environment == "local":
-                api_url = "http://api-local.sovfixer.com"
-            elif environment == "local2":
-                api_url = "http://localhost:8000"
-            else:
-                api_url = f"https://api-{environment}.sovfixer.com"
-
-        if auth_token is None:
-            if environment in ["staging", "staging2"]:
-                serverspace = "stg"
-            elif environment in ["prod", "prod2"]:
-                serverspace = "prd"
-            elif environment in ["prodeu", "prodeu2"]:
-                serverspace = "prdeu"
-            elif environment in ["dev", "dev2"]:
-                serverspace = "dev"
-            elif environment in ["local", "local2"]:
-                serverspace = "local"
-            else:
-                raise ValueError("Unknown environment and missing auth_token.")
-            auth_token = os.environ.get(f"PING_{serverspace}_AUTH_TOKEN".upper())
-
-        if auth_token is None:
-            auth_token = os.environ.get("SOVFIXER_AUTH_TOKEN")
-        if auth_token is None:
-            raise ValueError(
-                "Need --auth-token or SOVFIXER_AUTH_TOKEN environment variable set."
-            )
-        assert api_url
-        self.api_url = api_url
-        self.auth_token = auth_token
-        self.session = requests.Session()
-        self.session.headers = {
-            "Authorization": f"Token {self.auth_token}",
-            "Accept-Encoding": "gzip",
-        }
-        self.environment = environment if api_url is None else None
+    SOV_STATUS = t.SOV_STATUS
+    SOV_RESULT_STATUS = t.SOV_RESULT_STATUS
 
     def fix_sov_async_start(
         self,
@@ -187,7 +82,7 @@ class SOVFixerAPIClient:
         )
         return response_data
 
-    def fix_sov_async_check_progress(self, sovid_or_start_ret) -> FixSOVResponse:
+    def fix_sov_async_check_progress(self, sovid_or_start_ret) -> t.FixSOVResponse:
         if isinstance(sovid_or_start_ret, dict):
             sov_id = sovid_or_start_ret["id"]
         else:
@@ -200,7 +95,7 @@ class SOVFixerAPIClient:
         # pprint.pprint(response.json())
         raise_for_status(response)
 
-        response_data: FixSOVResponse = response.json()
+        response_data: t.FixSOVResponse = response.json()
         # request_status = response_data["request"]["status"]
         return response_data
 
@@ -235,6 +130,7 @@ class SOVFixerAPIClient:
     def fix_sov(
         self,
         filename,
+        *,
         document_type: str = "SOV",
         callback_url=None,
         actually_write=False,

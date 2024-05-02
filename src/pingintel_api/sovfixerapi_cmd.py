@@ -21,7 +21,7 @@ import click
 import requests
 from requests.exceptions import HTTPError
 
-from pingintel_api.sov_fixer_api_client import fix_sov
+from pingintel_api import SOVFixerAPIClient
 
 logger = logging.getLogger(__name__)
 
@@ -110,45 +110,16 @@ def main(
     client_ref,
     write,
 ):
-    if environment == "prod":
-        API_URL = "https://api.sovfixer.com"
-    elif environment == "prod2":
-        API_URL = "https://api2.sovfixer.com"
-    elif environment == "prodeu":
-        API_URL = "https://api.eu.sovfixer.com"
-    elif environment == "local":
-        API_URL = "http://api-local.sovfixer.com"
-    elif environment == "local2":
-        API_URL = "http://localhost:8000"
-    else:
-        API_URL = f"https://api-{environment}.sovfixer.com"
-
-    if auth_token is None:
-        if environment in ["staging", "staging2"]:
-            serverspace = "stg"
-        elif environment in ["prod", "prod2"]:
-            serverspace = "prd"
-        elif environment in ["prodeu", "prodeu2"]:
-            serverspace = "prdeu"
-        elif environment in ["dev", "dev2"]:
-            serverspace = "dev"
-        elif environment in ["local", "local2"]:
-            serverspace = "local"
-        else:
-            raise NotImplementedError()
-        auth_token = os.environ.get(f"PING_{serverspace}_AUTH_TOKEN".upper())
 
     if isinstance(filename, pathlib.PosixPath):
         filename = [str(filename)]
 
+    client = SOVFixerAPIClient(environment=environment, auth_token=auth_token)
     for fn in filename:
-        fix_sov(
-            API_URL,
+        client.fix_sov(
             fn,
-            document_type,
-            auth_token,
-            environment,
-            callback_url,
+            document_type=document_type,
+            callback_url=callback_url,
             actually_write=write,
             output_formats=output_format,
             client_ref=client_ref,

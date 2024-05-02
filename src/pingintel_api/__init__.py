@@ -1,2 +1,2 @@
-from .sov_fixer_api_client import SOVFixerAPIClient
-from .constants import SOV_RESULT_STATUS, SOV_STATUS
+from .sov_fixer.sov_fixer_api_client import SOVFixerAPIClient
+from .pingvision.pingvision_api_client import PingVisionAPIClient
