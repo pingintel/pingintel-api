@@ -8,7 +8,7 @@ dynamic = ["version"]
 authors = [
   { name="Scott Stafford", email="scott@pingintel.com" },
 ]
-description = "Python-based API for Ping Data Intelligence APIs"
+description = "Python-based client to Ping Data Intelligence APIs"
 readme = "README.md"
 requires-python = ">=3.11"
 classifiers = [
@@ -19,7 +19,7 @@ classifiers = [
 
 [project.urls]
 Homepage = "https://github.com/pingintel/pingintel-api"
-Issues = "https://github.com/pingintel/pingintel-api"
+Issues = "https://github.com/pingintel/pingintel-api/issues"
 
 [tool.hatch.version]
 path = "src/pingintel_api/__about__.py"
