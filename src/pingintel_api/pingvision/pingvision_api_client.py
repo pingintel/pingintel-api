@@ -7,21 +7,23 @@ import os
 import pprint
 import time
 from timeit import default_timer as timer
-from typing import overload, IO, TypedDict, NotRequired
+from typing import IO, NotRequired, TypedDict, overload
+
 import click
 import requests
 
 from pingintel_api.api_client_base import APIClientBase
+
 from .. import constants as c
+from ..utils import is_fileobj, log, raise_for_status
 from . import types as t
-from ..utils import is_fileobj, raise_for_status, log
 
 logger = logging.getLogger(__name__)
 
 
 class PingVisionAPIClient(APIClientBase):
     api_subdomain = "api"
-    base_domain = "vision.pingintel.com"
+    api_base_domain = "vision.pingintel.com"
     auth_token_env_name = "PINGVISION_AUTH_TOKEN"
     product = "pingvision"
 
@@ -32,7 +34,6 @@ class PingVisionAPIClient(APIClientBase):
             "Authorization": f"Bearer {self.auth_token}",
             "Accept-Encoding": "gzip",
         }
-        breakpoint()
 
         return session
 

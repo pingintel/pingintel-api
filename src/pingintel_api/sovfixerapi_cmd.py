@@ -2,24 +2,13 @@
 
 # Copyright 2021-2024 Ping Data Intelligence
 
-import base64
-import enum
-import gzip
-import hashlib
-import io
-import json
 import logging
-import os
 import pathlib
 import pprint
-import random
 import time
-import zipfile
 from timeit import default_timer as timer
 
 import click
-import requests
-from requests.exceptions import HTTPError
 
 from pingintel_api import SOVFixerAPIClient
 
@@ -37,6 +26,11 @@ Example Python commandline script for using the Ping Data Technologies sovfixer 
 """
 
 
+@click.group()
+def cli():
+    pass
+
+
 def log(msg):
     global start_time
     if start_time is None:
@@ -46,7 +40,7 @@ def log(msg):
     click.echo(f"[{timestamp} T+{elapsed:.1f}s] {msg}")
 
 
-@click.command()
+@cli.command()
 @click.argument(
     "filename", nargs=-1, required=True, type=click.Path(exists=True, dir_okay=False)
 )
@@ -100,7 +94,7 @@ def log(msg):
     default=False,
     help="If set, actually write the output. Otherwise, download as a test but do not write.",
 )
-def main(
+def fix(
     filename,
     environment,
     document_type,
@@ -126,5 +120,36 @@ def main(
         )
 
 
+@cli.command()
+@click.option(
+    "-e",
+    "--environment",
+    type=click.Choice(
+        [
+            "staging",
+            "staging2",
+            "prod",
+            "prod2",
+            "prodeu",
+            "prodeu2",
+            "local",
+            "local2",
+            "dev",
+            "dev2",
+        ],
+        case_sensitive=False,
+    ),
+    default="staging",
+)
+@click.option(
+    "--auth-token",
+    help="Provide auth token via --auth-token or SOVFIXER_AUTH_TOKEN environment variable.",
+)
+def activity(environment, auth_token):
+    client = SOVFixerAPIClient(environment=environment, auth_token=auth_token)
+    results = client.list_activity()
+    pprint.pprint(results)
+
+
 if __name__ == "__main__":
-    main()
+    cli()

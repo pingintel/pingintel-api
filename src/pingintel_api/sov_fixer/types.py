@@ -1,6 +1,7 @@
 # Copyright 2021-2024 Ping Data Intelligence
-from typing import TypedDict, NotRequired
 import enum
+from datetime import datetime
+from typing import Any, Dict, List, NotRequired, Optional, TypedDict
 
 
 class SOV_STATUS(str, enum.Enum):
@@ -52,3 +53,68 @@ class FixSOVResponseResult(TypedDict):
 class FixSOVResponse(TypedDict):
     request: FixSOVResponseRequest
     result: NotRequired[FixSOVResponseResult]
+
+
+class UpdateOutputData(TypedDict):
+    url: str
+    output_format: str
+    completed_time: datetime | None
+
+
+class OutputData(TypedDict):
+    label: str
+    sovid: str
+    scrubbed_filename: str
+    sov_data_id: int
+    output_format: str
+    url: str
+
+
+class UpdateData(TypedDict):
+    sovid: int
+    sudid: int
+    filename: str
+    document_type: str
+    record_type: str
+    sheet_name: str
+    original_sovid: int | None
+    posted_time: datetime
+    num_rows: int
+    sov_data_last_updated_date: datetime
+    outputs: list[UpdateOutputData]
+
+
+class SOVData(TypedDict):
+    id: str | None
+    document_type: str | None
+    pct_complete: float | None
+    filename: str | None
+    status: str | None
+    status_display: str | None
+    last_health_status: str | None
+    client_ref: str | None
+    output_data: list[OutputData] | None
+    origin: str | None
+    organization__short_name: str | None
+    sov_fixer_api_request__global_request_id: str | None
+    sov_fixer_email_request__global_request_id: str | None
+    ping_maps_url: str | None
+    input_file_url: str | None
+    extra_data: dict[str, Any] | None
+    updates: list[UpdateData] | None
+    completed_time: str | None
+    created_time: str | None
+    subject: str | None
+    from_email: str | None
+    to_email: str | None
+    num_buildings: int | None
+    progress_started_time: str | None
+    parsing_completed_time: str | None
+    pingdata_stats: Any | None
+
+
+class ActivityResponse(TypedDict):
+    results: list[SOVData]
+    cursor_id: str | None
+    prev_cursor_id: str | None
+    remaining_count: int
