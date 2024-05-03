@@ -5,4 +5,5 @@ class PingVisionListActivityResponse(TypedDict):
     results: list[dict]
     cursor_id: str | None
     prev_cursor_id: str | None
-    remaining_count: int
+    # total_count: int
+    # returned_count: int

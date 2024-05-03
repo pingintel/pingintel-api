@@ -27,17 +27,8 @@ class PingVisionAPIClient(APIClientBase):
     auth_token_env_name = "PINGVISION_AUTH_TOKEN"
     product = "pingvision"
 
-    def _create_session(self):
-        session = requests.Session()
-
-        session.headers = {
-            "Authorization": f"Bearer {self.auth_token}",
-            "Accept-Encoding": "gzip",
-        }
-
-        return session
-
-    def list_activity(
+   
+    def list_submission_activity(
         self,
         cursor_id: str | None = None,
         prev_cursor_id: str | None = None,
@@ -63,11 +54,6 @@ class PingVisionAPIClient(APIClientBase):
             data["organization__short_name"] = organization__short_name
 
         response = self.get(url, data=data)
-
-        if response.status_code == 200:
-            pprint.pprint(response.json())
-        else:
-            pprint.pprint(response.text)
 
         raise_for_status(response)
 
