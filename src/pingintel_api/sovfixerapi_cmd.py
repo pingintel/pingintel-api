@@ -4,6 +4,7 @@
 
 import logging
 import pathlib
+import pprint
 import time
 from timeit import default_timer as timer
 
@@ -147,13 +148,7 @@ def fix(
 def activity(environment, auth_token):
     client = SOVFixerAPIClient(environment=environment, auth_token=auth_token)
     results = client.list_activity()
-    results["results"] = list(
-        filter(lambda r: r.get("updates"), results.get("results", []))
-    )
-    import json
-
-    with open("/tmp/sovfixer_activity.json", "w") as fd:
-        json.dump(results, fd, indent=2)
+    pprint.pprint(results)
 
 
 if __name__ == "__main__":
