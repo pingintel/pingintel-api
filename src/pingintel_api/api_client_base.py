@@ -1,12 +1,15 @@
-import os, requests
-from typing import overload, IO, TypedDict, NotRequired
-from .utils import log
 import configparser
+import os
+from typing import IO, NotRequired, TypedDict, overload
+
+import requests
+
+from .utils import log
 
 
 class APIClientBase:
     api_subdomain: str
-    base_domain: str
+    api_base_domain: str
     auth_token_env_name: str
     product: str
 
@@ -65,15 +68,15 @@ class APIClientBase:
 
     def get_api_url_by_environment(self, environment: str) -> str:
         if environment == "prod":
-            return f"https://{self.api_subdomain}.{self.base_domain}"
+            return f"https://{self.api_subdomain}.{self.api_base_domain}"
         elif environment == "prod2":
-            return f"https://{self.api_subdomain}2.{self.base_domain}"
+            return f"https://{self.api_subdomain}2.{self.api_base_domain}"
         elif environment == "prodeu":
-            return f"https://{self.api_subdomain}.eu.{self.base_domain}"
+            return f"https://{self.api_subdomain}.eu.{self.api_base_domain}"
         elif environment == "local":
             return "http://api-local.sovfixer.com"
         else:
-            return f"https://{self.api_subdomain}-{environment}.{self.base_domain}"
+            return f"https://{self.api_subdomain}-{environment}.{self.api_base_domain}"
 
     def get_auth_token_by_environment(self, environment: str) -> str:
         if environment in ["staging", "staging2"]:

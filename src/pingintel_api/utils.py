@@ -1,9 +1,9 @@
-import requests
 import time
-import click
 from timeit import default_timer as timer
-from requests.exceptions import HTTPError
 
+import click
+import requests
+from requests.exceptions import HTTPError
 
 global start_time
 start_time = None

@@ -6,14 +6,16 @@ import logging
 import os
 import pprint
 import time
-from typing import overload, IO, TypedDict, NotRequired
+from typing import IO, NotRequired, TypedDict, overload
+
 import click
 import requests
 
 from pingintel_api.api_client_base import APIClientBase
+
 from .. import constants as c
+from ..utils import is_fileobj, log, raise_for_status
 from . import types as t
-from ..utils import is_fileobj, raise_for_status, log
 
 logger = logging.getLogger(__name__)
 
@@ -206,3 +208,37 @@ class SOVFixerAPIClient(APIClientBase):
             log("* Parsing failed!  Raw API output:")
             log(response_data)
             return False
+
+    def list_activity(
+        self,
+        cursor_id=None,
+        prev_cursor_id=None,
+        page_size=50,
+        fields=None,
+        search=None,
+        origin=None,
+        status=None,
+        organization__short_name=None,
+    ) -> t.ActivityResponse:
+        parameters = {}
+        if cursor_id:
+            parameters["cursor_id"] = cursor_id
+        elif prev_cursor_id:
+            parameters["prev_cursor_id"] = prev_cursor_id
+        if page_size:
+            parameters["page_size"] = page_size
+        if fields:
+            parameters["fields"] = fields
+        if search:
+            parameters["search"] = search
+        if origin:
+            parameters["origin"] = origin
+        if status:
+            parameters["status"] = status
+        if organization__short_name:
+            parameters["organization__short_name"] = organization__short_name
+
+        url = self.api_url + "/api/v1/sov/activity"
+        response = self.session.get(url, params=parameters)
+        raise_for_status(response)
+        return response.json()
