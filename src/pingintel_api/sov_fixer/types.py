@@ -101,7 +101,7 @@ class SOVData(TypedDict):
     ping_maps_url: str | None
     input_file_url: str | None
     extra_data: dict[str, Any] | None
-    updates: list[UpdateData] | None
+    updates: dict[int, UpdateData] | None
     completed_time: str | None
     created_time: str | None
     subject: str | None
