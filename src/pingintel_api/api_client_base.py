@@ -16,7 +16,9 @@ class APIClientBase:
     product: str
 
     @overload
-    def __init__(self, api_url: str, auth_token=None) -> None:
+    def __init__(
+        self, api_url: str, environment: str | None = None, auth_token=None
+    ) -> None:
         """Initialize the API client with an API URL and an optional auth token.
 
         :param api_url: The URL of the API.  e.g. "https://vision.pingintel.com"
@@ -60,7 +62,7 @@ class APIClientBase:
 
         if not auth_token:
             raise ValueError(
-                f"Need --auth-token or {self.auth_token_env_name} environment variable set."
+                f"Provide auth_token as a parameter, in ~/.pingintel.ini, or set {self.auth_token_env_name} environment variable."
             )
         assert api_url
         self.api_url = api_url
@@ -71,6 +73,10 @@ class APIClientBase:
     def get(self, url, **kwargs):
         log(f"GET {url}")
         return self.session.get(url, **kwargs)
+
+    def post(self, url, **kwargs):
+        log(f"POST {url}")
+        return self.session.post(url, **kwargs)
 
     def _create_session(self):
         session = requests.Session()

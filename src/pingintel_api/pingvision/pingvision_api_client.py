@@ -27,7 +27,16 @@ class PingVisionAPIClient(APIClientBase):
     auth_token_env_name = "PINGVISION_AUTH_TOKEN"
     product = "pingvision"
 
-   
+    def create_submission(self, files=None) -> t.PingVisionCreateSubmissionResponse:
+        url = self.api_url + "/api/v1/submission"
+
+        response = self.post(url, files=files)
+
+        raise_for_status(response)
+
+        response_data = response.json()
+        return response_data
+
     def list_submission_activity(
         self,
         cursor_id: str | None = None,

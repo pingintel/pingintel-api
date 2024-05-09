@@ -7,3 +7,8 @@ class PingVisionListActivityResponse(TypedDict):
     prev_cursor_id: str | None
     # total_count: int
     # returned_count: int
+
+
+class PingVisionCreateSubmissionResponse(TypedDict):
+    id: str
+    message: str
