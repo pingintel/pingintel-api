@@ -1,10 +1,10 @@
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "hatch-requirements-txt"]
 build-backend = "hatchling.build"
 
 [project]
 name = "pingintel-api"
-dynamic = ["version"]
+dynamic = ["version", "dependencies"]
 authors = [
   { name="Scott Stafford", email="scott@pingintel.com" },
 ]
@@ -23,6 +23,9 @@ Issues = "https://github.com/pingintel/pingintel-api/issues"
 
 [tool.hatch.version]
 path = "src/pingintel_api/__about__.py"
+
+[tool.hatch.metadata.hooks.requirements_txt]
+files = ["requirements.txt"]
 
 [project.scripts]
 sovfixerapi = "pingintel_api.sovfixerapi_cmd:main"

@@ -69,7 +69,8 @@ class SOVFixerAPIClient(APIClientBase):
 
         response = self.session.post(url, files=files, data=data)
         if response.status_code == 200:
-            pprint.pprint(response.json())
+            # pprint.pprint(response.json())
+            pass
         else:
             pprint.pprint(response.text)
 
