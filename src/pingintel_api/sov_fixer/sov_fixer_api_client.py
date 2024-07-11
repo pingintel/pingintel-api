@@ -2,6 +2,7 @@
 
 # Copyright 2021-2024 Ping Data Intelligence
 
+import json
 import logging
 import os
 import pprint
@@ -203,7 +204,7 @@ class SOVFixerAPIClient(APIClientBase):
                     actually_write=actually_write,
                     output_path=output_path,
                 )
-            return True
+            return start_response['id']
         else:
             log("* Parsing failed!  Raw API output:")
             log(response_data)
@@ -242,3 +243,161 @@ class SOVFixerAPIClient(APIClientBase):
         response = self.session.get(url, params=parameters)
         raise_for_status(response)
         return response.json()
+    
+    def reoutput_sov_init(
+        self,
+        sovid: str,
+        client_ref=None,
+    ):
+        if not sovid:
+            raise ValueError("Invalid sovid.")
+        url = self.api_url + f"/api/v1/sov/{sovid}/reoutput"
+
+        data = {}
+        if client_ref:
+            data["client_ref"] = client_ref
+    
+        response = self.session.post(url, data=data)
+        if response.status_code == 200:
+            pprint.pprint(response.json())
+        else:
+            pprint.pprint(response.text)
+
+        raise_for_status(response)
+
+        response_data = response.json()
+        return response_data
+
+    def reoutput_add_locations(
+        self,
+        sudid: str,
+        file: IO[bytes] | str,
+        filename=None,
+    ):
+        url = self.api_url + f"/api/v1/sov/reoutput/{sudid}/add_locations"
+        if is_fileobj(file):
+            if filename is None:
+                raise ValueError("Need filename if file is a file object.")
+
+            files = {"file": (filename, file)}
+        else:
+            if not os.path.exists(file):
+                raise click.ClickException(f"Path {file} does not exist.")
+
+            files = {"file": open(file, "rb")}
+
+        data = {}
+
+        response = self.session.post(url, files=files, data=data)
+        if response.status_code == 200:
+            pprint.pprint(response.json())
+        else:
+            pprint.pprint(response.text)
+
+        raise_for_status(response)
+
+        response_data = response.json()
+        return response_data
+
+    def reoutput_start(
+        self,
+        sudid: str,
+        extra_data=None,
+        policy_terms=None,
+        policy_terms_format_name=None,
+        output_formats=None,
+    ):
+        url = self.api_url + f"/api/v1/sov/reoutput/{sudid}/start"
+        data = {}
+        if extra_data:
+            data['extra_data'] = extra_data
+        if policy_terms:
+            data['policy_terms'] = policy_terms
+        if policy_terms_format_name:
+            data['policy_terms_format_name'] = policy_terms_format_name
+        if output_formats:
+            data['output_formats'] = output_formats
+        
+        response = self.session.post(url, json=data)
+        if response.status_code == 200:
+            pprint.pprint(response.json())
+        else:
+            pprint.pprint(response.text)
+
+        raise_for_status(response)
+
+        response_data = response.json()
+        return response_data
+
+    def reoutput_check_progress(self, sudid):
+        status_url = self.api_url + f"/api/v1/sov/reoutput/{sudid}"
+
+        response = self.session.get(status_url)
+        pprint.pprint(response.json())
+        raise_for_status(response)
+
+        response_data = response.json()
+        return response_data
+
+    def reoutput_sov(self, sovid, location_filenames, extra_data=None, policy_terms=None, policy_terms_format_name=None, output_formats=None, actually_write=False,):
+        client = self
+        init_response = client.reoutput_sov_init(sovid)
+        sudid = init_response["id"]
+        print(init_response)
+        for location_filename in location_filenames:
+            client.reoutput_add_locations(
+                sudid,
+                location_filename,
+            )
+        start_response = client.reoutput_start(sudid, extra_data=extra_data, policy_terms=policy_terms, policy_terms_format_name=policy_terms_format_name, output_formats=output_formats)
+
+        while 1:
+            response_data = client.reoutput_check_progress(sudid)
+            request_status = response_data["request"]["status"]
+            POLL_SECS = 2.5
+            if request_status == "PENDING":
+                log("  - Has not yet been queued for processing.")
+                time.sleep(POLL_SECS)
+            elif request_status == "IN_PROGRESS":
+                log(f"  - Still in progress: {request_status}")
+                time.sleep(POLL_SECS)
+            else:
+                break
+        
+        result_status = response_data["result"]["status"]
+        log(f"+ Finished with result {result_status}")
+        if result_status == "SUCCESS":
+            log("Complete!  Fetching outputs.")
+            for output in response_data["result"]["outputs"]:
+                output_url = output["url"]
+                if (
+                    self.environment
+                    and self.environment == "local2"
+                    and "api-local.sovfixer.com" in output_url
+                ):
+                    output_url = output_url.replace(
+                        "api-local.sovfixer.com", "localhost:8000"
+                    )
+
+                output_filename = output["filename"]
+
+                output_path = output_filename
+
+                if actually_write:
+                    if os.path.exists(output_path):
+                        yesno = input(
+                            f"Do you want to overwrite the existing file {output_path} [y/N]? "
+                        )
+                        if yesno.lower() != "y":
+                            continue
+
+                client.fix_sov_download(
+                    output,
+                    actually_write=actually_write,
+                    output_path=output_path,
+                )
+            return sudid
+        else:
+            log("* Reoutput failed!  Raw API output:")
+            log(response_data)
+            return False
