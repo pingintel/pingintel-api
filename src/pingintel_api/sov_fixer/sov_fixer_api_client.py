@@ -7,7 +7,7 @@ import logging
 import os
 import pprint
 import time
-from typing import IO, NotRequired, TypedDict, overload
+from typing import IO, Literal, NotRequired, TypedDict, overload
 
 import click
 import requests
@@ -205,7 +205,7 @@ class SOVFixerAPIClient(APIClientBase):
                     actually_write=actually_write,
                     output_path=output_path,
                 )
-            return start_response['id']
+            return start_response["id"]
         else:
             log("* Parsing failed!  Raw API output:")
             log(response_data)
@@ -216,12 +216,30 @@ class SOVFixerAPIClient(APIClientBase):
         cursor_id=None,
         prev_cursor_id=None,
         page_size=50,
-        fields=None,
+        fields: list[str] | None = None,
         search=None,
-        origin=None,
-        status=None,
+        origin: Literal["api", "email"] | None = None,
+        status: Literal["P", "I", "E", "R", "C", "F"] | None = None,
         organization__short_name=None,
     ) -> t.ActivityResponse:
+        """List activity in the SOV Fixer system.
+        cursor_id: str
+            The cursor ID to use for pagination. Do not set on the first call, but provide the value from each previous call to the next to get the next page.
+        prev_cursor_id: str
+            See cursor_id, but this goes backwards.
+        page_size: int
+            The number of results to return per page. Default is 50.
+        fields: str
+            The fields to include in the response. Default is all fields.
+        search: str
+            A search term to filter results by.
+        origin: str
+            Filter by the origin of the activity. Can be "api" or "email".
+        status: str
+            Filter by the status of the activity. Can be "P" (pending), "I" (in progress), "E" (enriching), "R" (re-enriching), "C" (complete), or "F" (failed).
+        organization__short_name: str
+            Filter by the short name of the organization that created the activity
+        """
         parameters = {}
         if cursor_id:
             parameters["cursor_id"] = cursor_id
@@ -244,7 +262,7 @@ class SOVFixerAPIClient(APIClientBase):
         response = self.session.get(url, params=parameters)
         raise_for_status(response)
         return response.json()
-    
+
     def reoutput_sov_init(
         self,
         sovid: str,
@@ -257,7 +275,7 @@ class SOVFixerAPIClient(APIClientBase):
         data = {}
         if client_ref:
             data["client_ref"] = client_ref
-    
+
         response = self.session.post(url, data=data)
         if response.status_code == 200:
             pprint.pprint(response.json())
@@ -311,14 +329,14 @@ class SOVFixerAPIClient(APIClientBase):
         url = self.api_url + f"/api/v1/sov/reoutput/{sudid}/start"
         data = {}
         if extra_data:
-            data['extra_data'] = extra_data
+            data["extra_data"] = extra_data
         if policy_terms:
-            data['policy_terms'] = policy_terms
+            data["policy_terms"] = policy_terms
         if policy_terms_format_name:
-            data['policy_terms_format_name'] = policy_terms_format_name
+            data["policy_terms_format_name"] = policy_terms_format_name
         if output_formats:
-            data['output_formats'] = output_formats
-        
+            data["output_formats"] = output_formats
+
         response = self.session.post(url, json=data)
         if response.status_code == 200:
             pprint.pprint(response.json())
@@ -340,7 +358,16 @@ class SOVFixerAPIClient(APIClientBase):
         response_data = response.json()
         return response_data
 
-    def reoutput_sov(self, sovid, location_filenames, extra_data=None, policy_terms=None, policy_terms_format_name=None, output_formats=None, actually_write=False,):
+    def reoutput_sov(
+        self,
+        sovid,
+        location_filenames,
+        extra_data=None,
+        policy_terms=None,
+        policy_terms_format_name=None,
+        output_formats=None,
+        actually_write=False,
+    ):
         client = self
         init_response = client.reoutput_sov_init(sovid)
         sudid = init_response["id"]
@@ -350,7 +377,13 @@ class SOVFixerAPIClient(APIClientBase):
                 sudid,
                 location_filename,
             )
-        start_response = client.reoutput_start(sudid, extra_data=extra_data, policy_terms=policy_terms, policy_terms_format_name=policy_terms_format_name, output_formats=output_formats)
+        start_response = client.reoutput_start(
+            sudid,
+            extra_data=extra_data,
+            policy_terms=policy_terms,
+            policy_terms_format_name=policy_terms_format_name,
+            output_formats=output_formats,
+        )
 
         while 1:
             response_data = client.reoutput_check_progress(sudid)
@@ -364,7 +397,7 @@ class SOVFixerAPIClient(APIClientBase):
                 time.sleep(POLL_SECS)
             else:
                 break
-        
+
         result_status = response_data["result"]["status"]
         log(f"+ Finished with result {result_status}")
         if result_status == "SUCCESS":

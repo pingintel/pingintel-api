@@ -22,8 +22,8 @@ logger = logging.getLogger(__name__)
 
 
 class PingMapsAPIClient(APIClientBase):
-    api_subdomain = "api"
-    api_base_domain = "sovfixer.com"
+    api_subdomain = "app"
+    api_base_domain = "pingintel.com"
     auth_token_env_name = "SOVFIXER_AUTH_TOKEN"
     product = "pingmaps"
 
