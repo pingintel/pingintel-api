@@ -4,13 +4,11 @@
 
 import logging
 import os
+import pathlib
 import pprint
 import time
 from timeit import default_timer as timer
 from typing import IO, NotRequired, TypedDict, overload
-
-import click
-import requests
 
 from pingintel_api.api_client_base import APIClientBase
 
@@ -22,15 +20,37 @@ logger = logging.getLogger(__name__)
 
 
 class PingVisionAPIClient(APIClientBase):
-    api_subdomain = "api"
-    api_base_domain = "vision.pingintel.com"
+    api_subdomain = "vision"
+    api_base_domain = "pingintel.com"
     auth_token_env_name = "PINGVISION_AUTH_TOKEN"
     product = "pingvision"
 
-    def create_submission(self, files=None) -> t.PingVisionCreateSubmissionResponse:
+    def create_submission(
+        self, filepaths: list[str | pathlib.Path]
+    ) -> t.PingVisionCreateSubmissionResponse:
         url = self.api_url + "/api/v1/submission"
 
-        response = self.post(url, files=files)
+        multiple_files = []
+        for filepath in filepaths:
+            # files = self._get_files_for_request(filepath)
+            files = ("file", (os.path.basename(filepath), open(filepath, "rb")))
+            multiple_files.append(files)
+        if len(filepaths) == 1:
+            multiple_files = {"file": multiple_files[0][1]}
+        response = self.post(url, files=multiple_files)
+
+        raise_for_status(response)
+
+        log(f"Submission created: {response.json()}")
+        response_data = response.json()
+        return response_data
+
+    def get_submission_detail(
+        self, pingid: str
+    ):  # -> t.PingVisionSubmissionDetailResponse:
+        url = self.api_url + f"/api/v1/submission/{pingid}"
+
+        response = self.get(url)
 
         raise_for_status(response)
 

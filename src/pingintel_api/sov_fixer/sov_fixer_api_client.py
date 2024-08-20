@@ -7,7 +7,7 @@ import logging
 import os
 import pprint
 import time
-from typing import IO, Literal, NotRequired, TypedDict, overload
+from typing import IO, Literal
 
 import click
 import requests
@@ -26,6 +26,7 @@ class SOVFixerAPIClient(APIClientBase):
     api_base_domain = "sovfixer.com"
     auth_token_env_name = "SOVFIXER_AUTH_TOKEN"
     product = "sovfixer"
+    include_legacy_dashes = True
 
     SOV_STATUS = t.SOV_STATUS
     SOV_RESULT_STATUS = t.SOV_RESULT_STATUS
@@ -43,16 +44,7 @@ class SOVFixerAPIClient(APIClientBase):
     ):
         url = self.api_url + "/api/v1/sov"
 
-        if is_fileobj(file):
-            if filename is None:
-                raise ValueError("Need filename if file is a file object.")
-
-            files = {"file": (filename, file)}
-        else:
-            if not os.path.exists(file):
-                raise click.ClickException(f"Path {file} does not exist.")
-
-            files = {"file": open(file, "rb")}
+        files = self._get_files_for_request(file, filename)
 
         data = {}
         if callback_url:

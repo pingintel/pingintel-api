@@ -2,9 +2,10 @@ import configparser
 import os
 from typing import IO, NotRequired, TypedDict, overload
 
+import click
 import requests
 
-from .utils import log
+from .utils import is_fileobj, log
 
 from pingintel_api.__about__ import __version__
 
@@ -14,6 +15,7 @@ class APIClientBase:
     api_base_domain: str
     auth_token_env_name: str
     product: str
+    include_legacy_dashes: bool = False
 
     @overload
     def __init__(
@@ -89,16 +91,21 @@ class APIClientBase:
         return session
 
     def get_api_url_by_environment(self, environment: str) -> str:
-        if environment == "prod":
-            return f"https://{self.api_subdomain}.{self.api_base_domain}"
-        elif environment == "prod2":
-            return f"https://{self.api_subdomain}2.{self.api_base_domain}"
-        elif environment == "prodeu":
-            return f"https://{self.api_subdomain}.eu.{self.api_base_domain}"
-        elif environment == "local":
-            return "http://api-local.sovfixer.com"
+        if self.include_legacy_dashes:
+            if environment == "prod":
+                return f"https://{self.api_subdomain}.{self.api_base_domain}"
+            elif environment == "prod2":
+                return f"https://{self.api_subdomain}2.{self.api_base_domain}"
+            elif environment == "prodeu":
+                return f"https://{self.api_subdomain}.eu.{self.api_base_domain}"
+            elif environment == "local":
+                return "http://api-local.sovfixer.com"
+            else:
+                return (
+                    f"https://{self.api_subdomain}-{environment}.{self.api_base_domain}"
+                )
         else:
-            return f"https://{self.api_subdomain}-{environment}.{self.api_base_domain}"
+            return f"https://{self.api_subdomain}.{environment}.{self.api_base_domain}"
 
     def get_auth_token_by_environment(self, environment: str) -> str:
         serverspace = self.get_serverspace_from_environment(environment)
@@ -119,3 +126,16 @@ class APIClientBase:
             raise ValueError("Unknown environment.")
 
         return serverspace
+
+    @classmethod
+    def _get_files_for_request(cls, file, filename=None):
+        if is_fileobj(file):
+            if filename is None:
+                raise ValueError("Need filename if file is a file object.")
+
+            return {"file": (filename, file)}
+        else:
+            if not os.path.exists(file):
+                raise click.ClickException(f"Path {file} does not exist.")
+
+            return {"file": open(file, "rb")}
