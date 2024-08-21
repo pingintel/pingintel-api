@@ -32,40 +32,36 @@ Example Python commandline script for using the Ping Data Technologies Ping Visi
     "--environment",
     type=click.Choice(
         [
-            "staging",
-            "staging2",
             "prod",
-            "prod2",
             "prodeu",
-            "prodeu2",
-            "local",
-            "local2",
+            "staging",
             "dev",
-            "dev2",
         ],
         case_sensitive=False,
     ),
-    default="staging",
+)
+@click.option(
+    "-u", "--api-url",
+    help="Provide base url (instead of environment, primarily for debugging)",
 )
 @click.option(
     "--auth-token",
     help="Provide auth token via --auth-token or PINGVISION_AUTH_TOKEN environment variable.",
 )
 @click.pass_context
-def cli(ctx, environment, auth_token):
+def cli(ctx, environment, api_url, auth_token):
     ctx.ensure_object(dict)
     ctx.obj["environment"] = environment
     ctx.obj["auth_token"] = auth_token
+    ctx.obj["api_url"] = api_url
 
 
-# def log(msg):
-#     global start_time
-#     if start_time is None:
-#         start_time = timer()
-#     elapsed = timer() - start_time
-#     timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
-#     click.echo(f"[{timestamp} T+{elapsed:.1f}s] {msg}")
-
+def get_client(ctx) -> PingVisionAPIClient:
+    environment = ctx.obj["environment"]
+    auth_token = ctx.obj["auth_token"]
+    api_url = ctx.obj["api_url"]
+    client = PingVisionAPIClient(environment=environment, auth_token=auth_token, api_url=api_url)
+    return client
 
 @cli.command()
 @click.pass_context
@@ -79,18 +75,15 @@ def cli(ctx, environment, auth_token):
     default=False,
     help="If set, poll until the submission is ready.",
 )
-def create(ctx, filename, poll_until_completion=False):
-    environment = ctx.obj["environment"]
-    auth_token = ctx.obj["auth_token"]
-
+def create(ctx, filename, poll_until_ready=False):
     if isinstance(filename, pathlib.PosixPath):
         filename = [str(filename)]
 
-    client = PingVisionAPIClient(environment=environment, auth_token=auth_token)
+    client = get_client(ctx)
     ret = client.create_submission(filepaths=filename)
     pingid = ret["id"]
 
-    if poll_until_completion:
+    if poll_until_ready:
         while True:
             ret = client.get_submission_detail(pingid=pingid)
             pprint.pprint(ret)
@@ -103,9 +96,7 @@ def create(ctx, filename, poll_until_completion=False):
 @click.pass_context
 @click.argument("pingid", type=str)
 def get(ctx, pingid):
-    environment = ctx.obj["environment"]
-    auth_token = ctx.obj["auth_token"]
-    client = PingVisionAPIClient(environment=environment, auth_token=auth_token)
+    client = get_client(ctx)
 
     ret = client.get_submission_detail(pingid=pingid)
     pprint.pprint(ret)
@@ -113,12 +104,25 @@ def get(ctx, pingid):
 
 @cli.command()
 @click.pass_context
-def activity(ctx):
-    environment = ctx.obj["environment"]
-    auth_token = ctx.obj["auth_token"]
-    client = PingVisionAPIClient(environment=environment, auth_token=auth_token)
-    results = client.list_submission_activity()
-    pprint.pprint(results)
+@click.option("--pretty", is_flag=True, default=False)
+@click.option('-l', '--limit', '--page-size', type=int, default=None, help="Limit the number of results returned.") 
+def activity(ctx, pretty, limit):
+    client = get_client(ctx)
+
+    results = client.list_submission_activity(page_size=limit)
+    if pretty:
+        """ print it like a table """
+        print(f"{'Activity ID':<36}{'Status':<30}{'Created':<20}")
+        for activity in results["results"]:
+            created_time_isoformatted = activity["created_time"]
+            created_time = time.strftime("%Y-%m-%d %H:%M", time.strptime(created_time_isoformatted, "%Y-%m-%dT%H:%M:%S.%fZ"))
+            print(
+                f"{activity['id'] or '*null*':<36}{activity['workflow_status__name'] or '*null*':<30}{created_time:<20}"
+            )
+            for doc in activity["documents"]:
+                print(f"  {doc['filename']:<40} {doc['processing_status']:<12} {doc['url']}")
+    else:
+        pprint.pprint(results)
 
 
 def main():

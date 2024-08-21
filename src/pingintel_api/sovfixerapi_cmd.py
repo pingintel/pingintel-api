@@ -27,42 +27,59 @@ Example Python commandline script for using the Ping Data Technologies sovfixer 
 
 
 @click.group()
-def cli():
-    pass
-
-
-def log(msg):
-    global start_time
-    if start_time is None:
-        start_time = timer()
-    elapsed = timer() - start_time
-    timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
-    click.echo(f"[{timestamp} T+{elapsed:.1f}s] {msg}")
-
-
-@cli.command()
-@click.argument(
-    "filename", nargs=-1, required=True, type=click.Path(exists=True, dir_okay=False)
-)
 @click.option(
     "-e",
     "--environment",
     type=click.Choice(
         [
-            "staging",
-            "staging2",
             "prod",
-            "prod2",
             "prodeu",
-            "prodeu2",
-            "local",
-            "local2",
+            "staging",
             "dev",
-            "dev2",
         ],
         case_sensitive=False,
     ),
-    default="staging",
+)
+@click.option(
+    "-u",
+    "--api-url",
+    help="Provide base url (instead of environment, primarily for debugging)",
+)
+@click.option(
+    "--auth-token",
+    help="Provide auth token via --auth-token or PINGVISION_AUTH_TOKEN environment variable.",
+)
+@click.pass_context
+def cli(ctx, environment, api_url, auth_token):
+    ctx.ensure_object(dict)
+    ctx.obj["environment"] = environment
+    ctx.obj["auth_token"] = auth_token
+    ctx.obj["api_url"] = api_url
+
+
+def get_client(ctx) -> SOVFixerAPIClient:
+    environment = ctx.obj["environment"]
+    auth_token = ctx.obj["auth_token"]
+    api_url = ctx.obj["api_url"]
+    client = SOVFixerAPIClient(
+        environment=environment, auth_token=auth_token, api_url=api_url
+    )
+    return client
+
+
+# def log(msg):
+#     global start_time
+#     if start_time is None:
+#         start_time = timer()
+#     elapsed = timer() - start_time
+#     timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+#     click.echo(f"[{timestamp} T+{elapsed:.1f}s] {msg}")
+
+
+@cli.command()
+@click.pass_context
+@click.argument(
+    "filename", nargs=-1, required=True, type=click.Path(exists=True, dir_okay=False)
 )
 @click.option(
     "-d",
@@ -72,10 +89,6 @@ def log(msg):
     ),
     default="SOV",
     help="Identify `filename` document type.  Defaults to SOV.",
-)
-@click.option(
-    "--auth-token",
-    help="Provide auth token via --auth-token or SOVFIXER_AUTH_TOKEN environment variable.",
 )
 @click.option(
     "--callback-url", help="(Optional) Provide a URL to which results should be POSTed."
@@ -95,10 +108,9 @@ def log(msg):
     help="If set, actually write the output. Otherwise, download as a test but do not write.",
 )
 def fix(
+    ctx,
     filename,
-    environment,
     document_type,
-    auth_token,
     callback_url,
     output_format,
     client_ref,
@@ -108,7 +120,7 @@ def fix(
     if isinstance(filename, pathlib.PosixPath):
         filename = [str(filename)]
 
-    client = SOVFixerAPIClient(environment=environment, auth_token=auth_token)
+    client = get_client(ctx)
     for fn in filename:
         client.fix_sov(
             fn,
@@ -121,32 +133,9 @@ def fix(
 
 
 @cli.command()
-@click.option(
-    "-e",
-    "--environment",
-    type=click.Choice(
-        [
-            "staging",
-            "staging2",
-            "prod",
-            "prod2",
-            "prodeu",
-            "prodeu2",
-            "local",
-            "local2",
-            "dev",
-            "dev2",
-        ],
-        case_sensitive=False,
-    ),
-    default="staging",
-)
-@click.option(
-    "--auth-token",
-    help="Provide auth token via --auth-token or SOVFIXER_AUTH_TOKEN environment variable.",
-)
-def activity(environment, auth_token):
-    client = SOVFixerAPIClient(environment=environment, auth_token=auth_token)
+@click.pass_context
+def activity(ctx):
+    client = get_client(ctx)
     results = client.list_activity()
     pprint.pprint(results)
 

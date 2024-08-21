@@ -33,10 +33,10 @@ class PingVisionAPIClient(APIClientBase):
         multiple_files = []
         for filepath in filepaths:
             # files = self._get_files_for_request(filepath)
-            files = ("file", (os.path.basename(filepath), open(filepath, "rb")))
+            files = ("files", (os.path.basename(filepath), open(filepath, "rb")))
             multiple_files.append(files)
         if len(filepaths) == 1:
-            multiple_files = {"file": multiple_files[0][1]}
+            multiple_files = {"files": multiple_files[0][1]}
         response = self.post(url, files=multiple_files)
 
         raise_for_status(response)
@@ -68,21 +68,21 @@ class PingVisionAPIClient(APIClientBase):
     ) -> t.PingVisionListActivityResponse:
         url = self.api_url + "/api/v1/activity"
 
-        data = {}
+        kwargs = {}
         if cursor_id:
-            data["cursor_id"] = cursor_id
+            kwargs["cursor_id"] = cursor_id
         if prev_cursor_id:
-            data["prev_cursor_id"] = prev_cursor_id
+            kwargs["prev_cursor_id"] = prev_cursor_id
         if page_size:
-            data["page_size"] = page_size
+            kwargs["page_size"] = page_size
         if fields:
-            data["fields"] = fields
+            kwargs["fields"] = fields
         if search:
-            data["search"] = search
+            kwargs["search"] = search
         if organization__short_name:
-            data["organization__short_name"] = organization__short_name
+            kwargs["organization__short_name"] = organization__short_name
 
-        response = self.get(url, data=data)
+        response = self.get(url, params=kwargs)
 
         raise_for_status(response)
 

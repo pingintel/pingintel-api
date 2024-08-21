@@ -95,7 +95,17 @@ class SOVFixerAPIClient(APIClientBase):
         # request_status = response_data["request"]["status"]
         return response_data
 
-    def fix_sov_download(self, output_ret, actually_write=False, output_path=None):
+    def fix_sov_download(self, output_ret, output_path=None, actually_write=True):
+        """Download one output of a SOV Fixer request.
+
+        output_ret: dict
+            Pass it one of the elements of the "outputs" list from the response of fix_sov_async_check_progress.
+        output_path: str
+            The path to write the file to.  If None, the filename from the output_ret will be used.
+        actually_write: bool
+            If True, the file will be written to disk.  If False, the file will be downloaded but not written to disk.  This is mostly for testing.
+        """
+
         output_url = output_ret["url"]
         if (
             self.environment
@@ -113,7 +123,7 @@ class SOVFixerAPIClient(APIClientBase):
         with self.session.get(output_url, stream=True) as response:
             raise_for_status(response)
             filesize_mb = int(response.headers.get("content-length", 0)) / 1024 / 1024
-            pprint.pprint(dict(response.headers))
+            # pprint.pprint(dict(response.headers))
             log(f"  - Streaming {output_description} output ({filesize_mb:.2f} MB)...")
 
             if actually_write:
@@ -270,7 +280,8 @@ class SOVFixerAPIClient(APIClientBase):
 
         response = self.session.post(url, data=data)
         if response.status_code == 200:
-            pprint.pprint(response.json())
+            # pprint.pprint(response.json())
+            pass
         else:
             pprint.pprint(response.text)
 
@@ -301,7 +312,8 @@ class SOVFixerAPIClient(APIClientBase):
 
         response = self.session.post(url, files=files, data=data)
         if response.status_code == 200:
-            pprint.pprint(response.json())
+            pass
+            # pprint.pprint(response.json())
         else:
             pprint.pprint(response.text)
 
@@ -331,7 +343,8 @@ class SOVFixerAPIClient(APIClientBase):
 
         response = self.session.post(url, json=data)
         if response.status_code == 200:
-            pprint.pprint(response.json())
+            pass
+            # pprint.pprint(response.json())
         else:
             pprint.pprint(response.text)
 
@@ -344,7 +357,7 @@ class SOVFixerAPIClient(APIClientBase):
         status_url = self.api_url + f"/api/v1/sov/reoutput/{sudid}"
 
         response = self.session.get(status_url)
-        pprint.pprint(response.json())
+        # pprint.pprint(response.json())
         raise_for_status(response)
 
         response_data = response.json()
@@ -363,7 +376,7 @@ class SOVFixerAPIClient(APIClientBase):
         client = self
         init_response = client.reoutput_sov_init(sovid)
         sudid = init_response["id"]
-        print(init_response)
+        # print(init_response)
         for location_filename in location_filenames:
             client.reoutput_add_locations(
                 sudid,
