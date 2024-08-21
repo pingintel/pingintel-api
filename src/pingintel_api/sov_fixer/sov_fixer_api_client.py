@@ -95,7 +95,12 @@ class SOVFixerAPIClient(APIClientBase):
         # request_status = response_data["request"]["status"]
         return response_data
 
-    def fix_sov_download(self, output_ret, output_path=None, actually_write=True):
+    def fix_sov_download(
+        self,
+        output_ret: t.FixSOVResponseResultOutput | t.OutputData,
+        output_path=None,
+        actually_write=True,
+    ):
         """Download one output of a SOV Fixer request.
 
         output_ret: dict
@@ -114,8 +119,10 @@ class SOVFixerAPIClient(APIClientBase):
         ):
             output_url = output_url.replace("api-local.sovfixer.com", "localhost:8000")
 
-        output_description = output_ret["description"]
-        output_filename = output_ret["filename"]
+        output_description = output_ret.get("description", output_ret.get("label"))
+        output_filename = output_ret.get(
+            "filename", output_ret.get("scrubbed_filename")
+        )
         if output_path is None:
             output_path = output_filename
 

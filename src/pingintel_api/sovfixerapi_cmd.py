@@ -7,6 +7,7 @@ import pathlib
 import pprint
 import time
 from timeit import default_timer as timer
+from typing import Literal
 
 import click
 
@@ -134,9 +135,36 @@ def fix(
 
 @cli.command()
 @click.pass_context
-def activity(ctx):
+@click.option("--cursor-id", "--sovid", help="Cursor ID to start from")
+@click.option("--prev-cursor-id")
+@click.option("-l", "--page-size", "--limit", default=50)
+@click.option("--fields", multiple=True)
+@click.option("--search", help="Filter key fields by an arbitrary string")
+@click.option("--origin", type=click.Choice(["api", "email"]))
+@click.option("--status", type=click.Choice(["P", "I", "E", "R", "C", "F"]))
+@click.option("--organization__short_name")
+def activity(
+    ctx,
+    cursor_id=None,
+    prev_cursor_id=None,
+    page_size=50,
+    fields: list[str] | None = None,
+    search=None,
+    origin: Literal["api", "email"] | None = None,
+    status: Literal["P", "I", "E", "R", "C", "F"] | None = None,
+    organization__short_name=None,
+):
     client = get_client(ctx)
-    results = client.list_activity()
+    results = client.list_activity(
+        cursor_id=cursor_id,
+        prev_cursor_id=prev_cursor_id,
+        page_size=page_size,
+        fields=fields,
+        search=search,
+        origin=origin,
+        status=status,
+        organization__short_name=organization__short_name,
+    )
     pprint.pprint(results)
 
 

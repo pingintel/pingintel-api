@@ -38,6 +38,15 @@ class FixSOVResponseRequest(TypedDict):
     pct_complete: int
 
 
+class OutputData(TypedDict):
+    label: str
+    # sovid: str
+    scrubbed_filename: str
+    # sov_data_id: int
+    output_format: str
+    url: str
+
+
 class FixSOVResponseResultOutput(TypedDict):
     url: str
     description: str
@@ -63,9 +72,9 @@ class UpdateOutputData(TypedDict):
 
 class OutputData(TypedDict):
     label: str
-    sovid: str
+    # sovid: str
     scrubbed_filename: str
-    sov_data_id: int
+    # sov_data_id: int
     output_format: str
     url: str
 
@@ -96,8 +105,7 @@ class SOVData(TypedDict):
     output_data: list[OutputData] | None
     origin: str | None
     organization__short_name: str | None
-    sov_fixer_api_request__global_request_id: str | None
-    sov_fixer_email_request__global_request_id: str | None
+    global_request_id: str | None
     ping_maps_url: str | None
     input_file_url: str | None
     extra_data: dict[str, Any] | None
@@ -110,7 +118,9 @@ class SOVData(TypedDict):
     num_buildings: int | None
     progress_started_time: str | None
     parsing_completed_time: str | None
-    pingdata_stats: Any | None
+    pingdata_stats: dict[str, dict[str, int]] | None
+    data_readiness_score: NotRequired[int]
+    data_readiness_notes: NotRequired[list[dict[str, str | int]]]
 
 
 class ActivityResponse(TypedDict):

@@ -124,6 +124,27 @@ def activity(ctx, pretty, limit):
     else:
         pprint.pprint(results)
 
+@cli.command()
+@click.pass_context
+@click.argument("document_url")
+@click.option("-o", "--output", type=click.File("wb"))
+def download_document(ctx, document_url, output):
+    if not output:
+        import urllib.parse,os
+        output = pathlib.Path(document_url).name
+        output = urllib.parse.unquote(output)
+        if os.path.exists(output):
+            confirm = input(f"File {output} already exists. Overwrite? (y/n) ")
+            if confirm.lower() != "y":
+                print("Exiting.")
+                return
+        output = open(output, "wb")
+    client = get_client(ctx)
+
+    results = client.download_document(output, document_url)
+
+    print(f"Downloaded file to {output.name}")
+
 
 def main():
     cli()

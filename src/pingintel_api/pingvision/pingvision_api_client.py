@@ -2,6 +2,8 @@
 
 # Copyright 2021-2024 Ping Data Intelligence
 
+import urllib.parse
+
 import logging
 import os
 import pathlib
@@ -88,3 +90,28 @@ class PingVisionAPIClient(APIClientBase):
 
         response_data = response.json()
         return response_data
+
+    @overload
+    def download_document(self, output_path_or_stream, document_url: str): ...
+
+    @overload
+    def download_document(self, output_path_or_stream, pingid: str, filename: str): ...
+
+    def download_document(
+        self, output_path_or_stream, document_url=None, pingid=None, filename=None
+    ):
+        if not document_url:
+            encoded_filename = urllib.parse.quote(filename)
+            document_url = f"/api/v1/submission/{pingid}/document/{encoded_filename}"
+
+        assert document_url.startswith("/")
+
+        url = self.api_url + document_url
+        response = self.get(url)
+        raise_for_status(response)
+
+        if is_fileobj(output_path_or_stream):
+            output_path_or_stream.write(response.content)
+        else:
+            with open(output_path_or_stream, "wb") as f:
+                f.write(response.content)
