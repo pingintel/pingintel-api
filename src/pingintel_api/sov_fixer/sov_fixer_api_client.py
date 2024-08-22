@@ -112,6 +112,12 @@ class SOVFixerAPIClient(APIClientBase):
         """
 
         output_url = output_ret["url"]
+
+        # if output_url does not have the base_url then add it.
+        if not output_url.startswith("http"):
+            assert output_url.startswith("/"), f"Invalid output URL: {output_url}"
+            output_url = self.api_url + output_url
+
         if (
             self.environment
             and self.environment == "local2"

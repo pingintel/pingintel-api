@@ -28,7 +28,7 @@ class PingVisionAPIClient(APIClientBase):
     product = "pingvision"
 
     def create_submission(
-        self, filepaths: list[str | pathlib.Path]
+        self, filepaths: list[str | pathlib.Path], client_ref: str | None = None
     ) -> t.PingVisionCreateSubmissionResponse:
         url = self.api_url + "/api/v1/submission"
 
@@ -39,7 +39,11 @@ class PingVisionAPIClient(APIClientBase):
             multiple_files.append(files)
         if len(filepaths) == 1:
             multiple_files = {"files": multiple_files[0][1]}
-        response = self.post(url, files=multiple_files)
+
+        data = {}
+        if client_ref:
+            data["client_ref"] = client_ref
+        response = self.post(url, files=multiple_files, data=data)
 
         raise_for_status(response)
 
