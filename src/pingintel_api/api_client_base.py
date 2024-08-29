@@ -1,9 +1,11 @@
 import configparser
 import os
-from typing import IO, NotRequired, TypedDict, overload
+from typing import overload
 
 import click
 import requests
+import requests
+from requests.adapters import HTTPAdapter, Retry
 
 from .utils import is_fileobj, log
 
@@ -88,6 +90,17 @@ class APIClientBase:
             "Accept-Encoding": "gzip",
             "User-Agent": f"pingintel_api/{self.__class__.__name__}/{__version__}",
         }
+
+        retry = Retry(
+            total=10,
+            # backoff_factor=0.8,
+            status_forcelist=[429, 502, 503, 504],
+            allowed_methods=["HEAD", "GET", "OPTIONS", "POST"],
+        )
+        # retry.DEFAULT_BACKOFF_MAX = random.uniform(25.0, 35.0)
+        adapter = HTTPAdapter(max_retries=retry)
+        session.mount("https://", adapter)
+
         return session
 
     def get_api_url_by_environment(self, environment: str) -> str:

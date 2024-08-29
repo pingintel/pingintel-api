@@ -87,7 +87,7 @@ class SOVFixerAPIClient(APIClientBase):
         status_url = self.api_url + f"/api/v1/sov/{sov_id}?include_progress=true"
         # params = {"id": sov_id}
 
-        response = self.session.get(status_url)
+        response = self.get(status_url)
         # pprint.pprint(response.json())
         raise_for_status(response)
 
@@ -132,8 +132,25 @@ class SOVFixerAPIClient(APIClientBase):
         if output_path is None:
             output_path = output_filename
 
-        log(f"Requesting output from {output_url}...")
-        with self.session.get(output_url, stream=True) as response:
+        return self.download_file(
+            output_url,
+            output_path,
+            actually_write=actually_write,
+            output_description=output_description,
+        )
+
+    def download_file(
+        self,
+        download_url,
+        output_path,
+        actually_write=False,
+        output_description=None,
+    ):
+        log(f"Requesting output from {download_url}...")
+        if download_url.startswith("/"):
+            download_url = self.api_url + download_url
+
+        with self.get(download_url, stream=True) as response:
             raise_for_status(response)
             filesize_mb = int(response.headers.get("content-length", 0)) / 1024 / 1024
             # pprint.pprint(dict(response.headers))
@@ -145,6 +162,20 @@ class SOVFixerAPIClient(APIClientBase):
                         fd.write(chunk)
             log(f"  - Downloaded {output_description} output: {output_path}.")
         return output_path if actually_write else None
+
+    def activity_download(self, output_ret, actually_write=False, output_path=None):
+        output_url = output_ret["url"]
+        output_description = output_ret["label"]
+        output_filename = output_ret["scrubbed_filename"]
+        if output_path is None:
+            output_path = output_filename
+
+        return self.download_file(
+            output_url,
+            output_path,
+            actually_write=actually_write,
+            output_description=output_description,
+        )
 
     def fix_sov(
         self,
@@ -274,7 +305,7 @@ class SOVFixerAPIClient(APIClientBase):
             parameters["organization__short_name"] = organization__short_name
 
         url = self.api_url + "/api/v1/sov/activity"
-        response = self.session.get(url, params=parameters)
+        response = self.get(url, params=parameters)
         raise_for_status(response)
         return response.json()
 
@@ -354,7 +385,7 @@ class SOVFixerAPIClient(APIClientBase):
         if output_formats:
             data["output_formats"] = output_formats
 
-        response = self.session.post(url, json=data)
+        response = self.post(url, json=data)
         if response.status_code == 200:
             pass
             # pprint.pprint(response.json())
@@ -369,7 +400,7 @@ class SOVFixerAPIClient(APIClientBase):
     def reoutput_check_progress(self, sudid):
         status_url = self.api_url + f"/api/v1/sov/reoutput/{sudid}"
 
-        response = self.session.get(status_url)
+        response = self.get(status_url)
         # pprint.pprint(response.json())
         raise_for_status(response)
 

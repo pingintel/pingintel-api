@@ -168,6 +168,34 @@ def activity(
     pprint.pprint(results)
 
 
+@cli.command()
+@click.pass_context
+@click.option(
+    "-S",
+    "--search",
+    help="(Optional) Provide a search string, which can be a SOVID, a filename, an insured name, etc.",
+)
+@click.option(
+    "-o",
+    "--output-path",
+    help="If specified, provide a download path for all attached files.",
+)
+def sov(environment, auth_token, search, output_path):
+    client = get_client(ctx)
+    results = client.list_activity(search=search, page_size=1)
+    if not results or not results["results"]:
+        log("No results found.")
+        return
+    result = results["results"][0]
+    output_data = result["output_data"]
+
+    if output_path:
+        for output_ret in output_data:
+            client.activity_download(
+                output_ret, actually_write=True, output_path=output_path
+            )
+
+
 def main():
     cli()
 
