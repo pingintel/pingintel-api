@@ -77,6 +77,21 @@ def get_client(ctx) -> SOVFixerAPIClient:
 #     click.echo(f"[{timestamp} T+{elapsed:.1f}s] {msg}")
 
 
+def _attributes_to_dict(
+    ctx: click.Context, attribute: click.Option, attributes: tuple[str, ...]
+) -> dict[str, str]:
+    """Click callback that converts attributes specified in the form `key=value` to a
+    dictionary. Thanks to https://stackoverflow.com/a/76601290/237091"""
+    result = {}
+    for arg in attributes:
+        k, v = arg.split("=")
+        if k in result:
+            raise click.BadParameter(f"Attribute {k!r} is specified twice")
+        result[k] = v
+
+    return result
+
+
 @cli.command()
 @click.pass_context
 @click.argument(
@@ -102,6 +117,13 @@ def get_client(ctx) -> SOVFixerAPIClient:
 )
 @click.option("--client-ref")
 @click.option(
+    "-E",
+    "--extra_data",
+    help="Extra data to include in the request, in the form key=value. Can be specified multiple times.",
+    multiple=True,
+    callback=_attributes_to_dict,
+)
+@click.option(
     "--write",
     "--no-write",
     is_flag=True,
@@ -115,6 +137,7 @@ def fix(
     callback_url,
     output_format,
     client_ref,
+    extra_data,
     write,
 ):
 
@@ -130,12 +153,14 @@ def fix(
             actually_write=write,
             output_formats=output_format,
             client_ref=client_ref,
+            extra_data=extra_data,
         )
 
 
 @cli.command()
 @click.pass_context
-@click.option("--cursor-id", "--sovid", help="Cursor ID to start from")
+@click.option("--id", "--sovid", help="SOV ID to retrieve")
+@click.option("--cursor-id", help="Cursor ID to start from")
 @click.option("--prev-cursor-id")
 @click.option("-l", "--page-size", "--limit", default=50)
 @click.option("--fields", multiple=True)
@@ -145,6 +170,7 @@ def fix(
 @click.option("--organization__short_name")
 def activity(
     ctx,
+    id=None,
     cursor_id=None,
     prev_cursor_id=None,
     page_size=50,
@@ -156,6 +182,7 @@ def activity(
 ):
     client = get_client(ctx)
     results = client.list_activity(
+        id=id,
         cursor_id=cursor_id,
         prev_cursor_id=prev_cursor_id,
         page_size=page_size,

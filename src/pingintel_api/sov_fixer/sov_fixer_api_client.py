@@ -40,6 +40,7 @@ class SOVFixerAPIClient(APIClientBase):
         output_formats=None,
         client_ref=None,
         integrations=None,
+        extra_data=None,
         delegate_to: str | None = None,
     ):
         url = self.api_url + "/api/v1/sov"
@@ -57,6 +58,9 @@ class SOVFixerAPIClient(APIClientBase):
             data["client_ref"] = client_ref
         if integrations is not None:
             data["integrations"] = integrations
+        if extra_data is not None:
+            for k, v in extra_data.items():
+                data["extra_data_" + k] = v
         if delegate_to is not None:
             data["delegate_to"] = delegate_to
 
@@ -186,6 +190,7 @@ class SOVFixerAPIClient(APIClientBase):
         actually_write=False,
         output_formats=None,
         client_ref=None,
+        extra_data=None,
     ):
         sov_fixer_client = self
         start_response = sov_fixer_client.fix_sov_async_start(
@@ -194,6 +199,7 @@ class SOVFixerAPIClient(APIClientBase):
             callback_url=callback_url,
             output_formats=output_formats,
             client_ref=client_ref,
+            extra_data=extra_data,
         )
 
         while 1:
@@ -259,6 +265,7 @@ class SOVFixerAPIClient(APIClientBase):
 
     def list_activity(
         self,
+        id=None,
         cursor_id=None,
         prev_cursor_id=None,
         page_size=50,
@@ -269,6 +276,8 @@ class SOVFixerAPIClient(APIClientBase):
         organization__short_name=None,
     ) -> t.ActivityResponse:
         """List activity in the SOV Fixer system.
+        id: str
+            The ID of the activity to retrieve.
         cursor_id: str
             The cursor ID to use for pagination. Do not set on the first call, but provide the value from each previous call to the next to get the next page.
         prev_cursor_id: str
@@ -287,6 +296,8 @@ class SOVFixerAPIClient(APIClientBase):
             Filter by the short name of the organization that created the activity
         """
         parameters = {}
+        if id:
+            parameters["id"] = id
         if cursor_id:
             parameters["cursor_id"] = cursor_id
         elif prev_cursor_id:
