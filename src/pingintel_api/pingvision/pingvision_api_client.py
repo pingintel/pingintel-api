@@ -65,6 +65,7 @@ class PingVisionAPIClient(APIClientBase):
 
     def list_submission_activity(
         self,
+        id: str | None = None,
         cursor_id: str | None = None,
         prev_cursor_id: str | None = None,
         page_size: int | None = None,
@@ -75,6 +76,8 @@ class PingVisionAPIClient(APIClientBase):
         url = self.api_url + "/api/v1/activity"
 
         kwargs = {}
+        if id:
+            kwargs["id"] = id
         if cursor_id:
             kwargs["cursor_id"] = cursor_id
         if prev_cursor_id:
