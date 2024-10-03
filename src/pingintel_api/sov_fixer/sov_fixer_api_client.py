@@ -42,6 +42,7 @@ class SOVFixerAPIClient(APIClientBase):
         integrations=None,
         extra_data=None,
         delegate_to: str | None = None,
+        update_hook_url=None,
     ):
         url = self.api_url + "/api/v1/sov"
 
@@ -50,6 +51,8 @@ class SOVFixerAPIClient(APIClientBase):
         data = {}
         if callback_url:
             data["callback_url"] = callback_url
+        if update_hook_url:
+            data["update_hook_url"] = update_hook_url
         if document_type:
             data["document_type"] = document_type
         if output_formats:
@@ -191,6 +194,7 @@ class SOVFixerAPIClient(APIClientBase):
         output_formats=None,
         client_ref=None,
         extra_data=None,
+        update_hook_url=None,
     ):
         sov_fixer_client = self
         start_response = sov_fixer_client.fix_sov_async_start(
@@ -200,6 +204,7 @@ class SOVFixerAPIClient(APIClientBase):
             output_formats=output_formats,
             client_ref=client_ref,
             extra_data=extra_data,
+            update_hook_url=update_hook_url,
         )
 
         while 1:
@@ -324,6 +329,8 @@ class SOVFixerAPIClient(APIClientBase):
         self,
         sovid: str,
         client_ref=None,
+        update_type: str = None,
+        callback_url: str = None,
     ):
         if not sovid:
             raise ValueError("Invalid sovid.")
@@ -332,6 +339,10 @@ class SOVFixerAPIClient(APIClientBase):
         data = {}
         if client_ref:
             data["client_ref"] = client_ref
+        if update_type:
+            data["update_type"] = update_type
+        if callback_url:
+            data["callback_url"] = callback_url
 
         response = self.session.post(url, data=data)
         if response.status_code == 200:
@@ -427,9 +438,11 @@ class SOVFixerAPIClient(APIClientBase):
         policy_terms_format_name=None,
         output_formats=None,
         actually_write=False,
+        update_type=None,
+        callback_url=None,
     ):
         client = self
-        init_response = client.reoutput_sov_init(sovid)
+        init_response = client.reoutput_sov_init(sovid, update_type=update_type, callback_url=callback_url)
         sudid = init_response["id"]
         # print(init_response)
         for location_filename in location_filenames:
