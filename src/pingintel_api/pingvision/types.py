@@ -39,3 +39,9 @@ class PingVisionListActivityResponse(TypedDict):
 class PingVisionCreateSubmissionResponse(TypedDict):
     id: str
     message: str
+
+
+class PingVisionNavResponse(TypedDict):
+    items: list[dict]
+    division_id: int
+    group: str

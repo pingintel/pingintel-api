@@ -44,7 +44,6 @@ class PingVisionAPIClient(APIClientBase):
         if client_ref:
             data["client_ref"] = client_ref
         response = self.post(url, files=multiple_files, data=data)
-
         raise_for_status(response)
 
         log(f"Submission created: {response.json()}")

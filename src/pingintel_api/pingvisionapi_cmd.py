@@ -105,11 +105,17 @@ def get(ctx, pingid):
 @cli.command()
 @click.pass_context
 @click.option("--pretty", is_flag=True, default=False)
-@click.option('-l', '--limit', '--page-size', type=int, default=None, help="Limit the number of results returned.") 
-def activity(ctx, pretty, limit):
+@click.option("--id", "--sovid", help="SOV ID to retrieve")
+@click.option("--cursor-id", help="Cursor ID to start from")
+@click.option("--prev-cursor-id")
+@click.option("-l", "--page-size", "--limit", default=50)
+@click.option("--fields", multiple=True)
+@click.option("--search", help="Filter key fields by an arbitrary string")
+# @click.option("--organization__short_name")
+def activity(ctx, pretty, id, cursor_id, prev_cursor_id, page_size, fields, search):
     client = get_client(ctx)
 
-    results = client.list_submission_activity(page_size=limit)
+    results = client.list_submission_activity(page_size=page_size, id=id, cursor_id=cursor_id, prev_cursor_id=prev_cursor_id, fields=fields, search=search)
     if pretty:
         """ print it like a table """
         print(f"{'Activity ID':<36}{'Status':<30}{'Created':<20}")
