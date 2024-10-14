@@ -508,3 +508,56 @@ class SOVFixerAPIClient(APIClientBase):
             log("* Reoutput failed!  Raw API output:")
             log(response_data)
             return False
+
+    def reoutput_regen_start(
+        self,
+        sudid: str,
+        output_formats: list[str],
+    ):
+        url = self.api_url + f"/api/v1/sov/reoutput/{sudid}/regen"
+
+        data = {}
+        if output_formats:
+            data["output_formats"] = output_formats
+
+        response = self.post(url, json=data)
+        if response.status_code == 200:
+            pass
+            pprint.pprint(response.json())
+        else:
+            pprint.pprint(response.text)
+
+        raise_for_status(response)
+
+        response_data = response.json()
+        return response_data
+
+    def reoutput_regen_result(self, id):
+        status_url = self.api_url + f"/api/v1/sov/reoutput/regen/{id}"
+
+        response = self.get(status_url)
+        if response.status_code == 200:
+            pass
+            pprint.pprint(response.json())
+        else:
+            pprint.pprint(response.text)
+        raise_for_status(response)
+
+        response_data = response.json()
+        return response_data
+
+    def reoutput_regen(
+        self,
+        sudid: str,
+        output_formats: list[str],
+    ):
+        response = self.reoutput_regen_start(sudid, output_formats)
+        regen_id = response.get("id", None)
+
+        for i in range(30):
+            response = self.reoutput_regen_result(regen_id)
+            regen_status = response.get('request', {}).get('status')
+            if regen_status == 'COMPLETE' or regen_status == 'FAILED':
+                break
+            time.sleep(1)
+        return response
