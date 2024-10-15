@@ -4,11 +4,11 @@ from pprint import pprint
 
 site.addsitedir("../src")
 
-from pingintel_api import PingVisionAPIClient
+from pingintel_api import PingRadarAPIClient
 
 SCRIPT_DIR = pathlib.Path(__file__).parent
 
-api_client = PingVisionAPIClient(environment="dev")
+api_client = PingRadarAPIClient(environment="dev")
 
 ret = api_client.create_submission(
     files={"files": ("test_sov.xlsx", open(SCRIPT_DIR / "test_sov.xlsx", "rb"))}

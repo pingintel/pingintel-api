@@ -25,7 +25,7 @@ class APIClientBase:
     ) -> None:
         """Initialize the API client with an API URL and an optional auth token.
 
-        :param api_url: The URL of the API.  e.g. "https://vision.pingintel.com"
+        :param api_url: The URL of the API.  e.g. "https://radar.pingintel.com"
         """
         pass
 

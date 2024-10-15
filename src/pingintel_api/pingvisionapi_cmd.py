@@ -10,7 +10,7 @@ from timeit import default_timer as timer
 
 import click
 
-from pingintel_api import PingVisionAPIClient
+from pingintel_api import PingRadarAPIClient
 
 logger = logging.getLogger(__name__)
 
@@ -20,9 +20,9 @@ start_time = None
 
 
 """
-pingvisionapi.py
+pingradarapi.py
 
-Example Python commandline script for using the Ping Data Technologies Ping Vision API to process SOVs.
+Example Python commandline script for using the Ping Data Technologies Ping Radar API to process SOVs.
 """
 
 
@@ -41,12 +41,13 @@ Example Python commandline script for using the Ping Data Technologies Ping Visi
     ),
 )
 @click.option(
-    "-u", "--api-url",
+    "-u",
+    "--api-url",
     help="Provide base url (instead of environment, primarily for debugging)",
 )
 @click.option(
     "--auth-token",
-    help="Provide auth token via --auth-token or PINGVISION_AUTH_TOKEN environment variable.",
+    help="Provide auth token via --auth-token or PINGRADAR_AUTH_TOKEN environment variable.",
 )
 @click.pass_context
 def cli(ctx, environment, api_url, auth_token):
@@ -56,12 +57,15 @@ def cli(ctx, environment, api_url, auth_token):
     ctx.obj["api_url"] = api_url
 
 
-def get_client(ctx) -> PingVisionAPIClient:
+def get_client(ctx) -> PingRadarAPIClient:
     environment = ctx.obj["environment"]
     auth_token = ctx.obj["auth_token"]
     api_url = ctx.obj["api_url"]
-    client = PingVisionAPIClient(environment=environment, auth_token=auth_token, api_url=api_url)
+    client = PingRadarAPIClient(
+        environment=environment, auth_token=auth_token, api_url=api_url
+    )
     return client
+
 
 @cli.command()
 @click.pass_context
@@ -115,20 +119,33 @@ def get(ctx, pingid):
 def activity(ctx, pretty, id, cursor_id, prev_cursor_id, page_size, fields, search):
     client = get_client(ctx)
 
-    results = client.list_submission_activity(page_size=page_size, id=id, cursor_id=cursor_id, prev_cursor_id=prev_cursor_id, fields=fields, search=search)
+    results = client.list_submission_activity(
+        page_size=page_size,
+        id=id,
+        cursor_id=cursor_id,
+        prev_cursor_id=prev_cursor_id,
+        fields=fields,
+        search=search,
+    )
     if pretty:
-        """ print it like a table """
+        """print it like a table"""
         print(f"{'Activity ID':<36}{'Status':<30}{'Created':<20}")
         for activity in results["results"]:
             created_time_isoformatted = activity["created_time"]
-            created_time = time.strftime("%Y-%m-%d %H:%M", time.strptime(created_time_isoformatted, "%Y-%m-%dT%H:%M:%S.%fZ"))
+            created_time = time.strftime(
+                "%Y-%m-%d %H:%M",
+                time.strptime(created_time_isoformatted, "%Y-%m-%dT%H:%M:%S.%fZ"),
+            )
             print(
                 f"{activity['id'] or '*null*':<36}{activity['workflow_status__name'] or '*null*':<30}{created_time:<20}"
             )
             for doc in activity["documents"]:
-                print(f"  {doc['filename']:<40} {doc['processing_status']:<12} {doc['url']}")
+                print(
+                    f"  {doc['filename']:<40} {doc['processing_status']:<12} {doc['url']}"
+                )
     else:
         pprint.pprint(results)
+
 
 @cli.command()
 @click.pass_context
@@ -136,7 +153,8 @@ def activity(ctx, pretty, id, cursor_id, prev_cursor_id, page_size, fields, sear
 @click.option("-o", "--output", type=click.File("wb"))
 def download_document(ctx, document_url, output):
     if not output:
-        import urllib.parse,os
+        import urllib.parse, os
+
         output = pathlib.Path(document_url).name
         output = urllib.parse.unquote(output)
         if os.path.exists(output):
