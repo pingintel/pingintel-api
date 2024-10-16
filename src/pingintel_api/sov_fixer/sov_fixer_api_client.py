@@ -67,7 +67,7 @@ class SOVFixerAPIClient(APIClientBase):
         if delegate_to is not None:
             data["delegate_to"] = delegate_to
 
-        response = self.session.post(url, files=files, data=data)
+        response = self.post(url, files=files, data=data)
         if response.status_code == 200:
             # pprint.pprint(response.json())
             pass
@@ -344,7 +344,7 @@ class SOVFixerAPIClient(APIClientBase):
         if callback_url:
             data["callback_url"] = callback_url
 
-        response = self.session.post(url, data=data)
+        response = self.post(url, data=data)
         if response.status_code == 200:
             # pprint.pprint(response.json())
             pass
@@ -376,7 +376,7 @@ class SOVFixerAPIClient(APIClientBase):
 
         data = {}
 
-        response = self.session.post(url, files=files, data=data)
+        response = self.post(url, files=files, data=data)
         if response.status_code == 200:
             pass
             # pprint.pprint(response.json())

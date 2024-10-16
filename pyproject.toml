@@ -29,4 +29,4 @@ files = ["requirements.txt"]
 
 [project.scripts]
 sovfixerapi = "pingintel_api.sovfixerapi_cmd:main"
-pingvisionapi = "pingintel_api.pingvisionapi_cmd:main"
+pingradarapi = "pingintel_api.pingradarapi_cmd:main"

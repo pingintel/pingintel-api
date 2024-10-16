@@ -10,7 +10,7 @@ import pathlib
 import pprint
 import time
 from timeit import default_timer as timer
-from typing import IO, NotRequired, TypedDict, overload
+from typing import BinaryIO, TypedDict, overload
 
 from pingintel_api.api_client_base import APIClientBase
 
@@ -21,20 +21,21 @@ from . import types as t
 logger = logging.getLogger(__name__)
 
 
-class PingVisionAPIClient(APIClientBase):
-    api_subdomain = "vision"
+class PingRadarAPIClient(APIClientBase):
+    api_subdomain = "radar"
     api_base_domain = "pingintel.com"
-    auth_token_env_name = "PINGVISION_AUTH_TOKEN"
-    product = "pingvision"
+    auth_token_env_name = "PINGRADAR_AUTH_TOKEN"
+    product = "pingradar"
 
     def create_submission(
         self, filepaths: list[str | pathlib.Path], client_ref: str | None = None
-    ) -> t.PingVisionCreateSubmissionResponse:
+    ) -> t.PingRadarCreateSubmissionResponse:
         url = self.api_url + "/api/v1/submission"
 
-        multiple_files = []
+        multiple_files: (
+            list[tuple[str, tuple[str, BinaryIO]]] | dict[str, tuple[str, BinaryIO]]
+        ) = []
         for filepath in filepaths:
-            # files = self._get_files_for_request(filepath)
             files = ("files", (os.path.basename(filepath), open(filepath, "rb")))
             multiple_files.append(files)
         if len(filepaths) == 1:
@@ -45,6 +46,11 @@ class PingVisionAPIClient(APIClientBase):
             data["client_ref"] = client_ref
         response = self.post(url, files=multiple_files, data=data)
 
+        if len(filepaths) == 1:
+            multiple_files["files"][1].close()
+        else:
+            for file in multiple_files:
+                file[1][1].close()
         raise_for_status(response)
 
         log(f"Submission created: {response.json()}")
@@ -53,7 +59,7 @@ class PingVisionAPIClient(APIClientBase):
 
     def get_submission_detail(
         self, pingid: str
-    ):  # -> t.PingVisionSubmissionDetailResponse:
+    ):  # -> t.PingRadarSubmissionDetailResponse:
         url = self.api_url + f"/api/v1/submission/{pingid}"
 
         response = self.get(url)
@@ -72,7 +78,7 @@ class PingVisionAPIClient(APIClientBase):
         fields: list[str] | None = None,
         search: str | None = None,
         organization__short_name: str | None = None,
-    ) -> t.PingVisionListActivityResponse:
+    ) -> t.PingRadarListActivityResponse:
         url = self.api_url + "/api/v1/activity"
 
         kwargs = {}

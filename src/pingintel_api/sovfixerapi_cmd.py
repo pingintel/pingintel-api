@@ -48,7 +48,7 @@ Example Python commandline script for using the Ping Data Technologies sovfixer 
 )
 @click.option(
     "--auth-token",
-    help="Provide auth token via --auth-token or PINGVISION_AUTH_TOKEN environment variable.",
+    help="Provide auth token via --auth-token or SOVFIXER_AUTH_TOKEN environment variable.",
 )
 @click.pass_context
 def cli(ctx, environment, api_url, auth_token):
