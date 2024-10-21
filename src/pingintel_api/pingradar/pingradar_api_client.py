@@ -79,7 +79,7 @@ class PingRadarAPIClient(APIClientBase):
         search: str | None = None,
         organization__short_name: str | None = None,
     ) -> t.PingRadarListActivityResponse:
-        url = self.api_url + "/api/v1/activity"
+        url = self.api_url + "/api/v1/submission"
 
         kwargs = {}
         if id:

@@ -110,6 +110,12 @@ def _attributes_to_dict(
     "--callback-url", help="(Optional) Provide a URL to which results should be POSTed."
 )
 @click.option(
+    "-I",
+    "--integrations",
+    multiple=True,
+    help="Select integration.",
+)
+@click.option(
     "-o",
     "--output-format",
     multiple=True,
@@ -135,6 +141,7 @@ def fix(
     filename,
     document_type,
     callback_url,
+    integrations,
     output_format,
     client_ref,
     extra_data,
@@ -151,6 +158,7 @@ def fix(
             document_type=document_type,
             callback_url=callback_url,
             actually_write=write,
+            integrations=integrations,
             output_formats=output_format,
             client_ref=client_ref,
             extra_data=extra_data,
