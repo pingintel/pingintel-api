@@ -325,7 +325,7 @@ class SOVFixerAPIClient(APIClientBase):
         raise_for_status(response)
         return response.json()
 
-    def reoutput_sov_init(
+    def init_sov_update(
         self,
         sovid: str,
         client_ref=None,
@@ -334,7 +334,7 @@ class SOVFixerAPIClient(APIClientBase):
     ):
         if not sovid:
             raise ValueError("Invalid sovid.")
-        url = self.api_url + f"/api/v1/sov/{sovid}/reoutput"
+        url = self.api_url + f"/api/v1/sov/{sovid}/initiate_update"
 
         data = {}
         if client_ref:
@@ -356,13 +356,13 @@ class SOVFixerAPIClient(APIClientBase):
         response_data = response.json()
         return response_data
 
-    def reoutput_add_locations(
+    def add_locations_to_sov_update(
         self,
         sudid: str,
         file: IO[bytes] | str,
         filename=None,
     ):
-        url = self.api_url + f"/api/v1/sov/reoutput/{sudid}/add_locations"
+        url = self.api_url + f"/api/v1/sov/update/{sudid}/add_locations"
         if is_fileobj(file):
             if filename is None:
                 raise ValueError("Need filename if file is a file object.")
@@ -388,7 +388,7 @@ class SOVFixerAPIClient(APIClientBase):
         response_data = response.json()
         return response_data
 
-    def reoutput_start(
+    def start_sov_update(
         self,
         sudid: str,
         extra_data=None,
@@ -396,7 +396,7 @@ class SOVFixerAPIClient(APIClientBase):
         policy_terms_format_name=None,
         output_formats=None,
     ):
-        url = self.api_url + f"/api/v1/sov/reoutput/{sudid}/start"
+        url = self.api_url + f"/api/v1/sov/update/{sudid}/start"
         data = {}
         if extra_data:
             data["extra_data"] = extra_data
@@ -419,8 +419,8 @@ class SOVFixerAPIClient(APIClientBase):
         response_data = response.json()
         return response_data
 
-    def reoutput_check_progress(self, sudid):
-        status_url = self.api_url + f"/api/v1/sov/reoutput/{sudid}"
+    def check_sov_update_progress(self, sudid):
+        status_url = self.api_url + f"/api/v1/sov/update/{sudid}"
 
         response = self.get(status_url)
         # pprint.pprint(response.json())
@@ -429,7 +429,7 @@ class SOVFixerAPIClient(APIClientBase):
         response_data = response.json()
         return response_data
 
-    def reoutput_sov(
+    def update_sov(
         self,
         sovid,
         location_filenames,
@@ -442,15 +442,15 @@ class SOVFixerAPIClient(APIClientBase):
         callback_url=None,
     ):
         client = self
-        init_response = client.reoutput_sov_init(sovid, update_type=update_type, callback_url=callback_url)
+        init_response = client.init_sov_update(sovid, update_type=update_type, callback_url=callback_url)
         sudid = init_response["id"]
         # print(init_response)
         for location_filename in location_filenames:
-            client.reoutput_add_locations(
+            client.add_locations_to_sov_update(
                 sudid,
                 location_filename,
             )
-        start_response = client.reoutput_start(
+        start_response = client.start_sov_update(
             sudid,
             extra_data=extra_data,
             policy_terms=policy_terms,
@@ -459,7 +459,7 @@ class SOVFixerAPIClient(APIClientBase):
         )
 
         while 1:
-            response_data = client.reoutput_check_progress(sudid)
+            response_data = client.check_sov_update_progress(sudid)
             request_status = response_data["request"]["status"]
             POLL_SECS = 2.5
             if request_status == "PENDING":
@@ -505,60 +505,45 @@ class SOVFixerAPIClient(APIClientBase):
                 )
             return sudid
         else:
-            log("* Reoutput failed!  Raw API output:")
+            log("* SOV Update failed!  Raw API output:")
             log(response_data)
             return False
 
-    def reoutput_regen_start(
-        self,
-        sudid: str,
-        output_formats: list[str],
-    ):
-        url = self.api_url + f"/api/v1/sov/reoutput/{sudid}/regen"
-
+    def start_get_output(self, sovid_or_sud: str, output_format: str, revision: int = -1, overwrite_existing=False):
+        url = self.api_url + f"/api/v1/sov/{sovid_or_sud}/get_or_create_output"
         data = {}
-        if output_formats:
-            data["output_formats"] = output_formats
-
-        response = self.post(url, json=data)
-        if response.status_code == 200:
-            pass
-            pprint.pprint(response.json())
-        else:
-            pprint.pprint(response.text)
-
+        if output_format:
+            data["output_format"] = output_format
+        if revision is not None:
+            data["revision"] = revision
+        if overwrite_existing:
+            data["overwrite_existing"] = overwrite_existing
+        
+        response = self.post(url, data=data)
         raise_for_status(response)
+        return response.json()
+    
+    def check_get_output_progress(self, output_request_id: str):
+        url = self.api_url + f"/api/v1/sov/get_or_create_output/{output_request_id}"
+        response = self.get(url)
+        return response.json()
 
-        response_data = response.json()
-        return response_data
-
-    def reoutput_regen_result(self, id):
-        status_url = self.api_url + f"/api/v1/sov/reoutput/regen/{id}"
-
-        response = self.get(status_url)
-        if response.status_code == 200:
-            pass
-            pprint.pprint(response.json())
-        else:
-            pprint.pprint(response.text)
-        raise_for_status(response)
-
-        response_data = response.json()
-        return response_data
-
-    def reoutput_regen(
-        self,
-        sudid: str,
-        output_formats: list[str],
-        timeout: int = 30,
-    ):
-        response = self.reoutput_regen_start(sudid, output_formats)
-        regen_id = response.get("id", None)
-
-        for i in range(timeout):
-            response = self.reoutput_regen_result(regen_id)
-            regen_status = response.get('request', {}).get('status')
-            if regen_status == 'COMPLETE' or regen_status == 'FAILED':
+    def get_or_create_output(self,sovid_or_sud: str, output_format: str, revision: int = -1, overwrite_existing=False):    
+        client = self
+        
+        start_response = client.start_get_output(sovid_or_sud, output_format, revision, overwrite_existing)
+        
+        output_request_id = start_response["request"]["id"]
+        while 1:
+            response_data = client.check_get_output_progress(output_request_id)
+            request_status = response_data["request"]["status"]
+            POLL_SECS = 2.5
+            if request_status == "PENDING":
+                log("  - Has not yet been queued for processing.")
+                time.sleep(POLL_SECS)
+            elif request_status == "IN_PROGRESS":
+                log(f"  - Still in progress: {request_status}")
+                time.sleep(POLL_SECS)
+            else:
                 break
-            time.sleep(1)
-        return response
+        return response_data
