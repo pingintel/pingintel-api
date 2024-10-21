@@ -189,6 +189,7 @@ class SOVFixerAPIClient(APIClientBase):
         callback_url=None,
         actually_write=False,
         output_formats=None,
+        integrations=None,
         client_ref=None,
         extra_data=None,
     ):
@@ -198,6 +199,7 @@ class SOVFixerAPIClient(APIClientBase):
             document_type=document_type,
             callback_url=callback_url,
             output_formats=output_formats,
+            integrations=integrations,
             client_ref=client_ref,
             extra_data=extra_data,
         )
