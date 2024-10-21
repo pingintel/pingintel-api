@@ -1,4 +1,4 @@
-from typing import TypedDict
+from typing import TypedDict, Literal, Any
 
 
 class PingRadarListActivityDetailDocumentResponse(TypedDict):
@@ -7,6 +7,7 @@ class PingRadarListActivityDetailDocumentResponse(TypedDict):
     processing_status: str
     url: str
     created_time: str
+    actions: list[Literal["download", "archive", "unarchive", "sovfixer-parse"]]
 
 
 class PingRadarListActivityDetailResponse(TypedDict):
@@ -14,6 +15,7 @@ class PingRadarListActivityDetailResponse(TypedDict):
     claimed_by_id: str | None
     company__name: str | None
     company__short_name: str | None
+    claimed_by__username: str | None
     created_time: str
     division__name: str
     division__short_name: str
@@ -26,6 +28,24 @@ class PingRadarListActivityDetailResponse(TypedDict):
     team__name: str | None
     workflow_status__name: str | None
     workflow_status_id: int | None
+    ping_maps: dict[str, str | int | None]
+
+    data_readiness_score: float
+    data_readiness_notes: list[dict[str, Any]]
+    global_request_id: str | None
+    # extra_data
+    # inception_date
+    insured_name: str | None
+    insured_street: str | None
+    insured_city: str | None
+    insured_state: str | None
+    insured_zip: str | None
+    insured_fein: str | None
+    home_state: str | None
+    # broker
+    insured_business_description: str | None
+    triage_rule_results: list[dict[str, str | None]]
+    triage_rules_overall_result: Literal["A", "D", "C"]
 
 
 class PingRadarListActivityResponse(TypedDict):
