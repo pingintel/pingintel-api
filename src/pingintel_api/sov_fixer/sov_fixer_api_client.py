@@ -530,7 +530,7 @@ class SOVFixerAPIClient(APIClientBase):
         response = self.get(url)
         return response.json()
 
-    def get_or_create_output(self,sovid_or_sud: str, output_format: str, revision: int = -1, overwrite_existing=False):    
+    def get_or_create_output(self,sovid_or_sud: str, output_format: str, revision: int = -1, overwrite_existing=False) -> t.OutputData:    
         client = self
         
         start_response = client.start_get_output(sovid_or_sud, output_format, revision, overwrite_existing)
