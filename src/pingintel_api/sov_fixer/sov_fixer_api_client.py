@@ -548,4 +548,11 @@ class SOVFixerAPIClient(APIClientBase):
                 time.sleep(POLL_SECS)
             else:
                 break
-        return response_data
+        result = response_data.get("result", {})
+        output = t.OutputData(
+            label=result.get("label", ""), 
+            scrubbed_filename=result.get("scrubbed_filename", ""), 
+            output_format=result.get("output_format", output_format), 
+            url=result.get("url", "")
+        )
+        return output
