@@ -13,17 +13,13 @@ policy_terms = {
       {
         "name": "5M",
         "limit": 5000000,
-        "participation": {
-          "amount": 5000000
-        }
+        "participation": 1.0
       },
       {
         "name": "10M xs 5M",
         "attachment": 5000000,
         "limit": 10000000,
-        "participation": {
-          "amount": 8000000
-        }
+        "participation": 0.75
       }
     ],
     "peril_terms": {
@@ -43,9 +39,7 @@ policy_terms = {
         ],
         "sublimit": 2000000,
         "location_deductible_type": "C",
-        "location_deductible": {
-          "percent": 0.05
-        }
+        "location_deductible": 0.05
       },
       "HU": {
         "subperil_types": [
@@ -90,9 +84,7 @@ policy_terms = {
         "AllOther": {
           "is_excluded": False,
           "location_deductible_type": "S",
-          "location_deductible": {
-            "percent": 0.03
-          }
+          "location_deductible": 0.03
         }
       },
       "IF": {
@@ -117,5 +109,5 @@ api_client.reoutput_sov(
     policy_terms=policy_terms, 
     policy_terms_format_name="PINGv2", 
     actually_write=True, 
-    output_formats=["JSON", "AMRISC"]
+    output_formats=["JSON", "AMRISC"],
 )
