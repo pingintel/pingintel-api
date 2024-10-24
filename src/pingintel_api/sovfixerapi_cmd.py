@@ -62,9 +62,7 @@ def get_client(ctx) -> SOVFixerAPIClient:
     environment = ctx.obj["environment"]
     auth_token = ctx.obj["auth_token"]
     api_url = ctx.obj["api_url"]
-    client = SOVFixerAPIClient(
-        environment=environment, auth_token=auth_token, api_url=api_url
-    )
+    client = SOVFixerAPIClient(environment=environment, auth_token=auth_token, api_url=api_url)
     return client
 
 
@@ -77,9 +75,7 @@ def get_client(ctx) -> SOVFixerAPIClient:
 #     click.echo(f"[{timestamp} T+{elapsed:.1f}s] {msg}")
 
 
-def _attributes_to_dict(
-    ctx: click.Context, attribute: click.Option, attributes: tuple[str, ...]
-) -> dict[str, str]:
+def _attributes_to_dict(ctx: click.Context, attribute: click.Option, attributes: tuple[str, ...]) -> dict[str, str]:
     """Click callback that converts attributes specified in the form `key=value` to a
     dictionary. Thanks to https://stackoverflow.com/a/76601290/237091"""
     result = {}
@@ -94,21 +90,15 @@ def _attributes_to_dict(
 
 @cli.command()
 @click.pass_context
-@click.argument(
-    "filename", nargs=-1, required=True, type=click.Path(exists=True, dir_okay=False)
-)
+@click.argument("filename", nargs=-1, required=True, type=click.Path(exists=True, dir_okay=False))
 @click.option(
     "-d",
     "--document-type",
-    type=click.Choice(
-        ["SOV", "PREM_BDX", "CLAIM_BDX", "SOV_BDX", "ACORD"], case_sensitive=False
-    ),
+    type=click.Choice(["SOV", "PREM_BDX", "CLAIM_BDX", "SOV_BDX", "ACORD"], case_sensitive=False),
     default="SOV",
     help="Identify `filename` document type.  Defaults to SOV.",
 )
-@click.option(
-    "--callback-url", help="(Optional) Provide a URL to which results should be POSTed."
-)
+@click.option("--callback-url", help="(Optional) Provide a URL to which results should be POSTed.")
 @click.option(
     "-I",
     "--integrations",
@@ -226,9 +216,7 @@ def sov(environment, auth_token, search, output_path):
 
     if output_path:
         for output_ret in output_data:
-            client.activity_download(
-                output_ret, actually_write=True, output_path=output_path
-            )
+            client.activity_download(output_ret, actually_write=True, output_path=output_path)
 
 
 def main():

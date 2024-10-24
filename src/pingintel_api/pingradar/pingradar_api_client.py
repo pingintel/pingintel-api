@@ -32,9 +32,7 @@ class PingRadarAPIClient(APIClientBase):
     ) -> t.PingRadarCreateSubmissionResponse:
         url = self.api_url + "/api/v1/submission"
 
-        multiple_files: (
-            list[tuple[str, tuple[str, BinaryIO]]] | dict[str, tuple[str, BinaryIO]]
-        ) = []
+        multiple_files: list[tuple[str, tuple[str, BinaryIO]]] | dict[str, tuple[str, BinaryIO]] = []
         for filepath in filepaths:
             files = ("files", (os.path.basename(filepath), open(filepath, "rb")))
             multiple_files.append(files)
@@ -57,9 +55,7 @@ class PingRadarAPIClient(APIClientBase):
         response_data = response.json()
         return response_data
 
-    def get_submission_detail(
-        self, pingid: str
-    ):  # -> t.PingRadarSubmissionDetailResponse:
+    def get_submission_detail(self, pingid: str):  # -> t.PingRadarSubmissionDetailResponse:
         url = self.api_url + f"/api/v1/submission/{pingid}"
 
         response = self.get(url)
@@ -110,9 +106,7 @@ class PingRadarAPIClient(APIClientBase):
     @overload
     def download_document(self, output_path_or_stream, pingid: str, filename: str): ...
 
-    def download_document(
-        self, output_path_or_stream, document_url=None, pingid=None, filename=None
-    ):
+    def download_document(self, output_path_or_stream, document_url=None, pingid=None, filename=None):
         if not document_url:
             encoded_filename = urllib.parse.quote(filename)
             document_url = f"/api/v1/submission/{pingid}/document/{encoded_filename}"

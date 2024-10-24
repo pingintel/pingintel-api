@@ -31,3 +31,9 @@ files = ["requirements.txt"]
 sovfixerapi = "pingintel_api.sovfixerapi_cmd:main"
 pingradarapi = "pingintel_api.pingradarapi_cmd:main"
 pingdataapi = "pingintel_api.pingdataapi_cmd:main"
+
+[tool.black]
+line-length = 120
+
+[tool.isort]
+profile = "black"

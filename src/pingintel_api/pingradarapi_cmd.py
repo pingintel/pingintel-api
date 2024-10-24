@@ -61,17 +61,13 @@ def get_client(ctx) -> PingRadarAPIClient:
     environment = ctx.obj["environment"]
     auth_token = ctx.obj["auth_token"]
     api_url = ctx.obj["api_url"]
-    client = PingRadarAPIClient(
-        environment=environment, auth_token=auth_token, api_url=api_url
-    )
+    client = PingRadarAPIClient(environment=environment, auth_token=auth_token, api_url=api_url)
     return client
 
 
 @cli.command()
 @click.pass_context
-@click.argument(
-    "filename", nargs=-1, required=True, type=click.Path(exists=True, dir_okay=False)
-)
+@click.argument("filename", nargs=-1, required=True, type=click.Path(exists=True, dir_okay=False))
 # @click.option("--client-ref")
 @click.option(
     "--poll-until-ready",
@@ -140,9 +136,7 @@ def activity(ctx, pretty, id, cursor_id, prev_cursor_id, page_size, fields, sear
                 f"{activity['id'] or '*null*':<36}{activity['workflow_status__name'] or '*null*':<30}{created_time:<20}"
             )
             for doc in activity["documents"]:
-                print(
-                    f"  {doc['filename']:<40} {doc['processing_status']:<12} {doc['url']}"
-                )
+                print(f"  {doc['filename']:<40} {doc['processing_status']:<12} {doc['url']}")
     else:
         pprint.pprint(results)
 

@@ -80,9 +80,7 @@ class SOVFixerAPIClient(APIClientBase):
         sov_id = response_data["id"]
         message = response_data["message"]
         status_url = self.api_url + f"/api/v1/sov/{sov_id}"
-        log(
-            f"+ Dispatched {sov_id}: {message}.  Now, polling for results at {status_url}."
-        )
+        log(f"+ Dispatched {sov_id}: {message}.  Now, polling for results at {status_url}.")
         return response_data
 
     def fix_sov_async_check_progress(self, sovid_or_start_ret) -> t.FixSOVResponse:
@@ -125,17 +123,11 @@ class SOVFixerAPIClient(APIClientBase):
             assert output_url.startswith("/"), f"Invalid output URL: {output_url}"
             output_url = self.api_url + output_url
 
-        if (
-            self.environment
-            and self.environment == "local2"
-            and "api-local.sovfixer.com" in output_url
-        ):
+        if self.environment and self.environment == "local2" and "api-local.sovfixer.com" in output_url:
             output_url = output_url.replace("api-local.sovfixer.com", "localhost:8000")
 
         output_description = output_ret.get("description", output_ret.get("label"))
-        output_filename = output_ret.get(
-            "filename", output_ret.get("scrubbed_filename")
-        )
+        output_filename = output_ret.get("filename", output_ret.get("scrubbed_filename"))
         if output_path is None:
             output_path = output_filename
 
@@ -210,9 +202,7 @@ class SOVFixerAPIClient(APIClientBase):
         )
 
         while 1:
-            response_data = sov_fixer_client.fix_sov_async_check_progress(
-                start_response
-            )
+            response_data = sov_fixer_client.fix_sov_async_check_progress(start_response)
             # raise_for_status(response_data)
             # pprint.pprint(response_data)
 
@@ -238,14 +228,8 @@ class SOVFixerAPIClient(APIClientBase):
             log("Complete!  Fetching outputs.")
             for output in response_data["result"]["outputs"]:
                 output_url = output["url"]
-                if (
-                    self.environment
-                    and self.environment == "local2"
-                    and "api-local.sovfixer.com" in output_url
-                ):
-                    output_url = output_url.replace(
-                        "api-local.sovfixer.com", "localhost:8000"
-                    )
+                if self.environment and self.environment == "local2" and "api-local.sovfixer.com" in output_url:
+                    output_url = output_url.replace("api-local.sovfixer.com", "localhost:8000")
 
                 output_filename = output["filename"]
 
@@ -253,9 +237,7 @@ class SOVFixerAPIClient(APIClientBase):
 
                 if actually_write:
                     if os.path.exists(output_path):
-                        yesno = input(
-                            f"Do you want to overwrite the existing file {output_path} [y/N]? "
-                        )
+                        yesno = input(f"Do you want to overwrite the existing file {output_path} [y/N]? ")
                         if yesno.lower() != "y":
                             continue
 
@@ -479,14 +461,8 @@ class SOVFixerAPIClient(APIClientBase):
             log("Complete!  Fetching outputs.")
             for output in response_data["result"]["outputs"]:
                 output_url = output["url"]
-                if (
-                    self.environment
-                    and self.environment == "local2"
-                    and "api-local.sovfixer.com" in output_url
-                ):
-                    output_url = output_url.replace(
-                        "api-local.sovfixer.com", "localhost:8000"
-                    )
+                if self.environment and self.environment == "local2" and "api-local.sovfixer.com" in output_url:
+                    output_url = output_url.replace("api-local.sovfixer.com", "localhost:8000")
 
                 output_filename = output["filename"]
 
@@ -494,9 +470,7 @@ class SOVFixerAPIClient(APIClientBase):
 
                 if actually_write:
                     if os.path.exists(output_path):
-                        yesno = input(
-                            f"Do you want to overwrite the existing file {output_path} [y/N]? "
-                        )
+                        yesno = input(f"Do you want to overwrite the existing file {output_path} [y/N]? ")
                         if yesno.lower() != "y":
                             continue
 
@@ -520,21 +494,23 @@ class SOVFixerAPIClient(APIClientBase):
             data["revision"] = revision
         if overwrite_existing:
             data["overwrite_existing"] = overwrite_existing
-        
+
         response = self.post(url, data=data)
         raise_for_status(response)
         return response.json()
-    
+
     def check_get_output_progress(self, output_request_id: str):
         url = self.api_url + f"/api/v1/sov/get_or_create_output/{output_request_id}"
         response = self.get(url)
         return response.json()
 
-    def get_or_create_output(self,sovid_or_sud: str, output_format: str, revision: int = -1, overwrite_existing=False) -> t.OutputData:    
+    def get_or_create_output(
+        self, sovid_or_sud: str, output_format: str, revision: int = -1, overwrite_existing=False
+    ) -> t.OutputData:
         client = self
-        
+
         start_response = client.start_get_output(sovid_or_sud, output_format, revision, overwrite_existing)
-        
+
         output_request_id = start_response["request"]["id"]
         while 1:
             response_data = client.check_get_output_progress(output_request_id)
@@ -550,9 +526,9 @@ class SOVFixerAPIClient(APIClientBase):
                 break
         result = response_data.get("result", {})
         output = t.OutputData(
-            label=result.get("label", ""), 
-            scrubbed_filename=result.get("scrubbed_filename", ""), 
-            output_format=result.get("output_format", output_format), 
-            url=result.get("url", "")
+            label=result.get("label", ""),
+            scrubbed_filename=result.get("scrubbed_filename", ""),
+            output_format=result.get("output_format", output_format),
+            url=result.get("url", ""),
         )
         return output

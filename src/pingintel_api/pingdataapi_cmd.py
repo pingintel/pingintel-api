@@ -61,9 +61,7 @@ def get_client(ctx) -> PingDataAPIClient:
     environment = ctx.obj["environment"]
     auth_token = ctx.obj["auth_token"]
     api_url = ctx.obj["api_url"]
-    client = PingDataAPIClient(
-        environment=environment, auth_token=auth_token, api_url=api_url
-    )
+    client = PingDataAPIClient(environment=environment, auth_token=auth_token, api_url=api_url)
     return client
 
 

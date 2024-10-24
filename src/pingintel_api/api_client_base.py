@@ -20,9 +20,7 @@ class APIClientBase:
     include_legacy_dashes: bool = False
 
     @overload
-    def __init__(
-        self, api_url: str, environment: str | None = None, auth_token=None
-    ) -> None:
+    def __init__(self, api_url: str, environment: str | None = None, auth_token=None) -> None:
         """Initialize the API client with an API URL and an optional auth token.
 
         :param api_url: The URL of the API.  e.g. "https://radar.pingintel.com"
@@ -53,9 +51,7 @@ class APIClientBase:
             if environment:
                 serverspace = self.get_serverspace_from_environment(environment)
                 try:
-                    auth_token = config.get(
-                        self.product, f"{self.auth_token_env_name}_{serverspace}"
-                    )
+                    auth_token = config.get(self.product, f"{self.auth_token_env_name}_{serverspace}")
                 except (configparser.NoOptionError, configparser.NoSectionError):
                     pass
             if not auth_token:
@@ -114,9 +110,7 @@ class APIClientBase:
             elif environment == "local":
                 return "http://api-local.sovfixer.com"
             else:
-                return (
-                    f"https://{self.api_subdomain}-{environment}.{self.api_base_domain}"
-                )
+                return f"https://{self.api_subdomain}-{environment}.{self.api_base_domain}"
         else:
             return f"https://{self.api_subdomain}.{environment}.{self.api_base_domain}"
 
