@@ -25,6 +25,7 @@ pingdataapi.py
 Example Python commandline script for using the Ping Data Technologies Data API to enhance locations with additional data.
 """
 
+
 @click.group()
 @click.option(
     "-e",
@@ -85,34 +86,15 @@ def log(msg):
     type=click.Choice(SOURCES.get_options(), case_sensitive=False),
     required=True,
 )
-
-@click.option(
-    "-o",
-    "--output-format",
-    multiple=True,
-    help="Select output format.",
-)
-@click.option("--client-ref")
-
-@click.option(
-    "--write",
-    "--no-write",
-    is_flag=True,
-    default=False,
-    help="If set, actually write the output. Otherwise, download as a test but do not write.",
-)
-@click.option('--occupancy', 'occupancy__desc_ping', help="(Optional) Occupancy for E2Value")
-@click.option('--area', 'const__bldg_area', help="(Optional) Building sqft for E2Value")
-
 def enhance(
     ctx: click.Context,
     address: list[str],
     sources: list[str],
-    timeout:float|None=None,
-    include_raw_response:bool=False,
-    extra_location_kwargs: dict|None=None,
+    timeout: float | None = None,
+    include_raw_response: bool = False,
+    extra_location_kwargs: dict | None = None,
 ):
-    
+
     if not extra_location_kwargs:
         extra_location_kwargs = {}
 
