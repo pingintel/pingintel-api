@@ -50,10 +50,10 @@ api_client = PingDataAPIClient(environment="dev")
 
 addresses = [
     "42 Galaxy St, Fort Liberty, NC 28307",
-    "42 Adams Street, Quincy, MA", 
+    "42 Adams Street, Quincy, MA",
     "42 Dolphin St, Hitchcock, TX 77563, USA",
 ]
-pprint(f"Don't Panic! Processing address enhancement for {addresses} . . . ") 
+pprint(f"Don't Panic! Processing address enhancement for {addresses} . . . ")
 print()
 
 for address in addresses:
@@ -62,20 +62,22 @@ for address in addresses:
         result = api_client.enhance_data(
             address=[address],
             sources=["GG"],  # Using Google Geocoding source as an example
-            timeout=42, 
-            include_raw_response=False
+            timeout=42,
+            include_raw_response=False,
         )
         pprint(result)
-        
+
         # Example of accessing specific fields
-        if result.get('location_data', {}).get('GG', {}).get('is_success'):
-            location = result['location_data']['GG']
-            print(f"""Extracted location details:
+        if result.get("location_data", {}).get("GG", {}).get("is_success"):
+            location = result["location_data"]["GG"]
+            print(
+                f"""Extracted location details:
                Latitude: {location['latitude']}
                Longitude: {location['longitude']}
                Formatted Address: {location['formatted_address']}
                Confidence: {location['confidence']}
-               Precision: {location['precision']}""")
-            print()        
+               Precision: {location['precision']}"""
+            )
+            print()
     except Exception as e:
         pprint(f"Failed to enhance address - Time to consult the Guide: {str(e)}")
