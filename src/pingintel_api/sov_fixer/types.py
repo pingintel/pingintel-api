@@ -1,7 +1,7 @@
 # Copyright 2021-2024 Ping Data Intelligence
 import enum
 from datetime import datetime
-from typing import Any, Dict, List, NotRequired, Optional, TypedDict
+from typing import Any, NotRequired, TypedDict
 
 from ..common_types import PingMapsStatus
 
@@ -38,15 +38,6 @@ class FixSOVResponseRequest(TypedDict):
     last_health_check_time: str
     last_health_status: str
     pct_complete: int
-
-
-class OutputData(TypedDict):
-    label: str
-    # sovid: str
-    scrubbed_filename: str
-    # sov_data_id: int
-    output_format: str
-    url: str
 
 
 class FixSOVResponseResultOutput(TypedDict):

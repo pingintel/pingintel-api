@@ -66,7 +66,7 @@ class APIClientBase:
 
         if not auth_token:
             raise ValueError(
-                f"Provide auth_token as a parameter, in ~/.pingintel.ini, or set {self.auth_token_env_name} environment variable."
+                f"Provide auth_token as a parameter, in ~/.pingintel.ini ([{self.product}] {self.auth_token_env_name}_{serverspace} or [{self.product}] {self.auth_token_env_name}), or set {self.auth_token_env_name} environment variable."
             )
         assert api_url
         self.api_url = api_url
