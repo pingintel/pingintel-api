@@ -3,6 +3,8 @@ import enum
 from datetime import datetime
 from typing import Any, Dict, List, NotRequired, Optional, TypedDict
 
+from ..common_types import PingMapsStatus
+
 
 class SOV_STATUS(str, enum.Enum):
     PENDING = "PENDING"
@@ -119,8 +121,9 @@ class SOVData(TypedDict):
     progress_started_time: str | None
     parsing_completed_time: str | None
     pingdata_stats: dict[str, dict[str, int]] | None
-    data_readiness_score: NotRequired[int]
-    data_readiness_notes: NotRequired[list[dict[str, str | int]]]
+    ping_maps: NotRequired[PingMapsStatus | None]
+    data_readiness_score: NotRequired[int | None]
+    data_readiness_notes: NotRequired[list[dict[str, str | int]] | None]
 
 
 class ActivityResponse(TypedDict):

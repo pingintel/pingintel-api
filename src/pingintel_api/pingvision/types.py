@@ -1,4 +1,6 @@
-from typing import TypedDict
+from typing import TypedDict, NotRequired
+
+from ..common_types import PingMapsStatus
 
 
 class PingVisionListActivityDetailDocumentResponse(TypedDict):
@@ -26,6 +28,7 @@ class PingVisionListActivityDetailResponse(TypedDict):
     team__name: str | None
     workflow_status__name: str | None
     workflow_status_id: int | None
+    ping_maps: NotRequired[PingMapsStatus | None]
 
 
 class PingVisionListActivityResponse(TypedDict):
