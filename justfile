@@ -16,3 +16,6 @@ sovfixerapi *args:
 
 pingradarapi *args:
     hatch run pingradarapi {{ args }}
+
+pingdataapi *args:
+    hatch run pingdataapi {{ args }}
