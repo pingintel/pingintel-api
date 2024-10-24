@@ -10,9 +10,7 @@ SCRIPT_DIR = pathlib.Path(__file__).parent
 
 api_client = PingRadarAPIClient(environment="dev")
 
-ret = api_client.create_submission(
-    files={"files": ("test_sov.xlsx", open(SCRIPT_DIR / "test_sov.xlsx", "rb"))}
-)
+ret = api_client.create_submission(filepaths=[SCRIPT_DIR / "test_sov.xlsx"])
 print(f"pingid: {ret['id']}")
 activity_results = api_client.list_submission_activity(page_size=5)
 
