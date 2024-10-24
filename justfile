@@ -14,5 +14,5 @@ publish:
 sovfixerapi *args:
     hatch run sovfixerapi {{ args }}
 
-pingvisionapi *args:
-    hatch run pingvisionapi {{ args }}
+pingradarapi *args:
+    hatch run pingradarapi {{ args }}
