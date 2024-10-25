@@ -52,6 +52,7 @@ addresses = [
     "42 Galaxy St, Fort Liberty, NC 28307",
     "42 Adams Street, Quincy, MA",
     "42 Dolphin St, Hitchcock, TX 77563, USA",
+    "Café at the End of the Universe 2800 E Observatory Rd, Los Angeles, CA 90027",
 ]
 pprint(f"Don't Panic! Processing address enhancement for {addresses} . . . ")
 print()
