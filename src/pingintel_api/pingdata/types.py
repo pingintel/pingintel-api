@@ -1,4 +1,5 @@
 # Copyright 2021-2024 Ping Data Intelligence
+from typing import Any, Dict, List, NotRequired, Optional, TypedDict
 import enum
 
 
@@ -87,3 +88,38 @@ class RequestStatus(str, enum.Enum):
 
 class ResultStatus(str, enum.Enum):
     SUCCESS = "SUCCESS"
+
+
+class Location(TypedDict):
+    address: NotRequired[str | None]
+    latitude: NotRequired[float | None]
+    longitude: NotRequired[float | None]
+    limits__building_limit: NotRequired[float | None]
+    limits__bpp_limit: NotRequired[float | None]
+    limits__bi_limit: NotRequired[float | None]
+    address_line_1: NotRequired[str | None]
+    address_line_2: NotRequired[str | None]
+    city: NotRequired[str | None]
+    state: NotRequired[str | None]
+    postal_code: NotRequired[str | None]
+    country: NotRequired[str | None]
+    county: NotRequired[str | None]
+    bldg_name: NotRequired[str | None]
+    # ping_occupancy_data: NotRequired[str | None]
+    # llm_text_blob: NotRequired[str | None]
+    # address_field_data: NotRequired[str | None]
+    occupancy__type_desc: NotRequired[str | None]
+    occupancy__desc_ping: NotRequired[str | None]
+    occupancy__code_air: NotRequired[str | None]
+    occupancy__code_atc: NotRequired[str | None]
+    const__desc_ping: NotRequired[str | None]
+    const__code_rms: NotRequired[str | None]
+    const__code_air: NotRequired[str | None]
+    const__roof_covering: NotRequired[str | None]
+    const__wall_type: NotRequired[str | None]
+    const__bldg_year_built: NotRequired[int | None]
+    const__num_stories: NotRequired[int | None]
+    const__bldg_area: NotRequired[int | None]
+    dtc_include_coastline_within_miles: NotRequired[float | None]
+    dtc_return_connected_coastlines: NotRequired[bool | None]
+    insured_name: NotRequired[str | None]

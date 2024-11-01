@@ -84,26 +84,38 @@ def log(msg):
     type=click.Choice(SOURCES.get_options(), case_sensitive=False),
     required=True,
 )
+@click.option("-c", "--country", type=str, default=None, help="Optional. Provides a country hint to the geocoders.")
+@click.option("--latitude", type=float, default=None, help="Optional. Specify latitude.")
+@click.option("--longitude", type=float, default=None, help="Optional. Specify longitude.")
+@click.option("--timeout", type=float, default=None, help="Optional. Maximum time to wait for response in seconds.")
+@click.option("-r", "--include-raw-response", is_flag=True, help="Optional. Include raw response from all sources.")
+@click.option("--nocache", is_flag=True, help="If set, do not use cache.")
 def enhance(
     ctx: click.Context,
-    address: list[str],
+    address: str,
     sources: list[str],
+    country: str | None,
+    latitude: float | None,
+    longitude: float | None,
     timeout: float | None = None,
     include_raw_response: bool = False,
-    extra_location_kwargs: dict | None = None,
+    nocache: bool = False,
+    # extra_location_kwargs: dict | None = None,
 ):
-
-    if not extra_location_kwargs:
-        extra_location_kwargs = {}
+    # if not extra_location_kwargs:
+    #     extra_location_kwargs = {}
 
     client = get_client(ctx)
 
     response_data = client.enhance_data(
         address=address,
+        country=country,
+        latitude=latitude,
+        longitude=longitude,
         sources=sources,
         timeout=timeout,
         include_raw_response=include_raw_response,
-        extra_location_kwargs=extra_location_kwargs,
+        nocache=nocache,
     )
     click.echo(f"+ Finished querying with result:\n{pprint.pformat(response_data)}")
 

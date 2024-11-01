@@ -3,8 +3,10 @@
 # Copyright 2021-2024 Ping Data Intelligence
 
 import logging
+from typing import Unpack
 
 from pingintel_api.api_client_base import APIClientBase
+from pingintel_api.pingdata import types as t
 
 from ..utils import raise_for_status
 
@@ -20,11 +22,12 @@ class PingDataAPIClient(APIClientBase):
 
     def enhance_data(
         self,
-        address: list[str],
+        *,
         sources: list[str],
         timeout: float | None = None,
         include_raw_response: bool = False,
-        extra_location_kwargs: dict | None = None,
+        nocache: bool = False,
+        **extra_location_kwargs: Unpack[t.Location],
     ):
         """
         Enhance one or more locations with additional geocoding data.
@@ -37,6 +40,9 @@ class PingDataAPIClient(APIClientBase):
                        Example: ["GG"] for Google Geocoding
         :type sources: list[str]
 
+        :param country: Optional ISO2A country code to provide a hint to the geocoder.
+        :type country: str|None
+
         :param timeout: Maximum time to wait for response in seconds.
                        If None, uses default timeout.
         :type timeout: float|None
@@ -44,10 +50,6 @@ class PingDataAPIClient(APIClientBase):
         :param include_raw_response: If True, includes the complete raw response from
                                     geocoding services in the result.
         :type include_raw_response: bool
-
-        :param extra_location_kwargs: Optional dictionary of additional parameters for
-                                    location processing.
-        :type extra_location_kwargs: dict|None
 
         :return: Dictionary containing enhanced location data for each address,
                 including coordinates, formatted addresses, and confidence scores.
@@ -60,7 +62,7 @@ class PingDataAPIClient(APIClientBase):
         if not extra_location_kwargs:
             extra_location_kwargs = {}
 
-        data = {"address": address, **extra_location_kwargs}
+        data = {**extra_location_kwargs}
 
         url = self.api_url + "/api/v1/enhance"
 
@@ -69,6 +71,9 @@ class PingDataAPIClient(APIClientBase):
 
         data["sources"] = sources
         data["include_raw_response"] = include_raw_response
+
+        if nocache:
+            data["check_cache"] = False
 
         response = self.get(url, params=data)
 
