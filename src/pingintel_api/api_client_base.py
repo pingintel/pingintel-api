@@ -12,6 +12,10 @@ from .utils import is_fileobj, log
 from pingintel_api.__about__ import __version__
 
 
+class AuthTokenNotFound(Exception):
+    pass
+
+
 class APIClientBase:
     api_subdomain: str
     api_base_domain: str
@@ -45,6 +49,7 @@ class APIClientBase:
             auth_token = self.get_auth_token_by_environment(environment)
         if not auth_token:
             auth_token = os.environ.get(self.auth_token_env_name)
+        serverspace = None
         if not auth_token:
             config = configparser.ConfigParser()
             config.read(os.path.expanduser("~/.pingintel.ini"))
@@ -60,10 +65,18 @@ class APIClientBase:
                 except (configparser.NoOptionError, configparser.NoSectionError):
                     pass
 
+        auth_token = None
         if not auth_token:
-            raise ValueError(
-                f"Provide auth_token as a parameter, in ~/.pingintel.ini ([{self.product}] {self.auth_token_env_name}_{serverspace} or [{self.product}] {self.auth_token_env_name}), or set {self.auth_token_env_name} environment variable."
+            s = []
+            s.append(f"No auth_token was found.  Please provide it via:")
+            s.append(f"   * --auth-token on commandline")
+            s.append(f"   * {self.auth_token_env_name} environment variable")
+            s.append(f"   * In ~/.pingintel.ini, under [{self.product}] as {self.auth_token_env_name}")
+            s.append(
+                f"   * In ~/.pingintel.ini, under [{self.product}] as {self.auth_token_env_name}_{(serverspace or '<environment>').upper()}"
             )
+
+            raise AuthTokenNotFound("\n".join(s))
         assert api_url
         self.api_url = api_url
         self.auth_token = auth_token

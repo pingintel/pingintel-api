@@ -10,6 +10,7 @@ import click
 
 from pingintel_api import PingDataAPIClient
 
+from pingintel_api.api_client_base import AuthTokenNotFound
 from pingintel_api.pingdata.types import SOURCES
 
 logger = logging.getLogger(__name__)
@@ -61,7 +62,12 @@ def get_client(ctx) -> PingDataAPIClient:
     environment = ctx.obj["environment"]
     auth_token = ctx.obj["auth_token"]
     api_url = ctx.obj["api_url"]
-    client = PingDataAPIClient(environment=environment, auth_token=auth_token, api_url=api_url)
+    try:
+        client = PingDataAPIClient(environment=environment, auth_token=auth_token, api_url=api_url)
+    except AuthTokenNotFound as e:
+        click.echo(e)
+        raise click.Abort()
+
     return client
 
 

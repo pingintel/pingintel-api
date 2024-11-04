@@ -11,6 +11,7 @@ from timeit import default_timer as timer
 import click
 
 from pingintel_api import PingRadarAPIClient
+from pingintel_api.api_client_base import AuthTokenNotFound
 
 logger = logging.getLogger(__name__)
 
@@ -61,7 +62,12 @@ def get_client(ctx) -> PingRadarAPIClient:
     environment = ctx.obj["environment"]
     auth_token = ctx.obj["auth_token"]
     api_url = ctx.obj["api_url"]
-    client = PingRadarAPIClient(environment=environment, auth_token=auth_token, api_url=api_url)
+    try:
+        client = PingRadarAPIClient(environment=environment, auth_token=auth_token, api_url=api_url)
+    except AuthTokenNotFound as e:
+        click.echo(e)
+        raise click.Abort()
+
     return client
 
 
