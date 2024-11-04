@@ -56,7 +56,7 @@ class APIClientBase:
             if environment:
                 serverspace = self.get_serverspace_from_environment(environment)
                 try:
-                    auth_token = config.get(self.product, f"{self.auth_token_env_name}_{serverspace}")
+                    auth_token = config.get(self.product, f"{self.auth_token_env_name}_{serverspace.upper()}")
                 except (configparser.NoOptionError, configparser.NoSectionError):
                     pass
             if not auth_token:
@@ -65,7 +65,6 @@ class APIClientBase:
                 except (configparser.NoOptionError, configparser.NoSectionError):
                     pass
 
-        auth_token = None
         if not auth_token:
             s = []
             s.append(f"No auth_token was found.  Please provide it via:")
