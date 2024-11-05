@@ -104,24 +104,29 @@ def _attributes_to_dict(ctx: click.Context, attribute: click.Option, attributes:
     default="SOV",
     help="Identify `filename` document type.  Defaults to SOV.",
 )
-@click.option("--callback-url", help="(Optional) Provide a URL to which results should be POSTed.")
+@click.option("--callback-url", help="(Optional) Provide a URL to which results should be POSTed.", metavar="URL")
 @click.option(
     "-I",
     "--integrations",
     multiple=True,
-    help="Select integration.",
+    metavar="INTEGRATION_ABBR",
+    help="Request one or more integrations.",
 )
 @click.option(
     "-o",
     "--output-format",
     multiple=True,
-    help="Select output format.",
+    metavar="OUTPUT_FORMAT",
+    help="Select one or more output formats.",
 )
-@click.option("--client-ref")
+@click.option(
+    "--client-ref", help="Arbitrary text, representing a client reference number or other identifier.", metavar="TEXT"
+)
 @click.option(
     "-E",
     "--extra_data",
     help="Extra data to include in the request, in the form key=value. Can be specified multiple times.",
+    metavar="KEY=VALUE",
     multiple=True,
     callback=_attributes_to_dict,
 )
@@ -129,8 +134,14 @@ def _attributes_to_dict(ctx: click.Context, attribute: click.Option, attributes:
     "--write",
     "--no-write",
     is_flag=True,
-    default=False,
+    default=True,
     help="If set, actually write the output. Otherwise, download as a test but do not write.",
+)
+@click.option(
+    "-D",
+    "--delegate-to",
+    metavar="ORG_SHORT_NAME",
+    help="Delegate to another organization. Provide the 'short name' of the desired delegatee.  Requires the `delegate` permission.",
 )
 def fix(
     ctx,
@@ -142,6 +153,7 @@ def fix(
     client_ref,
     extra_data,
     write,
+    delegate_to,
 ):
 
     if isinstance(filename, pathlib.PosixPath):
@@ -158,6 +170,7 @@ def fix(
             output_formats=output_format,
             client_ref=client_ref,
             extra_data=extra_data,
+            delegate_to=delegate_to,
         )
 
 

@@ -188,6 +188,7 @@ class SOVFixerAPIClient(APIClientBase):
         client_ref=None,
         extra_data=None,
         update_callback_url=None,
+        delegate_to=None,
     ):
         sov_fixer_client = self
         start_response = sov_fixer_client.fix_sov_async_start(
@@ -199,6 +200,7 @@ class SOVFixerAPIClient(APIClientBase):
             client_ref=client_ref,
             extra_data=extra_data,
             update_callback_url=update_callback_url,
+            delegate_to=delegate_to,
         )
 
         while 1:
