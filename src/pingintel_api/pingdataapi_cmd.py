@@ -11,7 +11,7 @@ import click
 from pingintel_api import PingDataAPIClient
 
 from pingintel_api.api_client_base import AuthTokenNotFound
-from pingintel_api.pingdata.types import SOURCES
+from pingintel_api.pingdata.types import SOURCES, Location
 
 logger = logging.getLogger(__name__)
 
@@ -113,7 +113,7 @@ def enhance(
 
     client = get_client(ctx)
 
-    response_data = client.enhance_data(
+    response_data = client.enhance(
         address=address,
         country=country,
         latitude=latitude,
@@ -122,6 +122,59 @@ def enhance(
         timeout=timeout,
         include_raw_response=include_raw_response,
         nocache=nocache,
+    )
+    click.echo(f"+ Finished querying with result:\n{pprint.pformat(response_data)}")
+
+
+@cli.command()
+@click.pass_context
+@click.option("-a", "--address", multiple=True)
+@click.option("-f", "--file", type=click.File("r"), help="File containing location data, one per line.")
+@click.option(
+    "-s",
+    "--sources",
+    multiple=True,
+    type=click.Choice(SOURCES.get_options(), case_sensitive=False),
+    # required=True,
+)
+@click.option("--timeout", type=float, default=None, help="Optional. Maximum time to wait for response in seconds.")
+@click.option("-r", "--include-raw-response", is_flag=True, help="Optional. Include raw response from all sources.")
+@click.option("--nocache", is_flag=True, help="If set, do not use cache.")
+@click.option("--fetch-outputs/--no-fetch-outputs", is_flag=True, default=True)
+@click.option("-v", "--verbose", help="Enable verbose output. Can be used up to 3 times.", count=True)
+def bulk_enhance(
+    ctx: click.Context,
+    address: list[str],
+    file: click.File,
+    sources: list[str],
+    timeout: float | None,
+    include_raw_response: bool,
+    nocache: bool,
+    fetch_outputs: bool,
+    verbose: int,
+):
+    client = get_client(ctx)
+
+    locations = []
+    address_id_ctr = 0
+    if address:
+        for addr in address:
+            address_id_ctr += 1
+            locations.append(Location(address=addr, id=f"id_{address_id_ctr:03d}"))
+
+    if file:
+        for line in file:
+            address_id_ctr += 1
+            locations.append(Location(address=line.strip(), id=f"id_{address_id_ctr:03d}"))
+
+    response_data = client.bulk_enhance(
+        locations=locations,
+        sources=sources,
+        timeout=timeout,
+        include_raw_response=include_raw_response,
+        nocache=nocache,
+        fetch_outputs=fetch_outputs,
+        verbose=verbose,
     )
     click.echo(f"+ Finished querying with result:\n{pprint.pformat(response_data)}")
 

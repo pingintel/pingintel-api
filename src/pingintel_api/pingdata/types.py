@@ -91,6 +91,7 @@ class ResultStatus(str, enum.Enum):
 
 
 class Location(TypedDict):
+    id: str
     address: NotRequired[str | None]
     latitude: NotRequired[float | None]
     longitude: NotRequired[float | None]

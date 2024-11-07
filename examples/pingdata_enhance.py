@@ -60,7 +60,7 @@ print()
 for address in addresses:
     try:
         # Make the API call to enhance the address
-        result = api_client.enhance_data(
+        result = api_client.enhance(
             address=[address],
             sources=["GG"],  # Using Google Geocoding source as an example
             timeout=42,
