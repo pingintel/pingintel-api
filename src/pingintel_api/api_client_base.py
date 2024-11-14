@@ -1,4 +1,5 @@
 import configparser
+import logging
 import os
 from typing import overload
 
@@ -7,7 +8,7 @@ import requests
 import requests
 from requests.adapters import HTTPAdapter, Retry
 
-from .utils import is_fileobj, log
+from .utils import is_fileobj
 
 from pingintel_api.__about__ import __version__
 
@@ -29,7 +30,7 @@ class APIClientBase:
 
         :param api_url: The URL of the API.  e.g. "https://radar.pingintel.com"
         """
-        pass
+        ...
 
     @overload
     def __init__(self, environment: str = "prod", auth_token=None) -> None: ...
@@ -40,6 +41,8 @@ class APIClientBase:
         environment: str | None = "prod",
         auth_token=None,
     ):
+        self.logger = logging.getLogger(self.__class__.__name__)
+
         if api_url is None:
             if environment is None:
                 raise ValueError("Need either api_url or environment.")
@@ -83,11 +86,14 @@ class APIClientBase:
         self.session = self._create_session()
 
     def get(self, url, **kwargs):
-        log(f"GET {url}")
+        self.logger.debug(f"GET {url}")
         return self.session.get(url, **kwargs)
 
     def post(self, url, **kwargs):
-        log(f"POST {url}")
+        self.logger.debug(f"POST {url}")
+        if "data" in kwargs:
+            self.logger.debug(f"POST data: {kwargs['data']}")
+        # breakpoint()
         return self.session.post(url, **kwargs)
 
     def _create_session(self):

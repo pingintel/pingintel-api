@@ -15,7 +15,7 @@ import requests
 from pingintel_api.api_client_base import APIClientBase
 
 from .. import constants as c
-from ..utils import is_fileobj, log, raise_for_status
+from ..utils import raise_for_status
 from . import types as t
 
 logger = logging.getLogger(__name__)

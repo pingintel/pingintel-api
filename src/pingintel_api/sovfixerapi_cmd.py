@@ -13,6 +13,7 @@ import click
 
 from pingintel_api import SOVFixerAPIClient
 from pingintel_api.api_client_base import AuthTokenNotFound
+from pingintel_api.utils import set_verbosity
 
 logger = logging.getLogger(__name__)
 
@@ -51,12 +52,16 @@ Example Python commandline script for using the Ping Data Technologies sovfixer 
     "--auth-token",
     help="Provide auth token via --auth-token or SOVFIXER_AUTH_TOKEN environment variable.",
 )
+@click.option(
+    "-v", "--verbose", count=True, help="Can be used multiple times. -v for INFO, -vv for DEBUG, -vvv for very DEBUG."
+)
 @click.pass_context
-def cli(ctx, environment, api_url, auth_token):
+def cli(ctx, environment, api_url, auth_token, verbose):
     ctx.ensure_object(dict)
     ctx.obj["environment"] = environment
     ctx.obj["auth_token"] = auth_token
     ctx.obj["api_url"] = api_url
+    set_verbosity(verbose)
 
 
 def get_client(ctx) -> SOVFixerAPIClient:
@@ -70,15 +75,6 @@ def get_client(ctx) -> SOVFixerAPIClient:
         raise click.Abort()
 
     return client
-
-
-# def log(msg):
-#     global start_time
-#     if start_time is None:
-#         start_time = timer()
-#     elapsed = timer() - start_time
-#     timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
-#     click.echo(f"[{timestamp} T+{elapsed:.1f}s] {msg}")
 
 
 def _attributes_to_dict(ctx: click.Context, attribute: click.Option, attributes: tuple[str, ...]) -> dict[str, str]:
@@ -143,6 +139,12 @@ def _attributes_to_dict(ctx: click.Context, attribute: click.Option, attributes:
     metavar="ORG_SHORT_NAME",
     help="Delegate to another organization. Provide the 'short name' of the desired delegatee.  Requires the `delegate` permission.",
 )
+@click.option(
+    "--noinput",
+    is_flag=True,
+    default=False,
+    help="If set, do not prompt for confirmation.",
+)
 def fix(
     ctx,
     filename,
@@ -154,14 +156,14 @@ def fix(
     extra_data,
     write,
     delegate_to,
+    noinput,
 ):
-
     if isinstance(filename, pathlib.PosixPath):
         filename = [str(filename)]
 
     client = get_client(ctx)
     for fn in filename:
-        client.fix_sov(
+        fix_sov_ret = client.fix_sov(
             fn,
             document_type=document_type,
             callback_url=callback_url,
@@ -171,7 +173,14 @@ def fix(
             client_ref=client_ref,
             extra_data=extra_data,
             delegate_to=delegate_to,
+            noinput=noinput,
         )
+        sovid = fix_sov_ret["id"]
+        local_outputs = fix_sov_ret["local_outputs"]
+        click.echo(f"Executed SOV Fixer, SOVID: {sovid}")
+        if local_outputs:
+            for output in local_outputs:
+                click.echo(f"  Wrote: {output}")
 
 
 @cli.command()
@@ -228,7 +237,7 @@ def sov(environment, auth_token, search, output_path):
     client = get_client(ctx)
     results = client.list_activity(search=search, page_size=1)
     if not results or not results["results"]:
-        log("No results found.")
+        logger.info("No results found.")
         return
     result = results["results"][0]
     output_data = result["output_data"]

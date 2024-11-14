@@ -15,7 +15,7 @@ from typing import BinaryIO, TypedDict, overload
 from pingintel_api.api_client_base import APIClientBase
 
 from .. import constants as c
-from ..utils import is_fileobj, log, raise_for_status
+from ..utils import is_fileobj, raise_for_status
 from . import types as t
 
 logger = logging.getLogger(__name__)
@@ -51,7 +51,7 @@ class PingRadarAPIClient(APIClientBase):
                 file[1][1].close()
         raise_for_status(response)
 
-        log(f"Submission created: {response.json()}")
+        self.logger.info(f"Submission created: {response.json()}")
         response_data = response.json()
         return response_data
 

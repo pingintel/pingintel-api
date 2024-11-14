@@ -12,6 +12,7 @@ import click
 
 from pingintel_api import PingRadarAPIClient
 from pingintel_api.api_client_base import AuthTokenNotFound
+from pingintel_api.utils import set_verbosity
 
 logger = logging.getLogger(__name__)
 
@@ -50,12 +51,16 @@ Example Python commandline script for using the Ping Data Technologies Ping Rada
     "--auth-token",
     help="Provide auth token via --auth-token or PINGRADAR_AUTH_TOKEN environment variable.",
 )
+@click.option(
+    "-v", "--verbose", count=True, help="Can be used multiple times. -v for INFO, -vv for DEBUG, -vvv for very DEBUG."
+)
 @click.pass_context
-def cli(ctx, environment, api_url, auth_token):
+def cli(ctx, environment, api_url, auth_token, verbose):
     ctx.ensure_object(dict)
     ctx.obj["environment"] = environment
     ctx.obj["auth_token"] = auth_token
     ctx.obj["api_url"] = api_url
+    set_verbosity(verbose)
 
 
 def get_client(ctx) -> PingRadarAPIClient:

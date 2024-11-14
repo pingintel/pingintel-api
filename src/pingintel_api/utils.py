@@ -1,21 +1,11 @@
-import time
+import time, logging
 from timeit import default_timer as timer
 
 import click
 import requests
 from requests.exceptions import HTTPError
 
-global start_time
-start_time = None
-
-
-def log(msg):
-    global start_time
-    if start_time is None:
-        start_time = timer()
-    elapsed = timer() - start_time
-    timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
-    click.echo(f"[{timestamp} T+{elapsed:.1f}s] {msg}")
+logger = logging.getLogger(__name__)
 
 
 def raise_for_status(response: requests.Response):
@@ -23,10 +13,49 @@ def raise_for_status(response: requests.Response):
         return
 
     error_msg = response.text
-    log(f"{response.status_code} {response.reason}: {error_msg}")
+    logger.error(f"{response.status_code} {response.reason}: {error_msg}")
 
     raise HTTPError(error_msg, response=response)
 
 
 def is_fileobj(source):
     return hasattr(source, "read")
+
+
+def set_verbosity(verbose):
+    # print("set_verbosity", verbose, settings.IS_SERVER_ENV)
+
+    console = logging.StreamHandler()
+    consoleformat = "%(asctime)s %(levelname)-7s %(message)s [%(name)s:%(lineno)s %(funcName)s]"
+    consoleformatter = logging.Formatter(consoleformat, datefmt="%H:%M:%S")
+    console.setFormatter(consoleformatter)
+
+    handlers = []
+    handlers.append(console)
+
+    WARNING_ONLY_LOGGERS = [
+        "urllib3.connectionpool",
+        "urllib3.util.retry",
+        "requests.packages.urllib3.connectionpool",
+        "requests.packages.urllib3.util.retry",
+    ]
+
+    DEFAULT_VERBOSITY = 0
+    keep_subloggers = False
+    if verbose == DEFAULT_VERBOSITY - 1:
+        base_level = logging.ERROR
+    elif verbose == DEFAULT_VERBOSITY:
+        base_level = logging.WARNING
+    elif verbose == DEFAULT_VERBOSITY + 1:
+        base_level = logging.INFO
+    elif verbose == DEFAULT_VERBOSITY + 2:
+        base_level = logging.DEBUG
+    else:
+        keep_subloggers = True
+        base_level = logging.DEBUG
+
+    logging.basicConfig(level=base_level, handlers=handlers, force=True)
+
+    if not keep_subloggers:
+        for logname in WARNING_ONLY_LOGGERS:
+            logging.getLogger(logname).setLevel(logging.WARNING)

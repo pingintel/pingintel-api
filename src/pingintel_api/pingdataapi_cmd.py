@@ -12,6 +12,7 @@ from pingintel_api import PingDataAPIClient
 
 from pingintel_api.api_client_base import AuthTokenNotFound
 from pingintel_api.pingdata.types import SOURCES, Location
+from pingintel_api.utils import set_verbosity
 
 logger = logging.getLogger(__name__)
 
@@ -50,12 +51,16 @@ Example Python commandline script for using the Ping Data Technologies Data API 
     "--auth-token",
     help="Provide auth token via --auth-token or PINGDSTS_AUTH_TOKEN environment variable.",
 )
+@click.option(
+    "-v", "--verbose", count=True, help="Can be used multiple times. -v for INFO, -vv for DEBUG, -vvv for very DEBUG."
+)
 @click.pass_context
-def cli(ctx, environment, api_url, auth_token):
+def cli(ctx, environment, api_url, auth_token, verbose):
     ctx.ensure_object(dict)
     ctx.obj["environment"] = environment
     ctx.obj["auth_token"] = auth_token
     ctx.obj["api_url"] = api_url
+    set_verbosity(verbose)
 
 
 def get_client(ctx) -> PingDataAPIClient:
@@ -69,15 +74,6 @@ def get_client(ctx) -> PingDataAPIClient:
         raise click.Abort()
 
     return client
-
-
-def log(msg):
-    global start_time
-    if start_time is None:
-        start_time = timer()
-    elapsed = timer() - start_time
-    timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
-    click.echo(f"[{timestamp} T+{elapsed:.1f}s] {msg}")
 
 
 @cli.command()

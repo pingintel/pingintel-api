@@ -12,7 +12,6 @@ from pingintel_api.api_client_base import APIClientBase
 from pingintel_api.pingdata import types as t
 
 from ..utils import raise_for_status
-from ..utils import is_fileobj, log, raise_for_status
 
 logger = logging.getLogger(__name__)
 
@@ -135,11 +134,9 @@ class PingDataAPIClient(APIClientBase):
         request_id = response_data["id"]
         message = response_data["message"]
 
-        quiet = verbose < 1
-        if not quiet:
-            log(
-                f"+ Dispatched {request_id}: {message}.  Now, polling for results at {self.bulk_enhance_async_get_status_url(request_id=request_id)}."
-            )
+        self.logger.info(
+            f"+ Dispatched {request_id}: {message}.  Now, polling for results at {self.bulk_enhance_async_get_status_url(request_id=request_id)}."
+        )
 
         while 1:
             response_data = self.bulk_enhance_async_check_progress(request_id=request_id)
@@ -148,16 +145,13 @@ class PingDataAPIClient(APIClientBase):
             request_status = response_data["request"]["status"]
 
             if request_status == "PENDING":
-                if not quiet:
-                    log(f"  - Has not yet been queued for processing, checking progress in {poll_seconds}s.")
+                self.logger.info(f"  - Has not yet been queued for processing, checking progress in {poll_seconds}s.")
                 time.sleep(poll_seconds)
             elif request_status == "QUEUED":
-                if not quiet:
-                    log(f"  - Queued, checking progress in {poll_seconds}s.")
+                self.logger.info(f"  - Queued, checking progress in {poll_seconds}s.")
                 time.sleep(poll_seconds)
             elif request_status == "IN_PROGRESS":
-                if not quiet:
-                    log(f"  - Still in progress, checking progress in {poll_seconds}s.")
+                self.logger.info(f"  - Still in progress, checking progress in {poll_seconds}s.")
                 time.sleep(poll_seconds)
             else:
                 break
@@ -168,14 +162,14 @@ class PingDataAPIClient(APIClientBase):
         except:
             raise
 
-        log(
+        self.logger.info(
             f"Finished {len(locations)} items with result {result_status}: {result_message}: {time.time()-start_time:.1f}s."
         )
 
         if result_status == "SUCCESS":
             if fetch_outputs:
                 actually_write = True
-                log("Complete!  Fetching outputs.")
+                self.logger.info("Complete!  Fetching outputs.")
                 for output in response_data["result"]["outputs"]:
                     output_url = output["url"]
                     output_filename = output["filename"]
@@ -189,20 +183,19 @@ class PingDataAPIClient(APIClientBase):
                             if yesno.lower() != "y":
                                 continue
 
-                    log(f"Requesting output from {output_url}...")
+                    self.logger.info(f"Requesting output from {output_url}...")
                     response = self.get(output_url)
                     raise_for_status(response)
                     if actually_write:
                         with open(output_path, "wb") as fd:
                             for chunk in response.iter_content(chunk_size=128):
                                 fd.write(chunk)
-                    if output and not quiet:
+                    if output:
                         pprint.pprint(response.json())
-                    log(f"  - Downloaded {output_description} output: {output_path}.")
+                    self.logger.info(f"  - Downloaded {output_description} output: {output_path}.")
             return True
         else:
-            log("* Parsing failed!  Raw API output:")
-            log(response_data)
+            self.logger.warning(f"* Parsing failed!  Raw API output:\n{response_data}")
             return False
 
     def bulk_enhance_async_start(
@@ -237,7 +230,7 @@ class PingDataAPIClient(APIClientBase):
             if response.ok:
                 break
             else:
-                print("retrying get-progress cause of", response.status_code, response.text)
+                self.logger.warning(f"retrying get-progress: {response.status_code}: {response.text}")
                 time.sleep(0.25)
         raise_for_status(response)
         response_data = response.json()

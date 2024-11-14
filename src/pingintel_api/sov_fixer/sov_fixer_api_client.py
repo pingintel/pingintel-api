@@ -15,7 +15,7 @@ import requests
 from pingintel_api.api_client_base import APIClientBase
 
 from .. import constants as c
-from ..utils import is_fileobj, log, raise_for_status
+from ..utils import is_fileobj, raise_for_status
 from . import types as t
 
 logger = logging.getLogger(__name__)
@@ -68,11 +68,11 @@ class SOVFixerAPIClient(APIClientBase):
             data["delegate_to"] = delegate_to
 
         response = self.post(url, files=files, data=data)
-        if response.status_code == 200:
+        if 200 <= response.status_code < 300:
             # pprint.pprint(response.json())
             pass
         else:
-            pprint.pprint(response.text)
+            self.logger.warning(f"Error starting SOV Fixer request:\n{pprint.pformat(response.text)}")
 
         raise_for_status(response)
 
@@ -80,7 +80,7 @@ class SOVFixerAPIClient(APIClientBase):
         sov_id = response_data["id"]
         message = response_data["message"]
         status_url = self.api_url + f"/api/v1/sov/{sov_id}"
-        log(f"+ Dispatched {sov_id}: {message}.  Now, polling for results at {status_url}.")
+        self.logger.info(f"+ Dispatched {sov_id}: {message}.  Now, polling for results at {status_url}.")
         return response_data
 
     def fix_sov_async_check_progress(self, sovid_or_start_ret) -> t.FixSOVResponse:
@@ -145,7 +145,7 @@ class SOVFixerAPIClient(APIClientBase):
         actually_write=False,
         output_description=None,
     ):
-        log(f"Requesting output from {download_url}...")
+        self.logger.info(f"Requesting output from {download_url}...")
         if download_url.startswith("/"):
             download_url = self.api_url + download_url
 
@@ -153,13 +153,13 @@ class SOVFixerAPIClient(APIClientBase):
             raise_for_status(response)
             filesize_mb = int(response.headers.get("content-length", 0)) / 1024 / 1024
             # pprint.pprint(dict(response.headers))
-            log(f"  - Streaming {output_description} output ({filesize_mb:.2f} MB)...")
+            self.logger.info(f"  - Streaming {output_description} output ({filesize_mb:.2f} MB)...")
 
             if actually_write:
                 with open(output_path, "wb") as fd:
                     for chunk in response.iter_content(chunk_size=1024 * 1024):
                         fd.write(chunk)
-            log(f"  - Downloaded {output_description} output: {output_path}.")
+            self.logger.info(f"  - Downloaded {output_description} output: {output_path}.")
         return output_path if actually_write else None
 
     def activity_download(self, output_ret, actually_write=False, output_path=None):
@@ -189,7 +189,8 @@ class SOVFixerAPIClient(APIClientBase):
         extra_data=None,
         update_callback_url=None,
         delegate_to=None,
-    ):
+        noinput=True,
+    ) -> t.FixSOVProcessResponse:
         sov_fixer_client = self
         start_response = sov_fixer_client.fix_sov_async_start(
             filename,
@@ -214,20 +215,22 @@ class SOVFixerAPIClient(APIClientBase):
 
             POLL_SECS = 2.5
             if request_status == "PENDING":
-                log("  - Has not yet been queued for processing.")
+                self.logger.info("  - Has not yet been queued for processing.")
                 time.sleep(POLL_SECS)
             elif request_status == "IN_PROGRESS":
-                log(f"  - Still in progress ({pct_complete}% complete): {last_status}")
+                self.logger.info(f"  - Still in progress ({pct_complete}% complete): {last_status}")
                 time.sleep(POLL_SECS)
             else:
                 break
 
         result_status = response_data["result"]["status"]
         result_message = response_data["result"]["message"]
-        log(f"+ Finished with result {result_status}: {result_message}")
+        self.logger.info(f"+ Finished with result {result_status}: {result_message}")
 
+        local_outputs = None
         if result_status == "SUCCESS":
-            log("Complete!  Fetching outputs.")
+            self.logger.info("Complete!  Fetching outputs.")
+            local_outputs = []
             for output in response_data["result"]["outputs"]:
                 output_url = output["url"]
                 if self.environment and self.environment == "local2" and "api-local.sovfixer.com" in output_url:
@@ -239,20 +242,33 @@ class SOVFixerAPIClient(APIClientBase):
 
                 if actually_write:
                     if os.path.exists(output_path):
-                        yesno = input(f"Do you want to overwrite the existing file {output_path} [y/N]? ")
-                        if yesno.lower() != "y":
-                            continue
+                        if not noinput:
+                            yesno = input(f"Do you want to overwrite the existing file {output_path} [y/N]? ")
+                            if yesno.lower() != "y":
+                                continue
 
                 sov_fixer_client.fix_sov_download(
                     output,
                     actually_write=actually_write,
                     output_path=output_path,
                 )
-            return start_response["id"]
+                local_outputs.append(output_path)
+            return {
+                "success": True,
+                "id": start_response["id"],
+                "start_response": start_response,
+                "final_response": response_data,
+                "local_outputs": local_outputs,
+            }
         else:
-            log("* Parsing failed!  Raw API output:")
-            log(response_data)
-            return False
+            self.logger.warning("* Parsing failed!  Raw API output:\n{response_data}")
+            return {
+                "success": False,
+                "id": start_response["id"],
+                "start_response": start_response,
+                "final_response": response_data,
+                "local_outputs": local_outputs,
+            }
 
     def list_activity(
         self,
@@ -331,11 +347,11 @@ class SOVFixerAPIClient(APIClientBase):
             data["callback_url"] = callback_url
 
         response = self.post(url, data=data)
-        if response.status_code == 200:
+        if 200 <= response.status_code < 300:
             # pprint.pprint(response.json())
             pass
         else:
-            pprint.pprint(response.text)
+            self.logger.warning(f"Error starting SOV Fixer update request:\n{pprint.pformat(response.text)}")
 
         raise_for_status(response)
 
@@ -363,11 +379,11 @@ class SOVFixerAPIClient(APIClientBase):
         data = {}
 
         response = self.post(url, files=files, data=data)
-        if response.status_code == 200:
+        if 200 <= response.status_code < 300:
             pass
             # pprint.pprint(response.json())
         else:
-            pprint.pprint(response.text)
+            self.logger.warning(f"Error adding locations to SOV Fixer update request:\n{pprint.pformat(response.text)}")
 
         raise_for_status(response)
 
@@ -394,11 +410,11 @@ class SOVFixerAPIClient(APIClientBase):
             data["output_formats"] = output_formats
 
         response = self.post(url, json=data)
-        if response.status_code == 200:
+        if 200 <= response.status_code < 300:
             pass
             # pprint.pprint(response.json())
         else:
-            pprint.pprint(response.text)
+            self.logger.warning(f"Error starting SOV Fixer update request:\n{pprint.pformat(response.text)}")
 
         raise_for_status(response)
 
@@ -426,6 +442,7 @@ class SOVFixerAPIClient(APIClientBase):
         actually_write=False,
         update_type=None,
         callback_url=None,
+        noinput=True,
     ):
         client = self
         init_response = client.init_sov_update(sovid, update_type=update_type, callback_url=callback_url)
@@ -449,18 +466,19 @@ class SOVFixerAPIClient(APIClientBase):
             request_status = response_data["request"]["status"]
             POLL_SECS = 2.5
             if request_status == "PENDING":
-                log("  - Has not yet been queued for processing.")
+                self.logger.info("  - Has not yet been queued for processing.")
                 time.sleep(POLL_SECS)
             elif request_status == "IN_PROGRESS":
-                log(f"  - Still in progress: {request_status}")
+                self.logger.info(f"  - Still in progress: {request_status}")
                 time.sleep(POLL_SECS)
             else:
                 break
 
         result_status = response_data["result"]["status"]
-        log(f"+ Finished with result {result_status}")
+        self.logger.info(f"+ Finished with result {result_status}")
+
         if result_status == "SUCCESS":
-            log("Complete!  Fetching outputs.")
+            self.logger.info("Complete!  Fetching outputs.")
             for output in response_data["result"]["outputs"]:
                 output_url = output["url"]
                 if self.environment and self.environment == "local2" and "api-local.sovfixer.com" in output_url:
@@ -472,9 +490,10 @@ class SOVFixerAPIClient(APIClientBase):
 
                 if actually_write:
                     if os.path.exists(output_path):
-                        yesno = input(f"Do you want to overwrite the existing file {output_path} [y/N]? ")
-                        if yesno.lower() != "y":
-                            continue
+                        if not noinput:
+                            yesno = input(f"Do you want to overwrite the existing file {output_path} [y/N]? ")
+                            if yesno.lower() != "y":
+                                continue
 
                 client.fix_sov_download(
                     output,
@@ -483,8 +502,7 @@ class SOVFixerAPIClient(APIClientBase):
                 )
             return sudid
         else:
-            log("* SOV Update failed!  Raw API output:")
-            log(response_data)
+            self.logger.warning("* SOV Update failed!  Raw API output:\n{response_data}")
             return False
 
     def start_get_output(self, sovid_or_sud: str, output_format: str, revision: int = -1, overwrite_existing=False):
@@ -519,10 +537,10 @@ class SOVFixerAPIClient(APIClientBase):
             request_status = response_data["request"]["status"]
             POLL_SECS = 2.5
             if request_status == "PENDING":
-                log("  - Has not yet been queued for processing.")
+                self.logger.info("  - Has not yet been queued for processing.")
                 time.sleep(POLL_SECS)
             elif request_status == "IN_PROGRESS":
-                log(f"  - Still in progress: {request_status}")
+                self.logger.info(f"  - Still in progress: {request_status}")
                 time.sleep(POLL_SECS)
             else:
                 break

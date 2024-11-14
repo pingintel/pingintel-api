@@ -57,6 +57,14 @@ class FixSOVResponse(TypedDict):
     result: NotRequired[FixSOVResponseResult]
 
 
+class FixSOVProcessResponse(TypedDict):
+    success: bool
+    id: str
+    start_response: FixSOVResponse
+    final_response: FixSOVResponse
+    local_outputs: list[str] | None
+
+
 class UpdateOutputData(TypedDict):
     url: str
     output_format: str

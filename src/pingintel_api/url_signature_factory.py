@@ -9,7 +9,7 @@ class UrlSignatureFactory:
     def __init__(self, secret):
         self.secret = str(secret)
 
-    def generate(self, user_id: str | int = 0, expiration: timedelta = timedelta(minutes=20)):
+    def generate(self, user_id: str | int = 0, expiration: timedelta = timedelta(minutes=20)) -> tuple[str, int]:
         expires = datetime.now(timezone.utc) + expiration
         expires_at = self._generate_timestamp(expires)
         return self._makesig(user_id, expires_at), expires_at
@@ -25,7 +25,7 @@ class UrlSignatureFactory:
 
         return True
 
-    def _makesig(self, user_id: str | int, expires_at: int):
+    def _makesig(self, user_id: str | int, expires_at: int) -> str:
         signature = hmac.new(
             self.secret.encode("utf-8"), (str(user_id) + str(expires_at)).encode("utf-8"), hashlib.sha256
         ).hexdigest()
