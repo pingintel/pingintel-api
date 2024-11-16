@@ -233,7 +233,7 @@ def activity(
     "--output-path",
     help="If specified, provide a download path for all attached files.",
 )
-def sov(environment, auth_token, search, output_path):
+def sov(ctx, search, output_path):
     client = get_client(ctx)
     results = client.list_activity(search=search, page_size=1)
     if not results or not results["results"]:
@@ -246,6 +246,42 @@ def sov(environment, auth_token, search, output_path):
         for output_ret in output_data:
             client.activity_download(output_ret, actually_write=True, output_path=output_path)
 
+
+
+@cli.command()
+@click.pass_context
+@click.argument("sovid_or_sudid")
+@click.option(
+    "-f",
+    "--output-format",
+    metavar="OUTPUT_FORMAT",
+    help="Select an output format.",
+)
+@click.option(
+    "--write",
+    "--no-write",
+    is_flag=True,
+    default=True,
+    help="If set, actually write the output. Otherwise, download as a test but do not write.",
+)
+@click.option(
+    "-r",
+    "--revision",
+    type=int,
+    default=-1,
+    help='Provide a specific revision number. Defaults to the latest revision (zero "-r0" for the initial sov).',
+)
+@click.option(
+    "--overwrite_existing",
+    "--no-overwrite_existing",
+    is_flag=True,
+    default=False,
+    help="If set, regenerate the file even if it already exists.",
+)
+def get_output(ctx, sovid_or_sudid, output_format, write, revision, overwrite_existing):
+    client = get_client(ctx)
+    output_data = client.get_or_create_output(sovid_or_sudid, output_format, revision, overwrite_existing)
+    client.activity_download(output_data, actually_write=write)
 
 def main():
     cli()
