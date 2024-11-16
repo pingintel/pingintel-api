@@ -8,7 +8,7 @@ import os
 import pprint
 import time
 from typing import IO, Literal
-
+from datetime import timedelta
 import click
 import requests
 
@@ -327,7 +327,7 @@ class SOVFixerAPIClient(APIClientBase):
         raise_for_status(response)
         return response.json()
 
-    def init_sov_update(
+    def update_sov_async_init(
         self,
         sovid: str,
         client_ref=None,
@@ -358,7 +358,7 @@ class SOVFixerAPIClient(APIClientBase):
         response_data = response.json()
         return response_data
 
-    def add_locations_to_sov_update(
+    def update_sov_async_add_locations(
         self,
         sudid: str,
         file: IO[bytes] | str,
@@ -390,7 +390,7 @@ class SOVFixerAPIClient(APIClientBase):
         response_data = response.json()
         return response_data
 
-    def start_sov_update(
+    def update_sov_async_start(
         self,
         sudid: str,
         extra_data=None,
@@ -421,7 +421,7 @@ class SOVFixerAPIClient(APIClientBase):
         response_data = response.json()
         return response_data
 
-    def check_sov_update_progress(self, sudid):
+    def update_sov_async_check_progress(self, sudid):
         status_url = self.api_url + f"/api/v1/sov/update/{sudid}"
 
         response = self.get(status_url)
@@ -445,15 +445,15 @@ class SOVFixerAPIClient(APIClientBase):
         noinput=True,
     ):
         client = self
-        init_response = client.init_sov_update(sovid, update_type=update_type, callback_url=callback_url)
+        init_response = client.update_sov_async_init(sovid, update_type=update_type, callback_url=callback_url)
         sudid = init_response["id"]
         # print(init_response)
         for location_filename in location_filenames:
-            client.add_locations_to_sov_update(
+            client.update_sov_async_add_locations(
                 sudid,
                 location_filename,
             )
-        start_response = client.start_sov_update(
+        start_response = client.update_sov_async_start(
             sudid,
             extra_data=extra_data,
             policy_terms=policy_terms,
@@ -462,7 +462,7 @@ class SOVFixerAPIClient(APIClientBase):
         )
 
         while 1:
-            response_data = client.check_sov_update_progress(sudid)
+            response_data = client.update_sov_async_check_progress(sudid)
             request_status = response_data["request"]["status"]
             POLL_SECS = 2.5
             if request_status == "PENDING":
@@ -505,7 +505,9 @@ class SOVFixerAPIClient(APIClientBase):
             self.logger.warning("* SOV Update failed!  Raw API output:\n{response_data}")
             return False
 
-    def start_get_output(self, sovid_or_sud: str, output_format: str, revision: int = -1, overwrite_existing=False):
+    def get_or_create_output_async_start(
+        self, sovid_or_sud: str, output_format: str, revision: int = -1, overwrite_existing=False
+    ):
         url = self.api_url + f"/api/v1/sov/{sovid_or_sud}/get_or_create_output"
         data = {}
         if output_format:
@@ -519,21 +521,33 @@ class SOVFixerAPIClient(APIClientBase):
         raise_for_status(response)
         return response.json()
 
-    def check_get_output_progress(self, output_request_id: str):
+    def get_or_create_output_async_check_progress(self, output_request_id: str):
         url = self.api_url + f"/api/v1/sov/get_or_create_output/{output_request_id}"
         response = self.get(url)
         return response.json()
 
     def get_or_create_output(
-        self, sovid_or_sud: str, output_format: str, revision: int = -1, overwrite_existing=False
+        self,
+        sovid_or_sud: str,
+        output_format: str,
+        revision: int = -1,
+        overwrite_existing=False,
+        timeout: timedelta | None = timedelta(minutes=5),
     ) -> t.OutputData:
+        """Get or create an output from a SOV Fixer request. If it exists, it will return immediately.
+        If it does not exist, it will start the generation process and poll for completion, then return it."""
         client = self
 
-        start_response = client.start_get_output(sovid_or_sud, output_format, revision, overwrite_existing)
+        start_response = client.get_or_create_output_async_start(
+            sovid_or_sud, output_format, revision, overwrite_existing
+        )
 
         output_request_id = start_response["request"]["id"]
+        start_time = time.time()
         while 1:
-            response_data = client.check_get_output_progress(output_request_id)
+            if timeout and time.time() - start_time > timeout.total_seconds():
+                raise TimeoutError(f"Timeout waiting for output generation: {output_request_id}")
+            response_data = client.get_or_create_output_async_check_progress(output_request_id)
             request_status = response_data["request"]["status"]
             POLL_SECS = 2.5
             if request_status == "PENDING":
