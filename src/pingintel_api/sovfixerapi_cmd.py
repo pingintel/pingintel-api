@@ -2,6 +2,7 @@
 
 # Copyright 2021-2024 Ping Data Intelligence
 
+import json
 import logging
 import pathlib
 import pprint
@@ -42,6 +43,7 @@ Example Python commandline script for using the Ping Data Technologies sovfixer 
         ],
         case_sensitive=False,
     ),
+    default="prod",
 )
 @click.option(
     "-u",
@@ -247,7 +249,6 @@ def sov(ctx, search, output_path):
             client.activity_download(output_ret, actually_write=True, output_path=output_path)
 
 
-
 @cli.command()
 @click.pass_context
 @click.argument("sovid_or_sudid")
@@ -282,6 +283,7 @@ def get_output(ctx, sovid_or_sudid, output_format, write, revision, overwrite_ex
     client = get_client(ctx)
     output_data = client.get_or_create_output(sovid_or_sudid, output_format, revision, overwrite_existing)
     client.activity_download(output_data, actually_write=write)
+
 
 def main():
     cli()

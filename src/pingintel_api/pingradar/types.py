@@ -1,4 +1,4 @@
-from typing import TypedDict, NotRequired
+from typing import TypedDict, NotRequired, Literal
 
 from ..common_types import PingMapsStatus
 
@@ -8,7 +8,11 @@ class PingRadarListActivityDetailDocumentResponse(TypedDict):
     filename: str
     processing_status: str
     url: str
-    created_time: str
+    created_time: str  
+    processing_pct_complete: NotRequired[int | None]
+    processing_last_message: NotRequired[str | None]
+    is_archived: bool
+    actions: list[str]
 
 
 class PingRadarListActivityDetailResponse(TypedDict):
