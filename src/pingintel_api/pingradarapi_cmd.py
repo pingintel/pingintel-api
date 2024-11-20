@@ -87,13 +87,29 @@ def get_client(ctx) -> PingRadarAPIClient:
     default=False,
     help="If set, poll until the submission is ready.",
 )
-def create(ctx, filename, poll_until_ready=False):
+@click.option(
+    "--delegate-to-division",
+    metavar="DIVISION_SHORT_NAME",
+    help="Delegate to another organization. Provide the 'short name' of the division of the desired delegatee.  Requires the `delegate` permission.",
+)
+@click.option(
+    "--delegate-to-team",
+    metavar="TEAM_NAME",
+    help="Delegate to another organization. Provide the 'name' of the desired delegatee team.  Requires the `delegate` permission.",
+)
+def create(ctx, filename, poll_until_ready, delegate_to_division, delegate_to_team):
     if isinstance(filename, pathlib.PosixPath):
         filename = [str(filename)]
 
     client = get_client(ctx)
-    ret = client.create_submission(filepaths=filename)
+    ret = client.create_submission(
+        filepaths=filename, delegate_to_division=delegate_to_division, delegate_to_team=delegate_to_team
+    )
     pingid = ret["id"]
+    url = ret["url"]
+
+    print(f"Submission created: {pingid}")
+    print(url)
 
     if poll_until_ready:
         while True:

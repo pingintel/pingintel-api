@@ -16,6 +16,7 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
+license-files = { paths = ["LICENSE"] }
 
 [project.urls]
 Homepage = "https://github.com/pingintel/pingintel-api"

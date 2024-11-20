@@ -8,7 +8,7 @@ class PingRadarListActivityDetailDocumentResponse(TypedDict):
     filename: str
     processing_status: str
     url: str
-    created_time: str  
+    created_time: str
     processing_pct_complete: NotRequired[int | None]
     processing_last_message: NotRequired[str | None]
     is_archived: bool
@@ -46,3 +46,4 @@ class PingRadarListActivityResponse(TypedDict):
 class PingRadarCreateSubmissionResponse(TypedDict):
     id: str
     message: str
+    url: str

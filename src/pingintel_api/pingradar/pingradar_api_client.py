@@ -28,7 +28,11 @@ class PingRadarAPIClient(APIClientBase):
     product = "pingradar"
 
     def create_submission(
-        self, filepaths: list[str | pathlib.Path], client_ref: str | None = None, delegate_to: str | None = None
+        self,
+        filepaths: list[str | pathlib.Path],
+        client_ref: str | None = None,
+        delegate_to_division: str | None = None,
+        delegate_to_team: str | None = None,
     ) -> t.PingRadarCreateSubmissionResponse:
         """
         Initiate a new submission from one or more original files.
@@ -55,10 +59,11 @@ class PingRadarAPIClient(APIClientBase):
         data = {}
         if client_ref:
             data["client_ref"] = client_ref
-            
-        if delegate_to:
-            data["delegate_to"] = delegate_to
-            
+
+        if delegate_to_division and delegate_to_team:
+            data["delegate_to_division"] = delegate_to_division
+            data["delegate_to_team"] = delegate_to_team
+
         response = self.post(url, files=multiple_files, data=data)
 
         if len(filepaths) == 1:
