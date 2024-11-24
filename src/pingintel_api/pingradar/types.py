@@ -33,6 +33,9 @@ class PingRadarListActivityDetailResponse(TypedDict):
     workflow_status__name: str | None
     workflow_status_id: int | None
     ping_maps: NotRequired[PingMapsStatus | None]
+    source__source_type: str | None
+    source__source_type_display: str | None
+    source__inbox_email_address: str | None
 
 
 class PingRadarListActivityResponse(TypedDict):

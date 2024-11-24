@@ -83,6 +83,7 @@ class OutputData(TypedDict):
 class UpdateData(TypedDict):
     sovid: int
     sudid: int
+    status: str
     filename: str
     document_type: str
     record_type: str
@@ -92,6 +93,11 @@ class UpdateData(TypedDict):
     num_rows: int
     sov_data_last_updated_date: datetime
     outputs: list[UpdateOutputData]
+    output_formats: NotRequired[list[str]]
+    contract_terms_tracking_id: NotRequired[str]
+    contract_terms_policy_number: NotRequired[str]
+    completed_time: NotRequired[datetime]
+    client_ref: NotRequired[str | None]
 
 
 class SOVData(TypedDict):
@@ -110,7 +116,8 @@ class SOVData(TypedDict):
     ping_maps_url: str | None
     input_file_url: str | None
     extra_data: dict[str, Any] | None
-    updates: dict[int, UpdateData] | None
+    updates: dict[str, UpdateData] | None
+    all_updates: list[UpdateData] | None
     completed_time: str | None
     created_time: str | None
     subject: str | None

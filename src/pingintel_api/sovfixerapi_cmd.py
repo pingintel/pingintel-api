@@ -129,11 +129,10 @@ def _attributes_to_dict(ctx: click.Context, attribute: click.Option, attributes:
     callback=_attributes_to_dict,
 )
 @click.option(
-    "--write",
-    "--no-write",
+    "--write/--no-write",
     is_flag=True,
     default=True,
-    help="If set, actually write the output. Otherwise, download as a test but do not write.",
+    help="(default) Actually write the output. If disabled, download but do not persist the result to disk.",
 )
 @click.option(
     "-D",
@@ -253,17 +252,16 @@ def sov(ctx, search, output_path):
 @click.pass_context
 @click.argument("sovid_or_sudid")
 @click.option(
-    "-f",
+    "-o",
     "--output-format",
     metavar="OUTPUT_FORMAT",
     help="Select an output format.",
 )
 @click.option(
-    "--write",
-    "--no-write",
+    "--write/--no-write",
     is_flag=True,
     default=True,
-    help="If set, actually write the output. Otherwise, download as a test but do not write.",
+    help="(default) Actually write the output. If disabled, download but do not persist the result to disk.",
 )
 @click.option(
     "-r",
@@ -273,8 +271,7 @@ def sov(ctx, search, output_path):
     help='Provide a specific revision number. Defaults to the latest revision (zero "-r0" for the initial sov).',
 )
 @click.option(
-    "--overwrite_existing",
-    "--no-overwrite_existing",
+    "--overwrite_existing/--no-overwrite_existing",
     is_flag=True,
     default=False,
     help="If set, regenerate the file even if it already exists.",

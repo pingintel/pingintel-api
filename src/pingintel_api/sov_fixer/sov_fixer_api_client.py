@@ -18,8 +18,6 @@ from .. import constants as c
 from ..utils import is_fileobj, raise_for_status
 from . import types as t
 
-logger = logging.getLogger(__name__)
-
 
 class SOVFixerAPIClient(APIClientBase):
     api_subdomain = "api"
@@ -159,7 +157,7 @@ class SOVFixerAPIClient(APIClientBase):
                 with open(output_path, "wb") as fd:
                     for chunk in response.iter_content(chunk_size=1024 * 1024):
                         fd.write(chunk)
-            self.logger.info(f"  - Downloaded {output_description} output: {output_path}.")
+                self.logger.info(f"  - Downloaded {output_description} output: {output_path}.")
         return output_path if actually_write else None
 
     def activity_download(self, output_ret, actually_write=False, output_path=None):
