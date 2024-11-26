@@ -282,6 +282,20 @@ def get_output(ctx, sovid_or_sudid, output_format, write, revision, overwrite_ex
     client.activity_download(output_data, actually_write=write)
 
 
+@cli.command()
+@click.pass_context
+@click.argument("rms_job_id")
+def excel_rms_job(ctx, rms_job_id):
+    client = get_client(ctx)
+    response = client.get(client.api_url + f"/api/v1/excel/rms_job/{rms_job_id}")
+    responsejson = response.json()
+    job_info = json.loads(responsejson["job_info"])
+    import pprint
+
+    pprint.pprint(job_info)
+    breakpoint()
+
+
 def main():
     cli()
 

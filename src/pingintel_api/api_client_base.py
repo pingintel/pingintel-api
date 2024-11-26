@@ -8,7 +8,7 @@ import requests
 import requests
 from requests.adapters import HTTPAdapter, Retry
 
-from .utils import is_fileobj
+from .utils import is_fileobj, censor
 
 from pingintel_api.__about__ import __version__
 
@@ -43,15 +43,23 @@ class APIClientBase:
     ):
         self.logger = logging.getLogger(self.__class__.__name__)
 
+        if api_url is None and environment is None:
+            environment = "prod"
+
         if api_url is None:
             if environment is None:
                 raise ValueError("Need either api_url or environment.")
             api_url = self.get_api_url_by_environment(environment)
 
+        env_var = None
         if not auth_token and environment:
-            auth_token = self.get_auth_token_by_environment(environment)
+            env_var, auth_token = self.get_auth_token_by_environment(environment)
+            if auth_token:
+                self.logger.debug(f"Using auth token from {env_var}: {censor(auth_token, 5)}")
         if not auth_token:
             auth_token = os.environ.get(self.auth_token_env_name)
+            if auth_token:
+                self.logger.debug(f"Using auth token from {self.auth_token_env_name}: {censor(auth_token, 5)}")
         serverspace = None
         if not auth_token:
             config = configparser.ConfigParser()
@@ -60,11 +68,19 @@ class APIClientBase:
                 serverspace = self.get_serverspace_from_environment(environment)
                 try:
                     auth_token = config.get(self.product, f"{self.auth_token_env_name}_{serverspace.upper()}")
+                    if auth_token:
+                        self.logger.debug(
+                            f"Using auth token from '~/.pingintel.ini', [{self.product}] {self.auth_token_env_name}_{serverspace.upper()}: {censor(auth_token, 5)}"
+                        )
                 except (configparser.NoOptionError, configparser.NoSectionError):
                     pass
             if not auth_token:
                 try:
                     auth_token = config.get(self.product, self.auth_token_env_name)
+                    if auth_token:
+                        self.logger.debug(
+                            f"Using auth token from '~/.pingintel.ini', [{self.product}] {self.auth_token_env_name}: {censor(auth_token, 5)}"
+                        )
                 except (configparser.NoOptionError, configparser.NoSectionError):
                     pass
 
@@ -134,7 +150,10 @@ class APIClientBase:
 
     def get_auth_token_by_environment(self, environment: str) -> str:
         serverspace = self.get_serverspace_from_environment(environment)
-        auth_token = os.environ.get(f"PING_{serverspace}_AUTH_TOKEN".upper())
+        env_var = f"{self.auth_token_env_name}_{serverspace}".upper()
+        # env_var = f"PING_{serverspace}_AUTH_TOKEN".upper()
+        auth_token = os.environ.get(env_var)
+        return env_var, auth_token
 
     def get_serverspace_from_environment(self, environment: str) -> str:
         if environment in ["staging", "staging2"]:

@@ -41,7 +41,6 @@ Example Python commandline script for using the Ping Data Technologies Ping Rada
         ],
         case_sensitive=False,
     ),
-    default="prod",
 )
 @click.option(
     "-u",

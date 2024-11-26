@@ -41,7 +41,6 @@ Example Python commandline script for using the Ping Data Technologies Data API 
         ],
         case_sensitive=False,
     ),
-    default="prod",
 )
 @click.option(
     "-u",
@@ -50,7 +49,7 @@ Example Python commandline script for using the Ping Data Technologies Data API 
 )
 @click.option(
     "--auth-token",
-    help="Provide auth token via --auth-token or PINGDSTS_AUTH_TOKEN environment variable.",
+    help="Provide auth token via --auth-token or PINGDATA_AUTH_TOKEN environment variable.",
 )
 @click.option(
     "-v", "--verbose", count=True, help="Can be used multiple times. -v for INFO, -vv for DEBUG, -vvv for very DEBUG."

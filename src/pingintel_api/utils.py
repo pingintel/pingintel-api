@@ -59,3 +59,10 @@ def set_verbosity(verbose):
     if not keep_subloggers:
         for logname in WARNING_ONLY_LOGGERS:
             logging.getLogger(logname).setLevel(logging.WARNING)
+
+
+def censor(s, max=6):
+    if not s:
+        return s
+
+    return s[:max] + "*" * (len(s) - max)
