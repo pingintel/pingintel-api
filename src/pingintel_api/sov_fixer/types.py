@@ -78,6 +78,7 @@ class OutputData(TypedDict):
     # sov_data_id: int
     output_format: str
     url: str
+    ping_ready_id: str
 
 
 class UpdateData(TypedDict):
