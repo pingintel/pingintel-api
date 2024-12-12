@@ -1,7 +1,8 @@
 import configparser
 import logging
 import os
-from typing import overload
+import pathlib
+from typing import IO, Collection, overload
 
 import click
 import requests
@@ -172,14 +173,26 @@ class APIClientBase:
         return serverspace
 
     @classmethod
-    def _get_files_for_request(cls, file, filename=None):
-        if is_fileobj(file):
-            if filename is None:
-                raise ValueError("Need filename if file is a file object.")
-
-            return {"file": (filename, file)}
+    def _get_files_for_request(
+        cls, file: IO[bytes] | str | pathlib.Path | Collection[IO[bytes] | str | pathlib.Path], filename=None
+    ) -> list[tuple[str, tuple[str, IO[bytes]]]]:
+        if is_fileobj(file) or isinstance(file, (str, pathlib.Path)):
+            files = [file]
         else:
-            if not os.path.exists(file):
-                raise click.ClickException(f"Path {file} does not exist.")
+            files = [_ for _ in file]
 
-            return {"file": open(file, "rb")}
+        ret = []
+        for f in files:
+            # files = [('file', open('report.xls', 'rb')), ('file', open('report2.xls', 'rb'))]
+            if is_fileobj(f):
+                if filename is None:
+                    raise ValueError("Need filename if file is a file object.")
+
+                ret.append(("file", (filename, f)))
+            else:
+                assert isinstance(f, (str, pathlib.Path)), f"Expected str or pathlib.Path, got {type(f)}"
+                if not os.path.exists(f):
+                    raise click.ClickException(f"Path {f} does not exist.")
+
+                ret.append(("file", open(f, "rb")))
+        return ret

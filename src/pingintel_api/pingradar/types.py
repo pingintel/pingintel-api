@@ -36,6 +36,7 @@ class PingRadarListActivityDetailResponse(TypedDict):
     source__source_type: str | None
     source__source_type_display: str | None
     source__inbox_email_address: str | None
+    triage_rule_results: list[dict[str, str | int | float]] | None
 
 
 class PingRadarListActivityResponse(TypedDict):

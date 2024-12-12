@@ -159,29 +159,31 @@ def fix(
     delegate_to,
     noinput,
 ):
-    if isinstance(filename, pathlib.PosixPath):
-        filename = [str(filename)]
+    if isinstance(filename, pathlib.Path):
+        filenames = [str(filename)]
+    else:
+        filenames = filename
 
     client = get_client(ctx)
-    for fn in filename:
-        fix_sov_ret = client.fix_sov(
-            fn,
-            document_type=document_type,
-            callback_url=callback_url,
-            actually_write=write,
-            integrations=integrations,
-            output_formats=output_format,
-            client_ref=client_ref,
-            extra_data=extra_data,
-            delegate_to=delegate_to,
-            noinput=noinput,
-        )
-        sovid = fix_sov_ret["id"]
-        local_outputs = fix_sov_ret["local_outputs"]
-        click.echo(f"Executed SOV Fixer, SOVID: {sovid}")
-        if local_outputs:
-            for output in local_outputs:
-                click.echo(f"  Wrote: {output}")
+    # for fn in filename:
+    fix_sov_ret = client.fix_sov(
+        filenames,
+        document_type=document_type,
+        callback_url=callback_url,
+        actually_write=write,
+        integrations=integrations,
+        output_formats=output_format,
+        client_ref=client_ref,
+        extra_data=extra_data,
+        delegate_to=delegate_to,
+        noinput=noinput,
+    )
+    sovid = fix_sov_ret["id"]
+    local_outputs = fix_sov_ret["local_outputs"]
+    click.echo(f"Executed SOV Fixer, SOVID: {sovid}")
+    if local_outputs:
+        for output in local_outputs:
+            click.echo(f"  Wrote: {output}")
 
 
 @cli.command()

@@ -5,9 +5,10 @@
 import json
 import logging
 import os
+import pathlib
 import pprint
 import time
-from typing import IO, Literal
+from typing import IO, Collection, Literal
 from datetime import timedelta
 import click
 import requests
@@ -31,7 +32,7 @@ class SOVFixerAPIClient(APIClientBase):
 
     def fix_sov_async_start(
         self,
-        file: IO[bytes] | str,
+        file: IO[bytes] | str | pathlib.Path | Collection[IO[bytes] | str | pathlib.Path],
         document_type,
         filename=None,
         callback_url=None,
@@ -176,7 +177,7 @@ class SOVFixerAPIClient(APIClientBase):
 
     def fix_sov(
         self,
-        filename,
+        filename: list[str | pathlib.Path] | str | pathlib.Path,
         *,
         document_type: str = "SOV",
         callback_url=None,
@@ -259,7 +260,7 @@ class SOVFixerAPIClient(APIClientBase):
                 "local_outputs": local_outputs,
             }
         else:
-            self.logger.warning("* Parsing failed!  Raw API output:\n{response_data}")
+            self.logger.warning(f"* Parsing failed!  Raw API output:\n{response_data}")
             return {
                 "success": False,
                 "id": start_response["id"],
@@ -500,7 +501,7 @@ class SOVFixerAPIClient(APIClientBase):
                 )
             return sudid
         else:
-            self.logger.warning("* SOV Update failed!  Raw API output:\n{response_data}")
+            self.logger.warning(f"* SOV Update failed!  Raw API output:\n{response_data}")
             return False
 
     def get_or_create_output_async_start(
@@ -532,7 +533,7 @@ class SOVFixerAPIClient(APIClientBase):
         overwrite_existing=False,
         timeout: timedelta | None = timedelta(minutes=5),
     ) -> t.OutputData:
-        """Get or create an output from a SOV Fixer request. If it exists, it will return immediately.
+        """Synchronously get or create an output from a SOV Fixer request. If it exists, it will return immediately.
         If it does not exist, it will start the generation process and poll for completion, then return it."""
         client = self
 
@@ -556,12 +557,16 @@ class SOVFixerAPIClient(APIClientBase):
                 time.sleep(POLL_SECS)
             else:
                 break
+
+        self.logger.info(f"+ Finished with result {response_data.get('result',{}).get('status')}")
         result = response_data.get("result", {})
+        if not result:
+            raise ValueError(f"Invalid response: {response_data}")
         output = t.OutputData(
-            label=result.get("label", ""),
-            scrubbed_filename=result.get("scrubbed_filename", ""),
-            output_format=result.get("output_format", output_format),
-            url=result.get("url", ""),
-            ping_ready_id=result.get("ping_ready_id", ""),
+            label=result.get("label", None),
+            scrubbed_filename=result.get("scrubbed_filename", None),
+            output_format=result.get("output_format", None),
+            url=result.get("url", None),
+            ping_ready_id=result.get("ping_ready_id", None),
         )
         return output
