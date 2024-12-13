@@ -103,6 +103,7 @@ def _attributes_to_dict(ctx: click.Context, attribute: click.Option, attributes:
     help="Identify `filename` document type.  Defaults to SOV.",
 )
 @click.option("--callback-url", help="(Optional) Provide a URL to which results should be POSTed.", metavar="URL")
+@click.option("--update-callback-url", help="(Optional) Provide a URL to which update (SUD) results should be POSTed.", metavar="URL")
 @click.option(
     "-I",
     "--integrations",
@@ -158,6 +159,7 @@ def fix(
     write,
     delegate_to,
     noinput,
+    update_callback_url,
 ):
     if isinstance(filename, pathlib.Path):
         filenames = [str(filename)]
@@ -177,6 +179,7 @@ def fix(
         extra_data=extra_data,
         delegate_to=delegate_to,
         noinput=noinput,
+        update_callback_url=update_callback_url,
     )
     sovid = fix_sov_ret["id"]
     local_outputs = fix_sov_ret["local_outputs"]
