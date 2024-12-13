@@ -177,18 +177,24 @@ class APIClientBase:
         cls, file: IO[bytes] | str | pathlib.Path | Collection[IO[bytes] | str | pathlib.Path], filename=None
     ) -> list[tuple[str, tuple[str, IO[bytes]]]]:
         if is_fileobj(file) or isinstance(file, (str, pathlib.Path)):
-            files = [file]
+            # if it's a singular input...
+            files = [(file, filename)]
         else:
-            files = [_ for _ in file]
+            if filename is None:
+                filename = [None] * len(file)
+            if len(file) != len(filename):
+                raise ValueError("Length of file and filename must be the same.")
+
+            files = [(_, fname) for _, fname in zip(file, filename)]
 
         ret = []
-        for f in files:
+        for f, fname in files:
             # files = [('file', open('report.xls', 'rb')), ('file', open('report2.xls', 'rb'))]
             if is_fileobj(f):
-                if filename is None:
+                if fname is None:
                     raise ValueError("Need filename if file is a file object.")
 
-                ret.append(("file", (filename, f)))
+                ret.append(("file", (fname, f)))
             else:
                 assert isinstance(f, (str, pathlib.Path)), f"Expected str or pathlib.Path, got {type(f)}"
                 if not os.path.exists(f):

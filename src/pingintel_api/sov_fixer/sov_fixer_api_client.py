@@ -33,8 +33,8 @@ class SOVFixerAPIClient(APIClientBase):
     def fix_sov_async_start(
         self,
         file: IO[bytes] | str | pathlib.Path | Collection[IO[bytes] | str | pathlib.Path],
-        document_type,
-        filename=None,
+        document_type: str = "SOV",
+        filename: str | Collection[str] | None = None,
         callback_url=None,
         output_formats=None,
         client_ref=None,
@@ -43,6 +43,15 @@ class SOVFixerAPIClient(APIClientBase):
         delegate_to: str | None = None,
         update_callback_url=None,
     ):
+        """
+        Start a SOV Fixer request from one or more files asynchronously.
+
+        :param file: The file to process.  Can be a file object, a path to a file, or a list of file objects or paths.
+        :param document_type: The type of document being processed.  Default is "SOV".
+        :param filename: The name of the file.  If file is a file object, this is required. If file is a list of file objects, this must be a list of filenames.
+        :param callback_url: The URL to call when the request is complete.
+        """
+
         url = self.api_url + "/api/v1/sov"
 
         files = self._get_files_for_request(file, filename)
