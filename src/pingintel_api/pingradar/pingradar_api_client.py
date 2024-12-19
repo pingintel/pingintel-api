@@ -78,7 +78,7 @@ class PingRadarAPIClient(APIClientBase):
         return response_data
 
     def get_submission_detail(self, pingid: str):  # -> t.PingRadarSubmissionDetailResponse:
-        url = self.api_url + f"/api/v1/submission/{pingid}"
+        url = self.api_url + f"/api/v1/submission/{pingid}/history"
 
         response = self.get(url)
 

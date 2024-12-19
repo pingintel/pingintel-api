@@ -2,8 +2,6 @@
 
 # Copyright 2021-2024 Ping Data Intelligence
 
-import json
-import logging
 import os
 import pathlib
 import pprint
@@ -11,11 +9,9 @@ import time
 from typing import IO, Collection, Literal
 from datetime import timedelta
 import click
-import requests
 
 from pingintel_api.api_client_base import APIClientBase
 
-from .. import constants as c
 from ..utils import is_fileobj, raise_for_status
 from . import types as t
 
@@ -55,7 +51,6 @@ class SOVFixerAPIClient(APIClientBase):
         url = self.api_url + "/api/v1/sov"
 
         files = self._get_files_for_request(file, filename)
-
         data = {}
         if callback_url:
             data["callback_url"] = callback_url

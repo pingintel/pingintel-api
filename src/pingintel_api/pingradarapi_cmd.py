@@ -140,6 +140,7 @@ def get(ctx, pingid):
 @click.option("--search", help="Filter key fields by an arbitrary string")
 # @click.option("--organization__short_name")
 def activity(ctx, pretty, id, cursor_id, prev_cursor_id, page_size, fields, search):
+    """List submission activity, using /api/v1/submission"""
     client = get_client(ctx)
 
     results = client.list_submission_activity(

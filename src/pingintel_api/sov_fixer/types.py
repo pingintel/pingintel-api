@@ -40,6 +40,17 @@ class FixSOVResponseRequest(TypedDict):
     pct_complete: int
 
 
+class FixSOVResponseResultInput(TypedDict):
+    """Results/details of processing of each of the input files."""
+
+    status: SOV_RESULT_STATUS
+    identified_document_type: str | None
+    url: str
+    filename: str
+    # checksum: str
+    error_message: NotRequired[str | None]
+
+
 class FixSOVResponseResultOutput(TypedDict):
     url: str
     description: str
@@ -49,6 +60,7 @@ class FixSOVResponseResultOutput(TypedDict):
 class FixSOVResponseResult(TypedDict):
     message: str
     status: SOV_RESULT_STATUS
+    inputs: list[FixSOVResponseResultInput]
     outputs: list[FixSOVResponseResultOutput]
 
 
