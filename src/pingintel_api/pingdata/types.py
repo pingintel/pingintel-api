@@ -1,5 +1,6 @@
 # Copyright 2021-2024 Ping Data Intelligence
-from typing import Any, Dict, List, NotRequired, Optional, TypedDict
+from typing import Any, Dict, List, NotRequired, Optional, TypedDict, Literal
+from datetime import datetime
 import enum
 
 
@@ -124,3 +125,49 @@ class Location(TypedDict):
     dtc_include_coastline_within_miles: NotRequired[float | None]
     dtc_return_connected_coastlines: NotRequired[bool | None]
     insured_name: NotRequired[str | None]
+
+
+class EnhanceResponse(TypedDict):
+    id: str
+    location_data: dict[SOURCES, dict]
+
+
+class BulkEnhanceResponseCheckProgressResultOutputFile(TypedDict):
+    url: str
+    filename: str
+    description: str
+
+
+class BulkEnhanceResponseOutputFile(BulkEnhanceResponseCheckProgressResultOutputFile):
+    local_filepath: str | None
+
+
+class BulkEnhanceResponseCheckProgressRequest(TypedDict):
+    status: Literal["PENDING", "QUEUED", "IN_PROGRESS", "COMPLETE", "FAILED"]
+    requested_at: datetime
+    progress_started_at: datetime | None
+    num_requested: int | None
+    num_completed: int | None
+    num_problems: int | None
+    num_canceled: int | None
+    completed_at: datetime | None
+
+
+class BulkEnhanceResponseCheckProgressResult(TypedDict):
+    status: str
+    message: str
+    total_processing_time: float
+    outputs: NotRequired[list[BulkEnhanceResponseCheckProgressResultOutputFile]]
+    additional_info: NotRequired[dict]
+    sources: NotRequired[list[dict]]
+
+
+class BulkEnhanceResponseCheckProgress(TypedDict):
+    request: BulkEnhanceResponseCheckProgressRequest
+    result: NotRequired[BulkEnhanceResponseCheckProgressResult]
+
+
+class BulkEnhanceResponse(TypedDict):
+    id: str
+    success: bool
+    output_files: NotRequired[list[BulkEnhanceResponseOutputFile]]
