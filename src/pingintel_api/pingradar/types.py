@@ -11,6 +11,8 @@ class PingRadarListActivityDetailDocumentResponse(TypedDict):
     created_time: str
     processing_pct_complete: NotRequired[int | None]
     processing_last_message: NotRequired[str | None]
+    sovfixer_result_status: NotRequired[str | None]
+    sovfixer_result_message: NotRequired[str | None]
     is_archived: bool
     actions: list[str]
 
@@ -28,7 +30,6 @@ class PingRadarListActivityDetailResponse(TypedDict):
     id: str
     modified_time: str
     pk: int
-    source__source_type: str
     team__name: str | None
     workflow_status__name: str | None
     workflow_status_id: int | None

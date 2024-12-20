@@ -6,7 +6,7 @@ from typing import Any, NotRequired, TypedDict
 from ..common_types import PingMapsStatus
 
 
-class SOV_STATUS(str, enum.Enum):
+class SOV_STATUS(enum.StrEnum):
     PENDING = "PENDING"
     IN_PROGRESS = "IN_PROGRESS"
     ENRICHING = "ENRICHING"
@@ -23,9 +23,10 @@ INCOMPLETE_STATUSES = [
 ]
 
 
-class SOV_RESULT_STATUS(str, enum.Enum):
+class SOV_RESULT_STATUS(enum.StrEnum):
     SUCCESS = "SUCCESS"
     FAILED_TO_READ = "FAILED_TO_READ"
+    PARTIAL_PARSE = "PARTIAL_PARSE"
     FAILED_TO_PARSE = "FAILED_TO_PARSE"
     FAILED_TO_PROCESS = "FAILED_TO_PROCESS"
 
@@ -48,7 +49,7 @@ class FixSOVResponseResultInput(TypedDict):
     url: str
     filename: str
     # checksum: str
-    error_message: NotRequired[str | None]
+    status_message: NotRequired[str | None]
 
 
 class FixSOVResponseResultOutput(TypedDict):
@@ -122,6 +123,7 @@ class SOVData(TypedDict):
     status_display: str | None
     last_health_status: str | None
     client_ref: str | None
+    input_data: list[FixSOVResponseResultInput] | None
     output_data: list[OutputData] | None
     origin: str | None
     organization__short_name: str | None
