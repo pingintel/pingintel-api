@@ -6,15 +6,31 @@ from ..common_types import PingMapsStatus
 class PingRadarListActivityDetailDocumentResponse(TypedDict):
     document_type: str
     filename: str
-    processing_status: str
     url: str
     created_time: str
-    processing_pct_complete: NotRequired[int | None]
-    processing_last_message: NotRequired[str | None]
+    is_archived: bool
+    archived_on: str | None
+    archived_reason: str | None
+    actions: list[str]
+
+
+class PingRadarListActivityDetailJobSovFixerDetailResponse(TypedDict):
+    sovfixer_sovid: NotRequired[str | None]
     sovfixer_result_status: NotRequired[str | None]
     sovfixer_result_message: NotRequired[str | None]
-    is_archived: bool
-    actions: list[str]
+
+
+class PingRadarListActivityDetailJobResponse(TypedDict):
+    job_id: str
+    filenames: list[str] | None
+    user_id: int
+    job_type: Literal["SOVFIXER", "AIR", "RMS"]
+    created_time: str
+    updated_time: str
+    processing_status: str
+    processing_pct_complete: NotRequired[float | None]
+    processing_last_message: NotRequired[str | None]
+    job_type_details: NotRequired[PingRadarListActivityDetailJobSovFixerDetailResponse]
 
 
 class PingRadarListActivityDetailResponse(TypedDict):
@@ -27,6 +43,7 @@ class PingRadarListActivityDetailResponse(TypedDict):
     division__short_name: str
     division_id: int
     documents: list[PingRadarListActivityDetailDocumentResponse]
+    jobs: list[PingRadarListActivityDetailJobResponse]
     id: str
     modified_time: str
     pk: int
