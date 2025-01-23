@@ -13,6 +13,8 @@ class PingRadarListActivityDetailDocumentResponse(TypedDict):
     archived_on: str | None
     archived_reason: str | None
     actions: list[str]
+    extension: str | None
+    size: int | None
 
 
 class PingRadarListActivityDetailJobSovFixerDetailResponse(TypedDict):
