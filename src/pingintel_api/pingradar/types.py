@@ -7,7 +7,7 @@ class PingRadarListActivityDetailDocumentResponse(TypedDict):
     document_type: str
     filename: str
     url: str
-    preview_proxy_url: str | None # non null for documents like .docx that use pdf type as preview
+    preview_url: str | None # non null for documents like .docx that use pdf type as preview
     created_time: str
     is_archived: bool
     archived_on: str | None
