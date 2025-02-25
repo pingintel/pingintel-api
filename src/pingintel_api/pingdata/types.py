@@ -77,6 +77,7 @@ class SOURCES(Choices):
     INTERMAP_FLOOD = "IMF", "Intermap Flood"
     CORELOGIC_WILDFIRE_RISK_SCORE = "CLWRS", "CoreLogic Wildfire Risk Score"
     REASK_METRYC = "REASKM", "Reask Metryc"
+    EASI_CRIME = "EC", "Easi Crime"
 
 
 class RequestStatus(str, enum.Enum):
