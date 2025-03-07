@@ -574,3 +574,19 @@ class SOVFixerAPIClient(APIClientBase):
             ping_ready_id=result.get("ping_ready_id", None),
         )
         return output
+
+    def add_building(self, sovid: str, building_data):
+        url = self.api_url + f"/api/v1/sov/{sovid}/add_building"
+        data = {}
+        data["building_data"] = building_data
+        response = self.post(url, json=data)
+        if 200 <= response.status_code < 300:
+            # pprint.pprint(response.json())
+            pass
+        else:
+            self.logger.warning(f"Error adding building to SOV:\n{pprint.pformat(response.text)}")
+
+        raise_for_status(response)
+
+        response_data = response.json()
+        return response_data

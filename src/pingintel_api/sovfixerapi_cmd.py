@@ -301,6 +301,17 @@ def excel_rms_job(ctx, rms_job_id):
     breakpoint()
 
 
+@cli.command()
+@click.pass_context
+@click.argument("sovid")
+@click.argument('building_data_path', type=click.Path(exists=True))
+def add_building(ctx, sovid, building_data_path):
+    client = get_client(ctx)
+    with open(building_data_path, 'r') as file:
+        data = json.load(file)
+    response = client.add_building(sovid, data)
+    pprint.pprint(response)
+
 def main():
     cli()
 
