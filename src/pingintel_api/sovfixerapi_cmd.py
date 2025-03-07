@@ -151,6 +151,12 @@ def _attributes_to_dict(ctx: click.Context, attribute: click.Option, attributes:
     default=False,
     help="If set, do not prompt for confirmation.",
 )
+@click.option(
+    "--no-ping-data-api",
+    is_flag=True,
+    default=False,
+    help="If set, do not allow ping data api calls.",
+)
 def fix(
     ctx,
     filename,
@@ -164,6 +170,7 @@ def fix(
     delegate_to,
     noinput,
     update_callback_url,
+    no_ping_data_api,
 ):
     if isinstance(filename, pathlib.Path):
         filenames = [str(filename)]
@@ -184,6 +191,7 @@ def fix(
         delegate_to=delegate_to,
         noinput=noinput,
         update_callback_url=update_callback_url,
+        allow_ping_data_api=not no_ping_data_api,
     )
     sovid = fix_sov_ret["id"]
     local_outputs = fix_sov_ret["local_outputs"]
