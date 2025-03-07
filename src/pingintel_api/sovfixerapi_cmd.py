@@ -151,6 +151,12 @@ def _attributes_to_dict(ctx: click.Context, attribute: click.Option, attributes:
     default=False,
     help="If set, do not prompt for confirmation.",
 )
+@click.option(
+    "--no-ping-data-api",
+    is_flag=True,
+    default=False,
+    help="If set, do not allow ping data api calls.",
+)
 def fix(
     ctx,
     filename,
@@ -164,6 +170,7 @@ def fix(
     delegate_to,
     noinput,
     update_callback_url,
+    no_ping_data_api,
 ):
     if isinstance(filename, pathlib.Path):
         filenames = [str(filename)]
@@ -184,6 +191,7 @@ def fix(
         delegate_to=delegate_to,
         noinput=noinput,
         update_callback_url=update_callback_url,
+        allow_ping_data_api=not no_ping_data_api,
     )
     sovid = fix_sov_ret["id"]
     local_outputs = fix_sov_ret["local_outputs"]
@@ -299,6 +307,17 @@ def excel_rms_job(ctx, rms_job_id):
     pprint.pprint(job_info)
     breakpoint()
 
+
+@cli.command()
+@click.pass_context
+@click.argument("sovid")
+@click.argument('building_data_path', type=click.Path(exists=True))
+def add_building(ctx, sovid, building_data_path):
+    client = get_client(ctx)
+    with open(building_data_path, 'r') as file:
+        data = json.load(file)
+    response = client.add_building(sovid, data)
+    pprint.pprint(response)
 
 def main():
     cli()
