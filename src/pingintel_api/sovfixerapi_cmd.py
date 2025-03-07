@@ -103,7 +103,11 @@ def _attributes_to_dict(ctx: click.Context, attribute: click.Option, attributes:
     help="Identify `filename` document type.  Defaults to SOV.",
 )
 @click.option("--callback-url", help="(Optional) Provide a URL to which results should be POSTed.", metavar="URL")
-@click.option("--update-callback-url", help="(Optional) Provide a URL to which update (SUD) results should be POSTed.", metavar="URL")
+@click.option(
+    "--update-callback-url",
+    help="(Optional) Provide a URL to which update (SUD) results should be POSTed.",
+    metavar="URL",
+)
 @click.option(
     "-I",
     "--integrations",
@@ -200,6 +204,13 @@ def fix(
 @click.option("--origin", type=click.Choice(["api", "email"]))
 @click.option("--status", type=click.Choice(["P", "I", "E", "R", "C", "F"]))
 @click.option("--organization__short_name")
+@click.option(
+    "-D",
+    "--download",
+    metavar="OUTPUT_PATH",
+    help="Download all attached files to OUTPUT_PATH",
+    type=click.Path(exists=False, dir_okay=True, file_okay=False, resolve_path=True, path_type=pathlib.Path),
+)
 def activity(
     ctx,
     id=None,
@@ -211,6 +222,7 @@ def activity(
     origin: Literal["api", "email"] | None = None,
     status: Literal["P", "I", "E", "R", "C", "F"] | None = None,
     organization__short_name=None,
+    download=None,
 ):
     client = get_client(ctx)
     results = client.list_activity(
@@ -226,31 +238,18 @@ def activity(
     )
     pprint.pprint(results)
 
-
-@cli.command()
-@click.pass_context
-@click.option(
-    "-S",
-    "--search",
-    help="(Optional) Provide a search string, which can be a SOVID, a filename, an insured name, etc.",
-)
-@click.option(
-    "-o",
-    "--output-path",
-    help="If specified, provide a download path for all attached files.",
-)
-def sov(ctx, search, output_path):
-    client = get_client(ctx)
-    results = client.list_activity(search=search, page_size=1)
-    if not results or not results["results"]:
-        logger.info("No results found.")
-        return
-    result = results["results"][0]
-    output_data = result["output_data"]
-
-    if output_path:
-        for output_ret in output_data:
-            client.activity_download(output_ret, actually_write=True, output_path=output_path)
+    if download:
+        for result in results["results"]:
+            input_data = result["input_data"]
+            for input_ret in input_data:
+                output_path = download / input_ret["filename"]
+                client.activity_download(input_ret, actually_write=True, output_path=output_path)
+                click.echo(f"Downloaded: {output_path}")
+            output_data = result["output_data"]
+            for output_ret in output_data:
+                output_path = download / output_ret["scrubbed_filename"]
+                client.activity_download(output_ret, actually_write=True, output_path=output_path)
+                click.echo(f"Downloaded: {output_path}")
 
 
 @cli.command()

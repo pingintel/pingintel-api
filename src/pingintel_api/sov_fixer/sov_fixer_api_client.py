@@ -167,8 +167,13 @@ class SOVFixerAPIClient(APIClientBase):
 
     def activity_download(self, output_ret, actually_write=False, output_path=None):
         output_url = output_ret["url"]
-        output_description = output_ret["label"]
-        output_filename = output_ret["scrubbed_filename"]
+        is_input_ret = "label" not in output_ret
+        if is_input_ret:
+            output_description = "Input"
+            output_filename = output_ret["filename"]
+        else:
+            output_description = output_ret["label"]
+            output_filename = output_ret["scrubbed_filename"]
         if output_path is None:
             output_path = output_filename
 
