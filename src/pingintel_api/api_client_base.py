@@ -3,7 +3,8 @@ import logging
 import os
 import pathlib
 from typing import IO, Collection, overload
-
+import gzip
+import json
 import click
 import requests
 import requests
@@ -110,7 +111,17 @@ class APIClientBase:
         self.logger.debug(f"POST {url}")
         if "data" in kwargs:
             self.logger.debug(f"POST data: {kwargs['data']}")
-        # breakpoint()
+
+        if (
+            "headers" in kwargs
+            and "content-encoding" in kwargs["headers"]
+            and kwargs["headers"]["content-encoding"] == "gzip"
+        ):
+            self.logger.debug(f"Converting raw POST json to gzip data")
+            request_body = gzip.compress(json.dumps(kwargs["json"]).encode("utf-8"))
+            kwargs["data"] = request_body
+            del kwargs["json"]
+
         return self.session.post(url, **kwargs)
 
     def _create_session(self):
