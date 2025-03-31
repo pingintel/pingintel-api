@@ -39,6 +39,7 @@ class SOVFixerAPIClient(APIClientBase):
         delegate_to: str | None = None,
         update_callback_url=None,
         allow_ping_data_api=None,
+        workflow=None,
     ):
         """
         Start a SOV Fixer request from one or more files asynchronously.
@@ -72,6 +73,8 @@ class SOVFixerAPIClient(APIClientBase):
             data["delegate_to"] = delegate_to
         if allow_ping_data_api is not None:
             data["allow_ping_data_api"] = allow_ping_data_api
+        if workflow is not None:
+            data["workflow"] = workflow
 
         response = self.post(url, files=files, data=data)
         if 200 <= response.status_code < 300:
@@ -202,6 +205,7 @@ class SOVFixerAPIClient(APIClientBase):
         delegate_to=None,
         noinput=True,
         allow_ping_data_api=True,
+        workflow=None,
     ) -> t.FixSOVProcessResponse:
         sov_fixer_client = self
         start_response = sov_fixer_client.fix_sov_async_start(
@@ -215,6 +219,7 @@ class SOVFixerAPIClient(APIClientBase):
             update_callback_url=update_callback_url,
             delegate_to=delegate_to,
             allow_ping_data_api=allow_ping_data_api,
+            workflow=workflow,
         )
 
         while 1:

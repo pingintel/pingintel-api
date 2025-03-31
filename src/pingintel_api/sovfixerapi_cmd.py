@@ -140,6 +140,11 @@ def _attributes_to_dict(ctx: click.Context, attribute: click.Option, attributes:
     help="(default) Actually write the output. If disabled, download but do not persist the result to disk.",
 )
 @click.option(
+    "-W",
+    "--workflow",
+    help="If set, specifies the workflow to use for processing. Defaults to the organization's default workflow.",
+)
+@click.option(
     "-D",
     "--delegate-to",
     metavar="ORG_SHORT_NAME",
@@ -167,6 +172,7 @@ def fix(
     client_ref,
     extra_data,
     write,
+    workflow,
     delegate_to,
     noinput,
     update_callback_url,
@@ -192,6 +198,7 @@ def fix(
         noinput=noinput,
         update_callback_url=update_callback_url,
         allow_ping_data_api=not no_ping_data_api,
+        workflow=workflow,
     )
     sovid = fix_sov_ret["id"]
     local_outputs = fix_sov_ret["local_outputs"]
@@ -292,6 +299,16 @@ def get_output(ctx, sovid_or_sudid, output_format, write, revision, overwrite_ex
     client = get_client(ctx)
     output_data = client.get_or_create_output(sovid_or_sudid, output_format, revision, overwrite_existing)
     client.activity_download(output_data, actually_write=write)
+
+
+@cli.command()
+@click.pass_context
+@click.argument("item_key")
+def get_map(ctx, item_key):
+    client = get_client(ctx)
+    response = client.get(client.api_url + f"/api/v1/pli/pdf/{item_key}")
+    responsejson = response.json()
+    pprint.pprint(responsejson)
 
 
 @cli.command()
