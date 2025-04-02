@@ -4,6 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pingintel-api"
+metadata-version = 2.4
 dynamic = ["version", "dependencies"]
 authors = [
   { name="Scott Stafford", email="scott@pingintel.com" },
