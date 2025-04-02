@@ -10,7 +10,7 @@ from timeit import default_timer as timer
 
 import click
 
-from pingintel_api import PingRadarAPIClient
+from pingintel_api import PingVisionAPIClient
 from pingintel_api.api_client_base import AuthTokenNotFound
 from pingintel_api.utils import set_verbosity
 
@@ -22,9 +22,9 @@ start_time = None
 
 
 """
-pingradarapi.py
+pingvisionapi.py
 
-Example Python commandline script for using the Ping Data Technologies Ping Radar API to process SOVs.
+Example Python commandline script for using the Ping Data Technologies Ping Vision API to process SOVs.
 """
 
 
@@ -49,7 +49,7 @@ Example Python commandline script for using the Ping Data Technologies Ping Rada
 )
 @click.option(
     "--auth-token",
-    help="Provide auth token via --auth-token or PINGRADAR_AUTH_TOKEN environment variable.",
+    help="Provide auth token via --auth-token or PINGVISION_AUTH_TOKEN environment variable.",
 )
 @click.option(
     "-v", "--verbose", count=True, help="Can be used multiple times. -v for INFO, -vv for DEBUG, -vvv for very DEBUG."
@@ -63,12 +63,12 @@ def cli(ctx, environment, api_url, auth_token, verbose):
     set_verbosity(verbose)
 
 
-def get_client(ctx) -> PingRadarAPIClient:
+def get_client(ctx) -> PingVisionAPIClient:
     environment = ctx.obj["environment"]
     auth_token = ctx.obj["auth_token"]
     api_url = ctx.obj["api_url"]
     try:
-        client = PingRadarAPIClient(environment=environment, auth_token=auth_token, api_url=api_url)
+        client = PingVisionAPIClient(environment=environment, auth_token=auth_token, api_url=api_url)
     except AuthTokenNotFound as e:
         click.echo(e)
         raise click.Abort()

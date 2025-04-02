@@ -3,11 +3,11 @@ from typing import TypedDict, NotRequired, Literal
 from ..common_types import PingMapsStatus
 
 
-class PingRadarListActivityDetailDocumentResponse(TypedDict):
+class PingVisionListActivityDetailDocumentResponse(TypedDict):
     document_type: str
     filename: str
     url: str
-    preview_url: str | None # non null for documents like .docx that use pdf type as preview
+    preview_url: str | None  # non null for documents like .docx that use pdf type as preview
     created_time: str
     is_archived: bool
     archived_on: str | None
@@ -17,13 +17,13 @@ class PingRadarListActivityDetailDocumentResponse(TypedDict):
     size: int | None
 
 
-class PingRadarListActivityDetailJobSovFixerDetailResponse(TypedDict):
+class PingVisionListActivityDetailJobSovFixerDetailResponse(TypedDict):
     sovfixer_sovid: NotRequired[str | None]
     sovfixer_result_status: NotRequired[str | None]
     sovfixer_result_message: NotRequired[str | None]
 
 
-class PingRadarListActivityDetailJobResponse(TypedDict):
+class PingVisionListActivityDetailJobResponse(TypedDict):
     job_id: str
     filenames: list[str] | None
     user_id: int
@@ -33,10 +33,10 @@ class PingRadarListActivityDetailJobResponse(TypedDict):
     processing_status: str
     processing_pct_complete: NotRequired[float | None]
     processing_last_message: NotRequired[str | None]
-    job_type_details: NotRequired[PingRadarListActivityDetailJobSovFixerDetailResponse]
+    job_type_details: NotRequired[PingVisionListActivityDetailJobSovFixerDetailResponse]
 
 
-class PingRadarListActivityDetailResponse(TypedDict):
+class PingVisionListActivityDetailResponse(TypedDict):
     actions: dict
     claimed_by_id: str | None
     company__name: str | None
@@ -45,8 +45,8 @@ class PingRadarListActivityDetailResponse(TypedDict):
     division__name: str
     division__short_name: str
     division_id: int
-    documents: list[PingRadarListActivityDetailDocumentResponse]
-    jobs: list[PingRadarListActivityDetailJobResponse]
+    documents: list[PingVisionListActivityDetailDocumentResponse]
+    jobs: list[PingVisionListActivityDetailJobResponse]
     id: str
     modified_time: str
     pk: int
@@ -60,15 +60,15 @@ class PingRadarListActivityDetailResponse(TypedDict):
     triage_rule_results: list[dict[str, str | int | float]] | None
 
 
-class PingRadarListActivityResponse(TypedDict):
-    results: list[PingRadarListActivityDetailResponse]
+class PingVisionListActivityResponse(TypedDict):
+    results: list[PingVisionListActivityDetailResponse]
     cursor_id: str | None
     prev_cursor_id: str | None
     # total_count: int
     # returned_count: int
 
 
-class PingRadarCreateSubmissionResponse(TypedDict):
+class PingVisionCreateSubmissionResponse(TypedDict):
     id: str
     message: str
     url: str

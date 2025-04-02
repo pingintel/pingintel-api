@@ -21,11 +21,11 @@ from . import types as t
 logger = logging.getLogger(__name__)
 
 
-class PingRadarAPIClient(APIClientBase):
-    api_subdomain = "radar"
+class PingVisionAPIClient(APIClientBase):
+    api_subdomain = "vision"
     api_base_domain = "pingintel.com"
-    auth_token_env_name = "PINGRADAR_AUTH_TOKEN"
-    product = "pingradar"
+    auth_token_env_name = "PINGVISION_AUTH_TOKEN"
+    product = "pingvision"
 
     def create_submission(
         self,
@@ -33,7 +33,7 @@ class PingRadarAPIClient(APIClientBase):
         client_ref: str | None = None,
         delegate_to_division: str | None = None,
         delegate_to_team: str | None = None,
-    ) -> t.PingRadarCreateSubmissionResponse:
+    ) -> t.PingVisionCreateSubmissionResponse:
         """
         Initiate a new submission from one or more original files.
 
@@ -77,7 +77,7 @@ class PingRadarAPIClient(APIClientBase):
         response_data = response.json()
         return response_data
 
-    def get_submission_detail(self, pingid: str):  # -> t.PingRadarSubmissionDetailResponse:
+    def get_submission_detail(self, pingid: str):  # -> t.PingVisionSubmissionDetailResponse:
         url = self.api_url + f"/api/v1/submission/{pingid}/history"
 
         response = self.get(url)
@@ -96,7 +96,7 @@ class PingRadarAPIClient(APIClientBase):
         fields: list[str] | None = None,
         search: str | None = None,
         organization__short_name: str | None = None,
-    ) -> t.PingRadarListActivityResponse:
+    ) -> t.PingVisionListActivityResponse:
         url = self.api_url + "/api/v1/submission"
 
         kwargs = {}

@@ -19,9 +19,9 @@ SOVFIXER_AUTH_TOKEN_STG = efghxxxx
 # use _DEV for staging environment. if not provided, fall back to SOVFIXER_AUTH_TOKEN.
 SOVFIXER_AUTH_TOKEN_DEV = efghxxxx
 
-[pingradar]
+[pingvision]
 # use _DEV or _STG  versions as desired
-PINGRADAR_AUTH_TOKEN = abcdxxxx
+PINGVISION_AUTH_TOKEN = abcdxxxx
 
 [pingmaps]
 # use _DEV or _STG  versions as desired
@@ -33,7 +33,7 @@ PINGMAPS_AUTH_TOKEN = abcdxxxx
 This package installs a number of commandline tools:
 
 `sovfixerapi`
-`pingradarapi`
+`pingvisionapi`
 `pingmapsapi`
 
 These tools are thin wrappers around the client API libraries.
