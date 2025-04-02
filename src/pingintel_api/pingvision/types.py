@@ -1,6 +1,14 @@
-from typing import TypedDict, NotRequired, Literal
+import enum
+from typing import Any, Self, TypedDict, NotRequired, Literal
 
 from ..common_types import PingMapsStatus
+
+
+class UI_VIEW_TYPES(str, enum.Enum):
+    LIST = "LIST"
+    TRIAGE = "TRIAGE"
+    SETTINGS = "SETTINGS"
+    USER_CUSTOM = "USER_CUSTOM"
 
 
 class PingVisionListActivityDetailDocumentResponse(TypedDict):
@@ -72,3 +80,39 @@ class PingVisionCreateSubmissionResponse(TypedDict):
     id: str
     message: str
     url: str
+
+
+# move to pingintel types when done
+class PingVisionHistoryAPIResponseItem(TypedDict):
+    uid: str
+    actor_id: int
+    actor_username: str
+    timestamp: str  # isoformat
+    verb: NotRequired[str]
+    messages: list[str | dict[Literal["field", "to_value"], Any]]
+    metadata: NotRequired[dict[str, Any]]
+
+
+### These types should go in pingintel_api when they're done being tweaked
+class PingVisionNavItemResponse(TypedDict):
+    team_id: NotRequired[int]
+    slug: str
+    name: str
+    view_type: UI_VIEW_TYPES
+    description: str
+    filter: NotRequired[dict[str, Any]]
+    icon: NotRequired[str]
+    group_by: NotRequired[str]
+    order_by: NotRequired[str]
+    count: NotRequired[str]
+
+
+class PingVisionNavGroupResponse(TypedDict):
+    items: list[PingVisionNavItemResponse | Self]
+    # division_id: int
+    name: str
+    icon: NotRequired[str]
+
+
+class PingVisionNavResponse(TypedDict):
+    views: list[PingVisionNavGroupResponse | PingVisionNavItemResponse]
