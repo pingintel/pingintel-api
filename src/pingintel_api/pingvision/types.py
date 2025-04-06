@@ -140,3 +140,19 @@ class PingVisionListSubmissionStatusResponse(TypedDict):
 
 
 class PingVisionChangeSubmissionStatusResponse(TypedDict): ...
+
+
+class PingVisionSubmissionBulkUpdateUpdatedData(TypedDict):
+    claimed_by_id: NotRequired[int]
+    workflow_status_id: NotRequired[int]
+
+
+class PingVisionSubmissionBulkUpdateResponse(TypedDict):
+    id: str
+    updated_data: PingVisionSubmissionBulkUpdateUpdatedData
+    error: NotRequired[str]
+
+class PingVisionSubmissionBulkUpdateChangeItem(TypedDict):
+    action: Literal["claim", "change_status"]
+    parameters: dict[Literal["claimed_by_id", "workflow_status_id"], int]
+
