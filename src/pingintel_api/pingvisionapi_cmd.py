@@ -192,6 +192,20 @@ def download_document(ctx, document_url, output):
     print(f"Downloaded file to {output.name}")
 
 
+@cli.command()
+@click.pass_context
+@click.option("-d", "--division-id", type=str, help="Division ID to filter by")
+def list_submission_statuses(ctx, division_id):
+    """List submission statuses"""
+    client = get_client(ctx)
+
+    results = client.list_submission_statuses(division_id=division_id)
+    if not results:
+        print("No submission statuses found.")
+        return
+    pprint.pprint(results)
+
+
 def main():
     cli()
 

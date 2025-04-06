@@ -123,10 +123,10 @@ class PingVisionAPIClient(APIClientBase):
         return response_data
 
     @overload
-    def download_document(self, output_path_or_stream, document_url: str): ...
+    def download_document(self, output_path_or_stream, *, document_url: str): ...
 
     @overload
-    def download_document(self, output_path_or_stream, pingid: str, filename: str): ...
+    def download_document(self, output_path_or_stream, *, pingid: str, filename: str): ...
 
     def download_document(self, output_path_or_stream, document_url=None, pingid=None, filename=None):
         if not document_url:
@@ -144,3 +144,23 @@ class PingVisionAPIClient(APIClientBase):
         else:
             with open(output_path_or_stream, "wb") as f:
                 f.write(response.content)
+
+    def list_submission_statuses(self, division_id: int) -> t.PingVisionListSubmissionStatusResponse:
+        url = self.api_url + f"/api/v1/submission-status/"
+
+        response = self.get(url, params={"division_id": division_id})
+        raise_for_status(response)
+
+        response_data = response.json()
+        return response_data
+
+    def change_status(self, pingid: str, workflow_status_id: int) -> t.PingVisionChangeSubmissionStatusResponse:
+        url = self.api_url + f"/api/v1/submission/{pingid}/change_status/"
+
+        data = {
+            "workflow_status_id": workflow_status_id,
+        }
+        response = self.patch(url, json=data)
+        raise_for_status(response)
+        response_data = response.json()
+        return response_data
