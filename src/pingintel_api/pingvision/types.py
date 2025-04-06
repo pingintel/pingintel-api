@@ -116,3 +116,27 @@ class PingVisionNavGroupResponse(TypedDict):
 
 class PingVisionNavResponse(TypedDict):
     views: list[PingVisionNavGroupResponse | PingVisionNavItemResponse]
+
+
+class SUBMISSION_STATUS_CATEGORY(str, enum.Enum):
+    RECEIVED = "R"
+    AUTOMATED_PROCESSING = "A"
+    READY = "Y"
+    IN_PROGRESS = "I"
+    ON_HOLD = "H"
+    COMPLETED = "C"
+    CLOSED = "L"
+
+
+class PingVisionListSubmissionStatusItemResponse(TypedDict):
+    category: SUBMISSION_STATUS_CATEGORY
+    division: int | None
+    id: int
+    name: str
+
+
+class PingVisionListSubmissionStatusResponse(TypedDict):
+    results: list[PingVisionListSubmissionStatusItemResponse]
+
+
+class PingVisionChangeSubmissionStatusResponse(TypedDict): ...

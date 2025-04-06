@@ -110,7 +110,12 @@ class APIClientBase:
         self.logger.debug(f"POST {url}")
         if "data" in kwargs:
             self.logger.debug(f"POST data: {kwargs['data']}")
-        # breakpoint()
+        return self.session.post(url, **kwargs)
+
+    def patch(self, url, **kwargs):
+        self.logger.debug(f"PATCH {url}")
+        if "data" in kwargs:
+            self.logger.debug(f"PATCH data: {kwargs['data']}")
         return self.session.post(url, **kwargs)
 
     def _create_session(self):
