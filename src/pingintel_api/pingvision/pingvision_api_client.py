@@ -10,7 +10,7 @@ import pathlib
 import pprint
 import time
 from timeit import default_timer as timer
-from typing import BinaryIO, TypedDict, overload
+from typing import BinaryIO, TypedDict, overload, List
 
 from pingintel_api.api_client_base import APIClientBase
 
@@ -160,6 +160,26 @@ class PingVisionAPIClient(APIClientBase):
         data = {
             "workflow_status_id": workflow_status_id,
         }
+        response = self.patch(url, json=data)
+        raise_for_status(response)
+        response_data = response.json()
+        return response_data
+    
+    def bulk_update_submission(self, pingids: list[str], changes: List[t.PingVisionSubmissionBulkUpdateChangeItem]) -> List[t.PingVisionSubmissionBulkUpdateResponse]:
+        url = self.api_url + f"/api/v1/submission/bulkupdate"
+        
+        data = {
+            "ids": pingids,
+            "changes": changes,
+        }
+        response = self.post(url, json=data)
+        raise_for_status(response)
+        response_data = response.json()
+        return response_data
+    
+    def update_submission(self, pingid: str, data: dict):
+        url = self.api_url + f"pi/v1/submission/{pingid}/"
+        
         response = self.patch(url, json=data)
         raise_for_status(response)
         response_data = response.json()
