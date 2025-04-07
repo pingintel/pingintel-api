@@ -1,5 +1,6 @@
 import time, logging
 from timeit import default_timer as timer
+from typing import Literal
 
 import click
 import requests
@@ -22,7 +23,7 @@ def is_fileobj(source):
     return hasattr(source, "read")
 
 
-def set_verbosity(verbose):
+def set_verbosity(verbose: Literal[-1, 0, 1, 2, 3]):
     # print("set_verbosity", verbose, settings.IS_SERVER_ENV)
 
     console = logging.StreamHandler()

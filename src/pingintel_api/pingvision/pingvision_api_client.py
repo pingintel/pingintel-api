@@ -2,6 +2,7 @@
 
 # Copyright 2021-2024 Ping Data Intelligence
 
+import datetime
 import urllib.parse
 
 import logging
@@ -11,6 +12,7 @@ import pprint
 import time
 from timeit import default_timer as timer
 from typing import BinaryIO, TypedDict, overload, List
+from typing import BinaryIO, TypedDict, Unpack, overload
 
 from pingintel_api.api_client_base import APIClientBase
 
@@ -63,6 +65,8 @@ class PingVisionAPIClient(APIClientBase):
         if delegate_to_division and delegate_to_team:
             data["delegate_to_division"] = delegate_to_division
             data["delegate_to_team"] = delegate_to_team
+        elif delegate_to_division or delegate_to_team:
+            raise ValueError("Both delegate_to_division and delegate_to_team must be provided.")
 
         response = self.post(url, files=multiple_files, data=data)
 
@@ -89,7 +93,7 @@ class PingVisionAPIClient(APIClientBase):
 
     def list_submission_activity(
         self,
-        id: str | None = None,
+        pingid: str | None = None,
         cursor_id: str | None = None,
         prev_cursor_id: str | None = None,
         page_size: int | None = None,
@@ -100,8 +104,8 @@ class PingVisionAPIClient(APIClientBase):
         url = self.api_url + "/api/v1/submission"
 
         kwargs = {}
-        if id:
-            kwargs["id"] = id
+        if pingid:
+            kwargs["id"] = pingid
         if cursor_id:
             kwargs["cursor_id"] = cursor_id
         if prev_cursor_id:
@@ -123,19 +127,23 @@ class PingVisionAPIClient(APIClientBase):
         return response_data
 
     @overload
-    def download_document(self, output_path_or_stream, *, document_url: str): ...
+    def download_document(self, output_path_or_stream, *, document_url: str) -> None: ...
 
     @overload
-    def download_document(self, output_path_or_stream, *, pingid: str, filename: str): ...
+    def download_document(self, output_path_or_stream, *, pingid: str, filename: str) -> None: ...
 
-    def download_document(self, output_path_or_stream, document_url=None, pingid=None, filename=None):
+    def download_document(self, output_path_or_stream, document_url=None, pingid=None, filename=None) -> None:
         if not document_url:
             encoded_filename = urllib.parse.quote(filename)
             document_url = f"/api/v1/submission/{pingid}/document/{encoded_filename}"
 
-        assert document_url.startswith("/")
+        if document_url.startswith("http"):
+            assert document_url.startswith(self.api_url), f"document_url should start with {self.api_url} or /"
+            url = document_url
+        else:
+            assert document_url.startswith(self.api_url), f"document_url should start with {self.api_url} or /"
+            url = self.api_url + document_url
 
-        url = self.api_url + document_url
         response = self.get(url)
         raise_for_status(response)
 
@@ -183,4 +191,46 @@ class PingVisionAPIClient(APIClientBase):
         response = self.patch(url, json=data)
         raise_for_status(response)
         response_data = response.json()
+        return response_data
+
+    def get_submission_events(
+        self,
+        **kwargs: Unpack[t.PingVisionSubmissionEventsRequest],
+    ) -> t.PingVisionSubmissionEventsResponse:
+        url = self.api_url + f"/api/v1/submission-events"
+
+        pingid = kwargs.get("pingid")
+        division_id = kwargs.get("division_id")
+        team_id = kwargs.get("team_id")
+        start = kwargs.get("start")
+        cursor_id = kwargs.get("cursor_id")
+        page_size = kwargs.get("page_size")
+
+        params = {}
+        if pingid:
+            params["pingid"] = pingid
+        if division_id:
+            params["division_id"] = division_id
+        if team_id:
+            params["team_id"] = team_id
+        if start:
+            params["start"] = start.isoformat()
+        if cursor_id:
+            params["cursor_id"] = cursor_id
+        if page_size:
+            params["page_size"] = page_size
+
+        response = self.get(url, params=params)
+        raise_for_status(response)
+
+        response_data = response.json()
+        return response_data
+
+    def get_teams(self) -> t.PingVisionTeamsResponse:
+        url = self.api_url + "/api/v1/user/teams/"
+        response = self.get(url)
+        raise_for_status(response)
+
+        response_data = response.json()
+        breakpoint()
         return response_data

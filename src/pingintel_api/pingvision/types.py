@@ -1,3 +1,4 @@
+import datetime
 import enum
 from typing import Any, Self, TypedDict, NotRequired, Literal
 
@@ -31,6 +32,13 @@ class PingVisionListActivityDetailJobSovFixerDetailResponse(TypedDict):
     sovfixer_result_message: NotRequired[str | None]
 
 
+class DOCUMENT_PROCESSING_STATUS(str, enum.Enum):
+    NOT_PROCESSED = "N"
+    IN_PROGRESS = "I"
+    COMPLETED = "C"
+    FAILED = "F"
+
+
 class PingVisionListActivityDetailJobResponse(TypedDict):
     job_id: str
     filenames: list[str] | None
@@ -38,7 +46,7 @@ class PingVisionListActivityDetailJobResponse(TypedDict):
     job_type: Literal["SOVFIXER", "AIR", "RMS"]
     created_time: str
     updated_time: str
-    processing_status: str
+    processing_status: DOCUMENT_PROCESSING_STATUS
     processing_pct_complete: NotRequired[float | None]
     processing_last_message: NotRequired[str | None]
     job_type_details: NotRequired[PingVisionListActivityDetailJobSovFixerDetailResponse]
@@ -156,3 +164,46 @@ class PingVisionSubmissionBulkUpdateChangeItem(TypedDict):
     action: Literal["claim", "change_status"]
     parameters: dict[Literal["claimed_by_id", "workflow_status_id"], int]
 
+
+class SUBMISSION_EVENT_LOG_TYPE(str, enum.Enum):
+    NEW_SUBMISSION = "NEW"
+    SUBMISSION_STATUS_CHANGE = "SSC"
+    USER_COMMENT = "UC"
+    SYSTEM_NOTE = "SN"
+    CLAIMED_BY_CHANGE = "CBC"
+    SOV_FIXER_INVOKED = "SFI"
+    SOV_FIXER_RESULTS_RECEIVED = "SFRR"
+    SOV_FIXER_FAILED = "SFF"
+    SOV_FIXER_UPDATE_RECEIVED = "SFUR"
+    ERROR = "ERR"
+    SCRUBBING_COMPLETE = "SCC"
+
+
+class PingVisionSubmissionEventResponse(TypedDict):
+    event_type: SUBMISSION_EVENT_LOG_TYPE
+    created_time: str
+    actor_id: int | None
+    actor_username: str | None
+    messages: list[str | dict[Literal["field", "to_value"], Any]]
+    metadata: NotRequired[dict[str, Any]]
+
+
+class PingVisionSubmissionEventsResponse(TypedDict):
+    results: list[PingVisionSubmissionEventResponse]
+    cursor_id: str
+
+
+class PingVisionSubmissionEventsRequest(TypedDict):
+    pingid: NotRequired[str]
+    division_id: NotRequired[int]
+    team_id: NotRequired[int]
+    start: NotRequired[datetime.datetime]
+    cursor_id: NotRequired[str | None]
+    page_size: NotRequired[int | None]
+
+
+class PingVisionTeamsResponse(TypedDict):
+    id: int
+    name: str
+    short_name: str
+    membership_type: Literal["member", "admin", "owner"]

@@ -145,7 +145,7 @@ def activity(ctx, pretty, id, cursor_id, prev_cursor_id, page_size, fields, sear
 
     results = client.list_submission_activity(
         page_size=page_size,
-        id=id,
+        pingid=id,
         cursor_id=cursor_id,
         prev_cursor_id=prev_cursor_id,
         fields=fields,
