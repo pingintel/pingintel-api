@@ -8,7 +8,8 @@ set windows-shell := ["powershell.exe", "-NoLogo", "-Command"]
 publish version:
     git checkout main
     hatch version {{ version }}
-    git commit -am "Bump version to v{{ version }}"
+    git add src/pingintel_api/__about__.py
+    git commit -m "Bump version to v{{ version }}"
     git push origin main
     gh release create --target main --generate-notes v{{ version }}
     hatch build

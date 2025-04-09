@@ -160,6 +160,7 @@ class PingVisionSubmissionBulkUpdateResponse(TypedDict):
     updated_data: PingVisionSubmissionBulkUpdateUpdatedData
     error: NotRequired[str]
 
+
 class PingVisionSubmissionBulkUpdateChangeItem(TypedDict):
     action: Literal["claim", "change_status"]
     parameters: dict[Literal["claimed_by_id", "workflow_status_id"], int]
@@ -180,12 +181,16 @@ class SUBMISSION_EVENT_LOG_TYPE(str, enum.Enum):
 
 
 class PingVisionSubmissionEventResponse(TypedDict):
+    uuid: str
+    division_id: int
+    team_id: int
+    user_id: int
+    pingid: str
+    message: str
     event_type: SUBMISSION_EVENT_LOG_TYPE
     created_time: str
-    actor_id: int | None
-    actor_username: str | None
-    messages: list[str | dict[Literal["field", "to_value"], Any]]
-    metadata: NotRequired[dict[str, Any]]
+    old_value: str | int
+    new_value: str | int
 
 
 class PingVisionSubmissionEventsResponse(TypedDict):
@@ -207,3 +212,8 @@ class PingVisionTeamsResponse(TypedDict):
     name: str
     short_name: str
     membership_type: Literal["member", "admin", "owner"]
+
+
+class DATA_ITEM_ACTIONS(str, enum.Enum):
+    UPSERT = "upsert"
+    REPLACE = "replace"

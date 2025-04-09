@@ -172,10 +172,12 @@ class PingVisionAPIClient(APIClientBase):
         raise_for_status(response)
         response_data = response.json()
         return response_data
-    
-    def bulk_update_submission(self, pingids: list[str], changes: List[t.PingVisionSubmissionBulkUpdateChangeItem]) -> List[t.PingVisionSubmissionBulkUpdateResponse]:
+
+    def bulk_update_submission(
+        self, pingids: list[str], changes: List[t.PingVisionSubmissionBulkUpdateChangeItem]
+    ) -> List[t.PingVisionSubmissionBulkUpdateResponse]:
         url = self.api_url + f"/api/v1/submission/bulkupdate"
-        
+
         data = {
             "ids": pingids,
             "changes": changes,
@@ -184,10 +186,10 @@ class PingVisionAPIClient(APIClientBase):
         raise_for_status(response)
         response_data = response.json()
         return response_data
-    
+
     def update_submission(self, pingid: str, data: dict):
         url = self.api_url + f"pi/v1/submission/{pingid}/"
-        
+
         response = self.patch(url, json=data)
         raise_for_status(response)
         response_data = response.json()
@@ -232,5 +234,9 @@ class PingVisionAPIClient(APIClientBase):
         raise_for_status(response)
 
         response_data = response.json()
-        breakpoint()
         return response_data
+
+    def add_data_items(self, pingid: str, action: t.DATA_ITEM_ACTIONS, items: dict[str, str | int | float | bool]):
+        url = self.api_url + f"/api/v1/submission/{pingid}/add_data_items"
+        response = self.post(url, json={"items": items, "action": action})
+        raise_for_status(response)
