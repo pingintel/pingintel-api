@@ -155,10 +155,10 @@ def activity(ctx, pretty, id, cursor_id, prev_cursor_id, page_size, fields, sear
                 time.strptime(created_time_isoformatted, "%Y-%m-%dT%H:%M:%S.%fZ"),
             )
             print(
-                f"{activity['id'] or '*null*':<36}{activity['workflow_status__name'] or '*null*':<30}{created_time:<20}"
+                f"{activity['id'] or '*null*':<36}{activity['workflow_status_name'] or '*null*':<30}{created_time:<20}"
             )
             for doc in activity["documents"]:
-                print(f"  {doc['filename']:<40} {doc['processing_status']:<12} {doc['url']}")
+                print(f"  {doc['filename']:<40} {doc['url']}")
     else:
         pprint.pprint(results)
 

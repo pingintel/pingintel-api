@@ -69,7 +69,7 @@ class PingVisionListActivityDetailResponse(TypedDict):
     pk: int
     team_uuid: str
     team_name: str | None
-    workflow_status__name: str | None
+    workflow_status_name: str | None
     workflow_status_id: int | None
     ping_maps: NotRequired[PingMapsStatus | None]
     source__source_type: str | None
