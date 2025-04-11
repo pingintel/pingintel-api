@@ -32,8 +32,11 @@ class PingVisionAPIClient(APIClientBase):
     def create_submission(
         self,
         filepaths: list[str | pathlib.Path],
+        team_uuid: str | None = None,
         client_ref: str | None = None,
-        delegate_to_division: str | None = None,
+        insured_name: str | None = None,
+        inception_date: datetime.date | None = None,
+        expiration_date: datetime.date | None = None,
         delegate_to_team: str | None = None,
     ) -> t.PingVisionCreateSubmissionResponse:
         """
@@ -42,11 +45,23 @@ class PingVisionAPIClient(APIClientBase):
         :param filepaths: List of file paths to submit.
         :type filepaths: list[str|pathlib.Path]
 
-        :param client_ref: Optional client reference string.
+        :param team_uuid: UUID of the team to which the submission should be sent. Required if the API user has access to create submissions for multiple teams.
+        :type team_uuid: str|None
+
+        :param client_ref: (Optional) Client reference string.
         :type client_ref: str|None
 
-        :param delegate_to: Optional team name to delegate the submission to. Requires additional permissions.
-        :type delegate_to: str|None
+        :param insured_name: (Optional) Name of the insured.
+        :type insured_name: str|None
+
+        :param inception_date: (Optional) Inception date of the submission.
+        :type inception_date: datetime.date|None
+
+        :param expiration_date: (Optional) Expiration date of the submission.
+        :type expiration_date: datetime.date|None
+
+        :param delegate_to_team: (Optional) Requires delegation permissions. Allows the user to assume the role of a user in another team.
+        :type delegate_to_team: str|None
         """
 
         url = self.api_url + "/api/v1/submission"
@@ -61,12 +76,16 @@ class PingVisionAPIClient(APIClientBase):
         data = {}
         if client_ref:
             data["client_ref"] = client_ref
-
-        if delegate_to_division and delegate_to_team:
-            data["delegate_to_division"] = delegate_to_division
+        if insured_name:
+            data["insured_name"] = insured_name
+        if team_uuid:
+            data["team_uuid"] = team_uuid
+        if inception_date:
+            data["inception_date"] = inception_date.isoformat()
+        if expiration_date:
+            data["expiration_date"] = expiration_date.isoformat()
+        if delegate_to_team:
             data["delegate_to_team"] = delegate_to_team
-        elif delegate_to_division or delegate_to_team:
-            raise ValueError("Both delegate_to_division and delegate_to_team must be provided.")
 
         response = self.post(url, files=multiple_files, data=data)
 
@@ -153,17 +172,17 @@ class PingVisionAPIClient(APIClientBase):
             with open(output_path_or_stream, "wb") as f:
                 f.write(response.content)
 
-    def list_submission_statuses(self, division_id: int) -> t.PingVisionListSubmissionStatusResponse:
+    def list_submission_statuses(self, division: str) -> list[t.PingVisionListSubmissionStatusItemResponse]:
         url = self.api_url + f"/api/v1/submission-status/"
 
-        response = self.get(url, params={"division_id": division_id})
+        response = self.get(url, params={"division": division})
         raise_for_status(response)
 
         response_data = response.json()
         return response_data
 
     def change_status(self, pingid: str, workflow_status_id: int) -> t.PingVisionChangeSubmissionStatusResponse:
-        url = self.api_url + f"/api/v1/submission/{pingid}/change_status/"
+        url = self.api_url + f"/api/v1/submission/{pingid}/change_status"
 
         data = {
             "workflow_status_id": workflow_status_id,
@@ -195,15 +214,15 @@ class PingVisionAPIClient(APIClientBase):
         response_data = response.json()
         return response_data
 
-    def get_submission_events(
+    def list_submission_events(
         self,
         **kwargs: Unpack[t.PingVisionSubmissionEventsRequest],
     ) -> t.PingVisionSubmissionEventsResponse:
         url = self.api_url + f"/api/v1/submission-events"
 
         pingid = kwargs.get("pingid")
-        division_id = kwargs.get("division_id")
-        team_id = kwargs.get("team_id")
+        division = kwargs.get("division")
+        team = kwargs.get("team")
         start = kwargs.get("start")
         cursor_id = kwargs.get("cursor_id")
         page_size = kwargs.get("page_size")
@@ -211,10 +230,10 @@ class PingVisionAPIClient(APIClientBase):
         params = {}
         if pingid:
             params["pingid"] = pingid
-        if division_id:
-            params["division_id"] = division_id
-        if team_id:
-            params["team_id"] = team_id
+        if division:
+            params["division"] = division
+        if team:
+            params["team"] = team
         if start:
             params["start"] = start.isoformat()
         if cursor_id:
@@ -228,8 +247,8 @@ class PingVisionAPIClient(APIClientBase):
         response_data = response.json()
         return response_data
 
-    def get_teams(self) -> t.PingVisionTeamsResponse:
-        url = self.api_url + "/api/v1/user/teams/"
+    def list_teams(self) -> list[t.PingVisionTeamsResponse]:
+        url = self.api_url + "/api/v1/user/teams"
         response = self.get(url)
         raise_for_status(response)
 

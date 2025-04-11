@@ -87,23 +87,17 @@ def get_client(ctx) -> PingVisionAPIClient:
     help="If set, poll until the submission is ready.",
 )
 @click.option(
-    "--delegate-to-division",
-    metavar="DIVISION_SHORT_NAME",
-    help="Delegate to another organization. Provide the 'short name' of the division of the desired delegatee.  Requires the `delegate` permission.",
-)
-@click.option(
+    "--delegate-to",
     "--delegate-to-team",
-    metavar="TEAM_NAME",
-    help="Delegate to another organization. Provide the 'name' of the desired delegatee team.  Requires the `delegate` permission.",
+    metavar="TEAM_UUID",
+    help="Delegate to another organization. Provide the 'uuid' of the desired delegatee team.  Requires the `delegate` permission.",
 )
-def create(ctx, filename, poll_until_ready, delegate_to_division, delegate_to_team):
+def create(ctx, filename, poll_until_ready, delegate_to_team):
     if isinstance(filename, pathlib.PosixPath):
         filename = [str(filename)]
 
     client = get_client(ctx)
-    ret = client.create_submission(
-        filepaths=filename, delegate_to_division=delegate_to_division, delegate_to_team=delegate_to_team
-    )
+    ret = client.create_submission(filepaths=filename, delegate_to_team=delegate_to_team)
     pingid = ret["id"]
     url = ret["url"]
 

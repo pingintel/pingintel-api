@@ -55,18 +55,20 @@ class PingVisionListActivityDetailJobResponse(TypedDict):
 class PingVisionListActivityDetailResponse(TypedDict):
     actions: dict
     claimed_by_id: str | None
-    company__name: str | None
-    company__short_name: str | None
+    company_name: str | None
+    company_short_name: str | None
     created_time: str
-    division__name: str
-    division__short_name: str
+    division_uuid: str
+    division_name: str
+    division_short_name: str
     division_id: int
     documents: list[PingVisionListActivityDetailDocumentResponse]
     jobs: list[PingVisionListActivityDetailJobResponse]
     id: str
     modified_time: str
     pk: int
-    team__name: str | None
+    team_uuid: str
+    team_name: str | None
     workflow_status__name: str | None
     workflow_status_id: int | None
     ping_maps: NotRequired[PingMapsStatus | None]
@@ -138,13 +140,8 @@ class SUBMISSION_STATUS_CATEGORY(str, enum.Enum):
 
 class PingVisionListSubmissionStatusItemResponse(TypedDict):
     category: SUBMISSION_STATUS_CATEGORY
-    division: int | None
-    id: int
+    uuid: str
     name: str
-
-
-class PingVisionListSubmissionStatusResponse(TypedDict):
-    results: list[PingVisionListSubmissionStatusItemResponse]
 
 
 class PingVisionChangeSubmissionStatusResponse(TypedDict): ...
@@ -182,8 +179,8 @@ class SUBMISSION_EVENT_LOG_TYPE(str, enum.Enum):
 
 class PingVisionSubmissionEventResponse(TypedDict):
     uuid: str
-    division_id: int
-    team_id: int
+    division_uuid: str
+    team_uuid: str
     user_id: int
     pingid: str
     message: str
@@ -199,18 +196,22 @@ class PingVisionSubmissionEventsResponse(TypedDict):
 
 
 class PingVisionSubmissionEventsRequest(TypedDict):
-    pingid: NotRequired[str]
-    division_id: NotRequired[int]
-    team_id: NotRequired[int]
-    start: NotRequired[datetime.datetime]
+    pingid: NotRequired[str | None]
+    division: NotRequired[str | None]
+    team: NotRequired[str | None]
+    start: NotRequired[datetime.datetime | None]
     cursor_id: NotRequired[str | None]
     page_size: NotRequired[int | None]
 
 
 class PingVisionTeamsResponse(TypedDict):
-    id: int
-    name: str
-    short_name: str
+    team_uuid: str
+    team_name: str
+    division_uuid: str
+    division_name: str
+    company_uuid: str
+    company_name: str
+
     membership_type: Literal["member", "admin", "owner"]
 
 
