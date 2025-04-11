@@ -173,7 +173,7 @@ class PingVisionAPIClient(APIClientBase):
                 f.write(response.content)
 
     def list_submission_statuses(self, division: str) -> list[t.PingVisionListSubmissionStatusItemResponse]:
-        url = self.api_url + f"/api/v1/submission-status/"
+        url = self.api_url + f"/api/v1/submission-status"
 
         response = self.get(url, params={"division": division})
         raise_for_status(response)
@@ -207,7 +207,7 @@ class PingVisionAPIClient(APIClientBase):
         return response_data
 
     def update_submission(self, pingid: str, data: dict):
-        url = self.api_url + f"pi/v1/submission/{pingid}/"
+        url = self.api_url + f"pi/v1/submission/{pingid}"
 
         response = self.patch(url, json=data)
         raise_for_status(response)
@@ -235,7 +235,7 @@ class PingVisionAPIClient(APIClientBase):
         if team:
             params["team"] = team
         if start:
-            params["start"] = start.isoformat()
+            params["start"] = start.strftime("%Y%m%d%H%M%S")
         if cursor_id:
             params["cursor_id"] = cursor_id
         if page_size:

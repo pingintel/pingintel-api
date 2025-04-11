@@ -86,18 +86,26 @@ def get_client(ctx) -> PingVisionAPIClient:
     default=False,
     help="If set, poll until the submission is ready.",
 )
+@click.option("--insured-name")
+@click.option(
+    "--team",
+    "--team-uuid",
+    help="Team UUID to use for the submission. Optional unless you can access more than one team.",
+)
 @click.option(
     "--delegate-to",
     "--delegate-to-team",
     metavar="TEAM_UUID",
     help="Delegate to another organization. Provide the 'uuid' of the desired delegatee team.  Requires the `delegate` permission.",
 )
-def create(ctx, filename, poll_until_ready, delegate_to_team):
+def create(ctx, filename, poll_until_ready, team, insured_name, delegate_to):
     if isinstance(filename, pathlib.PosixPath):
         filename = [str(filename)]
 
     client = get_client(ctx)
-    ret = client.create_submission(filepaths=filename, delegate_to_team=delegate_to_team)
+    ret = client.create_submission(
+        filepaths=filename, delegate_to_team=delegate_to, insured_name=insured_name, team_uuid=team
+    )
     pingid = ret["id"]
     url = ret["url"]
 
@@ -121,6 +129,21 @@ def get(ctx, pingid):
 
     ret = client.get_submission_detail(pingid=pingid)
     pprint.pprint(ret)
+
+
+@cli.command()
+@click.pass_context
+def list_teams(ctx):
+    client = get_client(ctx)
+
+    ret = client.list_teams()
+    if not ret:
+        print("No teams found.")
+        return
+
+    print(f"{'Team Name':<40}{'UUID':<36}")
+    for team in ret:
+        print(f"{team['team_name']:<40}{team['team_uuid']:<36}")
 
 
 @cli.command()
@@ -188,12 +211,12 @@ def download_document(ctx, document_url, output):
 
 @cli.command()
 @click.pass_context
-@click.option("-d", "--division-id", type=str, help="Division ID to filter by")
-def list_submission_statuses(ctx, division_id):
+@click.option("-d", "--division", type=str, help="Division UUID to filter by")
+def list_submission_statuses(ctx, division):
     """List submission statuses"""
     client = get_client(ctx)
 
-    results = client.list_submission_statuses(division_id=division_id)
+    results = client.list_submission_statuses(division=division)
     if not results:
         print("No submission statuses found.")
         return
