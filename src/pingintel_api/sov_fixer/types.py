@@ -91,7 +91,7 @@ class OutputData(TypedDict):
     # sov_data_id: int
     output_format: str
     url: str
-    ping_ready_id: NotRequired[str]
+    ping_certified_id: NotRequired[str]
 
 
 class UpdateData(TypedDict):

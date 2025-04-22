@@ -591,7 +591,7 @@ class SOVFixerAPIClient(APIClientBase):
             scrubbed_filename=result.get("scrubbed_filename", None),
             output_format=result.get("output_format", None),
             url=result.get("url", None),
-            ping_ready_id=result.get("ping_ready_id", None),
+            ping_certified_id=result.get("ping_certified_id", None),
         )
         return output
 
