@@ -98,7 +98,7 @@ def _attributes_to_dict(ctx: click.Context, attribute: click.Option, attributes:
 @click.option(
     "-d",
     "--document-type",
-    type=click.Choice(["SOV", "PREM_BDX", "CLAIM_BDX", "SOV_BDX", "ACORD"], case_sensitive=False),
+    type=click.Choice(["SOV", "PREM_BDX", "CLAIM_BDX", "SOV_BDX", "ACORD", "LOSS_RUN"], case_sensitive=False),
     default="SOV",
     help="Identify `filename` document type.  Defaults to SOV.",
 )
