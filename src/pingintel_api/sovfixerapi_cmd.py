@@ -210,6 +210,15 @@ def fix(
 
 @cli.command()
 @click.pass_context
+@click.argument("sovid")
+def check_progress(ctx, sovid):
+    client = get_client(ctx)
+    response = client.fix_sov_async_check_progress(sovid)
+    pprint.pprint(response)
+
+
+@cli.command()
+@click.pass_context
 @click.option("--id", "--sovid", help="SOV ID to retrieve")
 @click.option("--cursor-id", help="Cursor ID to start from")
 @click.option("--prev-cursor-id")
@@ -265,6 +274,14 @@ def activity(
                 output_path = download / output_ret["scrubbed_filename"]
                 client.activity_download(output_ret, actually_write=True, output_path=output_path)
                 click.echo(f"Downloaded: {output_path}")
+            updates = result["updates"]
+            for rev, update_ret in updates.items():
+                update_outputs = update_ret["outputs"]
+                for update_output in update_outputs:
+                    filename = update_output["url"].split("/")[-1]
+                    output_path = download / f"r{int(rev):0000d}-{filename}"
+                    client.activity_download(update_output, actually_write=True, output_path=output_path)
+                    click.echo(f"Downloaded: {output_path}")
 
 
 @cli.command()
@@ -298,7 +315,8 @@ def activity(
 def get_output(ctx, sovid_or_sudid, output_format, write, revision, overwrite_existing):
     client = get_client(ctx)
     output_data = client.get_or_create_output(sovid_or_sudid, output_format, revision, overwrite_existing)
-    client.activity_download(output_data, actually_write=write)
+    ret = client.activity_download(output_data, actually_write=write)
+    click.echo(f"Downloaded: {ret}")
 
 
 @cli.command()
@@ -328,13 +346,14 @@ def excel_rms_job(ctx, rms_job_id):
 @cli.command()
 @click.pass_context
 @click.argument("sovid")
-@click.argument('building_data_path', type=click.Path(exists=True))
+@click.argument("building_data_path", type=click.Path(exists=True))
 def add_building(ctx, sovid, building_data_path):
     client = get_client(ctx)
-    with open(building_data_path, 'r') as file:
+    with open(building_data_path, "r") as file:
         data = json.load(file)
     response = client.add_building(sovid, data)
     pprint.pprint(response)
+
 
 def main():
     cli()

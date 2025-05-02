@@ -176,8 +176,15 @@ class SOVFixerAPIClient(APIClientBase):
 
     def activity_download(self, output_ret, actually_write=False, output_path=None):
         output_url = output_ret["url"]
-        is_input_ret = "label" not in output_ret
-        if is_input_ret:
+        is_update_output_ret = "filename" not in output_ret and "scrubbed_filename" not in output_ret
+        is_input_ret = "label" not in output_ret and not is_update_output_ret
+
+        # this is old and will go away...
+        if is_update_output_ret:
+            output_description = "Update"
+            output_filename = output_url.split("/")[-1]
+
+        elif is_input_ret:
             output_description = "Input"
             output_filename = output_ret["filename"]
         else:
@@ -186,12 +193,16 @@ class SOVFixerAPIClient(APIClientBase):
         if output_path is None:
             output_path = output_filename
 
-        return self.download_file(
-            output_url,
-            output_path,
-            actually_write=actually_write,
-            output_description=output_description,
-        )
+        try:
+            return self.download_file(
+                output_url,
+                output_path,
+                actually_write=actually_write,
+                output_description=output_description,
+            )
+        except Exception as e:
+            self.logger.warning(f"Error downloading {output_description} output: {e}")
+            return None
 
     def fix_sov(
         self,

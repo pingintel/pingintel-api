@@ -32,7 +32,7 @@ class SOV_RESULT_STATUS(enum.StrEnum):
 
 
 class FixSOVResponseRequest(TypedDict):
-    status: SOV_STATUS
+    status: SOV_STATUS | str
     requested_at: str
     progress_started_at: str
     completed_at: str | None
@@ -44,7 +44,7 @@ class FixSOVResponseRequest(TypedDict):
 class FixSOVResponseResultInput(TypedDict):
     """Results/details of processing of each of the input files."""
 
-    status: SOV_RESULT_STATUS
+    status: SOV_RESULT_STATUS | str
     identified_document_type: str | None
     url: str
     filename: str
@@ -60,9 +60,9 @@ class FixSOVResponseResultOutput(TypedDict):
 
 class FixSOVResponseResult(TypedDict):
     message: str
-    status: SOV_RESULT_STATUS
+    status: SOV_RESULT_STATUS | str
     inputs: list[FixSOVResponseResultInput]
-    outputs: list[FixSOVResponseResultOutput]
+    outputs: NotRequired[list[FixSOVResponseResultOutput]]
 
 
 class FixSOVResponse(TypedDict):
@@ -82,6 +82,8 @@ class UpdateOutputData(TypedDict):
     url: str
     output_format: str
     completed_time: datetime | None
+    scrubbed_filename: str
+    label: str | None
 
 
 class OutputData(TypedDict):
