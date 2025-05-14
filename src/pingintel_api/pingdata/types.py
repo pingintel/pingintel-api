@@ -2,6 +2,7 @@
 from typing import Any, Dict, List, NotRequired, Optional, TypedDict, Literal
 from datetime import datetime
 import enum
+import functools
 
 
 class Choices(enum.Enum):
@@ -24,6 +25,18 @@ class Choices(enum.Enum):
     @classmethod
     def get_options(cls):
         return [v.value for k, v in cls.__members__.items()]
+
+    @functools.cache
+    def _get_ordering(self):
+        return {name: idx for idx, name in enumerate(self.__class__)}
+
+    def __lt__(self, other):
+        ordering = self._get_ordering()
+        return ordering[self] < ordering[other]
+
+    def __gt__(self, other):
+        ordering = self._get_ordering()
+        return ordering[self] > ordering[other]
 
 
 class SOURCES(Choices):

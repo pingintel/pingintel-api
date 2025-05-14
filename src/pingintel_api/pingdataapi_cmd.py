@@ -54,12 +54,19 @@ Example Python commandline script for using the Ping Data Technologies Data API 
 @click.option(
     "-v", "--verbose", count=True, help="Can be used multiple times. -v for INFO, -vv for DEBUG, -vvv for very DEBUG."
 )
+@click.option(
+    "-D",
+    "--delegate-to",
+    metavar="ORG_SHORT_NAME",
+    help="Delegate to another organization. Provide the 'short name' of the desired delegatee.  Requires the `delegate` permission.",
+)
 @click.pass_context
-def cli(ctx, environment, api_url, auth_token, verbose):
+def cli(ctx, environment, api_url, auth_token, verbose, delegate_to):
     ctx.ensure_object(dict)
     ctx.obj["environment"] = environment
     ctx.obj["auth_token"] = auth_token
     ctx.obj["api_url"] = api_url
+    ctx.obj["delegate_to"] = delegate_to
     set_verbosity(verbose)
 
 
@@ -118,6 +125,7 @@ def enhance(
         timeout=timeout,
         include_raw_response=include_raw_response,
         nocache=nocache,
+        delegate_to=ctx.obj["delegate_to"],
     )
     click.echo(f"+ Finished querying with result:\n{pprint.pformat(response_data)}")
 
@@ -171,6 +179,7 @@ def bulk_enhance(
         nocache=nocache,
         fetch_outputs=fetch_outputs,
         verbose=verbose,
+        delegate_to=ctx.obj["delegate_to"],
     )
     click.echo(f"+ Finished querying with result:\n{pprint.pformat(response_data)}")
 

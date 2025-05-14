@@ -30,6 +30,7 @@ class PingDataAPIClient(APIClientBase):
         timeout: float | None = None,
         include_raw_response: bool = False,
         nocache: bool = False,
+        delegate_to: str | None = None,
         **extra_location_kwargs: Unpack[t.Location],
     ) -> t.EnhanceResponse:
         """
@@ -54,6 +55,12 @@ class PingDataAPIClient(APIClientBase):
                                     geocoding services in the result.
         :type include_raw_response: bool
 
+        :param nocache: If True, ignore nay cached results.
+        :type nocache: bool
+
+        :param delegate_to: Optional delegate to use for the request.
+        :type delegate_to: str|None
+
         :return: Dictionary containing enhanced location data for each address,
                 including coordinates, formatted addresses, and confidence scores.
         :rtype: dict
@@ -74,7 +81,8 @@ class PingDataAPIClient(APIClientBase):
 
         data["sources"] = sources
         data["include_raw_response"] = include_raw_response
-
+        if delegate_to:
+            data["delegate_to"] = delegate_to
         if nocache:
             data["check_cache"] = False
 
@@ -96,6 +104,7 @@ class PingDataAPIClient(APIClientBase):
         poll_seconds: float = 5.0,
         fetch_outputs: bool = False,
         verbose: int = 1,
+        delegate_to: str | None = None,
     ) -> t.BulkEnhanceResponse:
         """
         Enhance one or more locations with additional geocoding data.
@@ -130,6 +139,9 @@ class PingDataAPIClient(APIClientBase):
         :param verbose: Verbosity level. 0=quiet, 1=normal, 2=verbose.
         :type verbose: int
 
+        :param delegate_to: Optional delegate to use for the request.
+        :type delegate_to: str|None
+
         :return: Dictionary containing pointers to output files.
         :rtype: dict
 
@@ -145,6 +157,7 @@ class PingDataAPIClient(APIClientBase):
             timeout=timeout,
             include_raw_response=include_raw_response,
             nocache=nocache,
+            delegate_to=delegate_to,
         )
         request_id = response_data["id"]
         message = response_data["message"]
@@ -219,7 +232,14 @@ class PingDataAPIClient(APIClientBase):
             return {"success": False, "id": request_id}
 
     def bulk_enhance_async_start(
-        self, location_data, sources, callback_url=None, timeout=None, include_raw_response=False, nocache=None
+        self,
+        location_data,
+        sources,
+        callback_url=None,
+        timeout=None,
+        include_raw_response=False,
+        nocache=None,
+        delegate_to=None,
     ):
         data = {"locations": location_data}
         if callback_url:
@@ -227,6 +247,8 @@ class PingDataAPIClient(APIClientBase):
         if timeout is not None:
             data["timeout"] = timeout
         data["sources"] = sources
+        if delegate_to:
+            data["delegate_to"] = delegate_to
 
         data["include_raw_response"] = include_raw_response
         check_cache = not nocache

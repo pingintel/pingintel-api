@@ -307,7 +307,7 @@ def activity(
     help='Provide a specific revision number. Defaults to the latest revision (zero "-r0" for the initial sov).',
 )
 @click.option(
-    "--overwrite_existing/--no-overwrite_existing",
+    "--overwrite-existing/--no-overwrite-existing",
     is_flag=True,
     default=False,
     help="If set, regenerate the file even if it already exists.",
