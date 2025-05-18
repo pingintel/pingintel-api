@@ -109,10 +109,8 @@ def enhance(
     timeout: float | None = None,
     include_raw_response: bool = False,
     nocache: bool = False,
-    # extra_location_kwargs: dict | None = None,
 ):
-    # if not extra_location_kwargs:
-    #     extra_location_kwargs = {}
+    """Request data synchronously about a single address."""
 
     client = get_client(ctx)
 
@@ -157,6 +155,7 @@ def bulk_enhance(
     fetch_outputs: bool,
     verbose: int,
 ):
+    """Request data about multiple addresses using async API."""
     client = get_client(ctx)
 
     locations = []

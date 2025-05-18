@@ -178,6 +178,7 @@ def fix(
     update_callback_url,
     no_ping_data_api,
 ):
+    """Extract insurance information from file(s).  The filename argument is required and can be specified multiple times."""
     if isinstance(filename, pathlib.Path):
         filenames = [str(filename)]
     else:
@@ -212,6 +213,7 @@ def fix(
 @click.pass_context
 @click.argument("sovid")
 def check_progress(ctx, sovid):
+    """Check the progress of a submission."""
     client = get_client(ctx)
     response = client.fix_sov_async_check_progress(sovid)
     pprint.pprint(response)
@@ -248,6 +250,7 @@ def activity(
     organization__short_name=None,
     download=None,
 ):
+    """List submission activity."""
     client = get_client(ctx)
     results = client.list_activity(
         id=id,
@@ -313,46 +316,26 @@ def activity(
     help="If set, regenerate the file even if it already exists.",
 )
 def get_output(ctx, sovid_or_sudid, output_format, write, revision, overwrite_existing):
+    """Fetch or generate an output from a previous extraction."""
     client = get_client(ctx)
     output_data = client.get_or_create_output(sovid_or_sudid, output_format, revision, overwrite_existing)
     ret = client.activity_download(output_data, actually_write=write)
     click.echo(f"Downloaded: {ret}")
 
 
-@cli.command()
-@click.pass_context
-@click.argument("item_key")
-def get_map(ctx, item_key):
-    client = get_client(ctx)
-    response = client.get(client.api_url + f"/api/v1/pli/pdf/{item_key}")
-    responsejson = response.json()
-    pprint.pprint(responsejson)
+# Removed temporarily, incomplete without update bldg, remove bldg, etc.
+# @cli.command()
+# @click.pass_context
+# @click.argument("sovid")
+# @click.argument("building_data_path", type=click.Path(exists=True))
+# def add_building(ctx, sovid, building_data_path):
+#     """Adds a building as an annotation to an existing SOV."""
 
-
-@cli.command()
-@click.pass_context
-@click.argument("rms_job_id")
-def excel_rms_job(ctx, rms_job_id):
-    client = get_client(ctx)
-    response = client.get(client.api_url + f"/api/v1/excel/rms_job/{rms_job_id}")
-    responsejson = response.json()
-    job_info = json.loads(responsejson["job_info"])
-    import pprint
-
-    pprint.pprint(job_info)
-    breakpoint()
-
-
-@cli.command()
-@click.pass_context
-@click.argument("sovid")
-@click.argument("building_data_path", type=click.Path(exists=True))
-def add_building(ctx, sovid, building_data_path):
-    client = get_client(ctx)
-    with open(building_data_path, "r") as file:
-        data = json.load(file)
-    response = client.add_building(sovid, data)
-    pprint.pprint(response)
+#     client = get_client(ctx)
+#     with open(building_data_path, "r") as file:
+#         data = json.load(file)
+#     response = client.add_building(sovid, data)
+#     pprint.pprint(response)
 
 
 def main():

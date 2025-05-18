@@ -1,12 +1,12 @@
 # pingintel-api
 
-Python-based API for Ping Data Technology products.
+Python client library for API and commandline tools for Ping products.
 
 ### Setup
 
 `pip install pingintel-api`
 
-You will probably also want to create a `~/.pingintel.ini` file, which can store your API keys. (They can also be provided in the environment, via `--auth-token` on the commandline, or passed as arguments):
+You will probably want to create a `~/.pingintel.ini` file, which can store your API keys. (They can also be provided in the environment, via `--auth-token` on the commandline, or passed as arguments):
 
 Example `~/.pingintel_ini` file:
 
@@ -23,9 +23,14 @@ SOVFIXER_AUTH_TOKEN_DEV = efghxxxx
 # use _DEV or _STG  versions as desired
 PINGVISION_AUTH_TOKEN = abcdxxxx
 
+[pingdata]
+# use _DEV or _STG  versions as desired
+PINGDATA_AUTH_TOKEN = abcdxxxx
+
 [pingmaps]
 # use _DEV or _STG  versions as desired
 PINGMAPS_AUTH_TOKEN = abcdxxxx
+
 ```
 
 ### Usage
@@ -34,7 +39,7 @@ This package installs a number of commandline tools:
 
 `sovfixerapi`
 `pingvisionapi`
-`pingmapsapi`
+`pingdataapi`
 
 These tools are thin wrappers around the client API libraries.
 
@@ -49,9 +54,79 @@ api_client.fix_sov("test_sov.xlsx")
 
 ### API Documentation
 
-For complete documentation on the REST API, please see https://api.sovfixer.com/docs/.
+#### pingvisionapi
 
-### Release New Versions
+```
+Usage: pingvisionapi [OPTIONS] COMMAND [ARGS]...
+
+Options:
+  -e, --environment [prod|prodeu|staging|dev]
+  -u, --api-url TEXT              Provide base url (instead of environment,
+                                  primarily for debugging)
+  --auth-token TEXT               Provide auth token via --auth-token or
+                                  PINGVISION_AUTH_TOKEN environment variable.
+  -v, --verbose                   Can be used multiple times. -v for INFO, -vv
+                                  for DEBUG, -vvv for very DEBUG.
+  --help                          Show this message and exit.
+
+Commands:
+  activity                  List submission activity.
+  create                    Create new submission from file(s).
+  download-document         Download document by document URL.
+  get                       Get submission detail.
+  list-submission-statuses  List submission statuses.
+  list-teams                List teams.
+```
+
+### sovfixerapi
+
+```
+Usage: sovfixerapi [OPTIONS] COMMAND [ARGS]...
+
+Options:
+  -e, --environment [prod|prodeu|staging|dev]
+  -u, --api-url TEXT              Provide base url (instead of environment,
+                                  primarily for debugging)
+  --auth-token TEXT               Provide auth token via --auth-token or
+                                  SOVFIXER_AUTH_TOKEN environment variable.
+  -v, --verbose                   Can be used multiple times. -v for INFO, -vv
+                                  for DEBUG, -vvv for very DEBUG.
+  --help                          Show this message and exit.
+
+Commands:
+  activity        List submission activity.
+  check-progress  Check the progress of a submission.
+  fix             Extract insurance information from file(s).
+  get-output      Fetch or generate an output from a previous extraction.
+```
+
+#### pingdataapi
+
+```
+Usage: pingdataapi [OPTIONS] COMMAND [ARGS]...
+
+Options:
+  -e, --environment [prod|prodeu|staging|dev]
+  -u, --api-url TEXT              Provide base url (instead of environment,
+                                  primarily for debugging)
+  --auth-token TEXT               Provide auth token via --auth-token or
+                                  PINGDATA_AUTH_TOKEN environment variable.
+  -v, --verbose                   Can be used multiple times. -v for INFO, -vv
+                                  for DEBUG, -vvv for very DEBUG.
+  -D, --delegate-to ORG_SHORT_NAME
+                                  Delegate to another organization. Provide
+                                  the 'short name' of the desired delegatee.
+                                  Requires the `delegate` permission.
+  --help                          Show this message and exit.
+
+Commands:
+  bulk-enhance  Request data about multiple addresses using async API.
+  enhance       Request data synchronously about a single address.
+```
+
+For complete documentation on the REST API, please see https://docs.pingintel.com/.
+
+### Contributing
 
 `pingintel-api` uses `hatch` for pypi packaging and updates. Install it for your platform first.
 

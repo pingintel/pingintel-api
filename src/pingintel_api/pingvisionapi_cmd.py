@@ -99,6 +99,8 @@ def get_client(ctx) -> PingVisionAPIClient:
     help="Delegate to another organization. Provide the 'uuid' of the desired delegatee team.  Requires the `delegate` permission.",
 )
 def create(ctx, filename, poll_until_ready, team, insured_name, delegate_to):
+    """Create new submission from file(s)."""
+
     if isinstance(filename, pathlib.PosixPath):
         filename = [str(filename)]
 
@@ -125,6 +127,7 @@ def create(ctx, filename, poll_until_ready, team, insured_name, delegate_to):
 @click.pass_context
 @click.argument("pingid", type=str)
 def get(ctx, pingid):
+    """Get submission detail."""
     client = get_client(ctx)
 
     ret = client.get_submission_detail(pingid=pingid)
@@ -134,6 +137,7 @@ def get(ctx, pingid):
 @cli.command()
 @click.pass_context
 def list_teams(ctx):
+    """List teams."""
     client = get_client(ctx)
 
     ret = client.list_teams()
@@ -157,7 +161,7 @@ def list_teams(ctx):
 @click.option("--search", help="Filter key fields by an arbitrary string")
 # @click.option("--organization__short_name")
 def activity(ctx, pretty, id, cursor_id, prev_cursor_id, page_size, fields, search):
-    """List submission activity, using /api/v1/submission"""
+    """List submission activity."""
     client = get_client(ctx)
 
     results = client.list_submission_activity(
@@ -169,7 +173,6 @@ def activity(ctx, pretty, id, cursor_id, prev_cursor_id, page_size, fields, sear
         search=search,
     )
     if pretty:
-        """print it like a table"""
         print(f"{'Activity ID':<36}{'Status':<30}{'Created':<20}")
         for activity in results["results"]:
             created_time_isoformatted = activity["created_time"]
@@ -191,6 +194,7 @@ def activity(ctx, pretty, id, cursor_id, prev_cursor_id, page_size, fields, sear
 @click.argument("document_url")
 @click.option("-o", "--output", type=click.File("wb"))
 def download_document(ctx, document_url, output):
+    """Download document by document URL."""
     if not output:
         import urllib.parse, os
 
@@ -213,7 +217,7 @@ def download_document(ctx, document_url, output):
 @click.pass_context
 @click.option("-d", "--division", type=str, help="Division UUID to filter by")
 def list_submission_statuses(ctx, division):
-    """List submission statuses"""
+    """List submission statuses."""
     client = get_client(ctx)
 
     results = client.list_submission_statuses(division=division)
