@@ -431,6 +431,7 @@ class SOVFixerAPIClient(APIClientBase):
         policy_terms=None,
         policy_terms_format_name=None,
         output_formats=None,
+        metadata=None,
     ):
         url = self.api_url + f"/api/v1/sov/update/{sudid}/start"
         data = {}
@@ -442,6 +443,8 @@ class SOVFixerAPIClient(APIClientBase):
             data["policy_terms_format_name"] = policy_terms_format_name
         if output_formats:
             data["output_formats"] = output_formats
+        if metadata:
+            data["metadata"] = metadata
 
         response = self.post(url, json=data)
         if 200 <= response.status_code < 300:
@@ -477,6 +480,7 @@ class SOVFixerAPIClient(APIClientBase):
         update_type=None,
         callback_url=None,
         noinput=True,
+        metadata=None,
     ):
         client = self
         init_response = client.update_sov_async_init(sovid, update_type=update_type, callback_url=callback_url)
@@ -493,6 +497,7 @@ class SOVFixerAPIClient(APIClientBase):
             policy_terms=policy_terms,
             policy_terms_format_name=policy_terms_format_name,
             output_formats=output_formats,
+            metadata=metadata,
         )
 
         while 1:
