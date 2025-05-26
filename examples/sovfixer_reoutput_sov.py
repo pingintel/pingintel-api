@@ -14,64 +14,89 @@ policy_terms = {
         {"name": "5M", "limit": 5000000, "participation": 1.0},
         {"name": "10M xs 5M", "attachment": 5000000, "limit": 10000000, "participation": 0.75},
     ],
-    "peril_terms": {
-        "EQ": {
+    "peril_terms": [
+        {
+            "group": "EQ",
             "subperil_types": ["EQ_Shake", "EQ_Sprinkler", "EQ_Landslide", "EQ_Tsunami", "EQ_Liquefaction"],
             "sublimit": 3000000,
         },
-        "EQ2": {
+        {
+            "group": "EQ2",
             "subperil_types": ["EQ_Fire"],
             "sublimit": 2000000,
             "location_deductible_type": "C",
             "location_deductible": 0.05,
         },
-        "HU": {
+        {
+            "group": "HU",
             "subperil_types": ["HU_Wind", "HU_PrecipitationFlood"],
             "min_deductible": 100000,
             "max_deductible": 150000,
         },
-        "SCS": {
+        {
+            "group": "SCS",
             "subperil_types": ["Hail", "StraightLineWind", "Tornado", "WinterStorm"],
             "bi_days_deductible": 10,
         },
-        "IF": {
+        {
+            "group": "IF",
             "subperil_types": ["InlandFlood"],
         },
-        "WF": {
+        {
+            "group": "WF",
             "subperil_types": ["Wildfire"],
         },
-        "TE": {
+        {
+            "group": "TE",
             "subperil_types": ["Terrorism"],
+        }
+    ],
+    "zone_terms": [
+        {
+            "peril_class": "HU",
+            "zone": "AllOther",
+            "is+excluded": True,
         },
-    },
-    "zone_terms": {
-        "HU": {
-            "AllOther": {
-                "is_excluded": True,
-            }
+        {
+            "peril_class": "SCS",
+            "zone": "AllOther",
+            "is_excluded": False,
+            "location_deductible_type": "S",
+            "location_deductible": 0.03,
         },
-        "SCS": {"AllOther": {"is_excluded": False, "location_deductible_type": "S", "location_deductible": 0.03}},
-        "IF": {
-            "SFHA": {
-                "sublimit": 4000000,
-                "min_deductible": 100000,
-                "max_deductible": 500000,
-                "is_excluded": False,
-                "location_deductible_type": "S",
-            }
+        {
+            "peril_class": "IF",
+            "zone": "SFHA",
+            "sublimit": 4000000,
+            "min_deductible": 100000,
+            "max_deductible": 500000,
+            "is_excluded": False,
+            "location_deductible_type": "S",
         },
-    },
+    ],
     "excluded_subperil_types": ["HU_Surge"],
 }
 
-api_client.reoutput_sov(
+extra_data={
+    "insured_name": "My Test",
+}
+
+metadata = {
+    "Timestamp": 1748261077,
+    "Name": "My Filename.xlsm",
+    "UserInfo": {
+        "UserName": "Jane Doe",
+    }
+}
+
+update_sov_ret = api_client.update_sov(
     sovid,
     location_filenames=["test_reoutput_locations.csv"],
-    extra_data={
-        "insured_name": "My Test",
-    },
+    extra_data=extra_data,
     policy_terms=policy_terms,
     policy_terms_format_name="PINGv2",
     actually_write=True,
     output_formats=["JSON", "AMRISC"],
+    metadata=metadata,
 )
+print(update_sov_ret)
