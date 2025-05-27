@@ -185,7 +185,7 @@ class PingVisionAPIClient(APIClientBase):
         url = self.api_url + f"/api/v1/submission/{pingid}/change_status"
 
         data = {
-            "workflow_status_id": workflow_status_id,
+            "workflow_status_uuid": workflow_status_id,
         }
         response = self.patch(url, json=data)
         raise_for_status(response)
