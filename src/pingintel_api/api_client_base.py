@@ -116,7 +116,7 @@ class APIClientBase:
         self.logger.debug(f"PATCH {url}")
         if "data" in kwargs:
             self.logger.debug(f"PATCH data: {kwargs['data']}")
-        return self.session.post(url, **kwargs)
+        return self.session.patch(url, **kwargs)
 
     def _create_session(self):
         session = requests.Session()
