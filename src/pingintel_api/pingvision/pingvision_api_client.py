@@ -161,7 +161,7 @@ class PingVisionAPIClient(APIClientBase):
         else:
             url = self.api_url + document_url
         
-        assert url.startswith(self.api_url), f"document_url should start with {self.api_url} or / but got {document_url}"
+        assert url.startswith(self.api_url), f"document_url should start with {self.api_url} or / but got {url}"
 
         response = self.get(url)
         raise_for_status(response)
