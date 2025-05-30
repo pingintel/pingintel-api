@@ -157,11 +157,11 @@ class PingVisionAPIClient(APIClientBase):
             document_url = f"/api/v1/submission/{pingid}/document/{encoded_filename}"
 
         if document_url.startswith("http"):
-            assert document_url.startswith(self.api_url), f"document_url should start with {self.api_url} or /"
             url = document_url
         else:
-            assert document_url.startswith(self.api_url), f"document_url should start with {self.api_url} or /"
             url = self.api_url + document_url
+        
+        assert url.startswith(self.api_url), f"document_url should start with {self.api_url} or / but got {document_url}"
 
         response = self.get(url)
         raise_for_status(response)
