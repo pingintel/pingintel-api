@@ -11,6 +11,7 @@ from datetime import timedelta
 import click
 
 from pingintel_api.api_client_base import APIClientBase
+from urllib.parse import urlparse, urlunparse
 
 from ..utils import is_fileobj, raise_for_status
 from . import types as t
@@ -136,7 +137,6 @@ class SOVFixerAPIClient(APIClientBase):
             output_url = self.api_url + output_url
         else:
             # Ensure output_url uses the same port as self.api_url
-            from urllib.parse import urlparse, urlunparse
             api_parts = urlparse(self.api_url)
             output_parts = urlparse(output_url)
             api_port = api_parts.port
@@ -144,14 +144,16 @@ class SOVFixerAPIClient(APIClientBase):
                 netloc = output_parts.hostname
                 if api_port:
                     netloc += f":{api_port}"
-                output_url = urlunparse((
-                    output_parts.scheme,
-                    netloc,
-                    output_parts.path,
-                    output_parts.params,
-                    output_parts.query,
-                    output_parts.fragment,
-                ))
+                output_url = urlunparse(
+                    (
+                        output_parts.scheme,
+                        netloc,
+                        output_parts.path,
+                        output_parts.params,
+                        output_parts.query,
+                        output_parts.fragment,
+                    )
+                )
 
         if self.environment and self.environment == "local2" and "api-local.sovfixer.com" in output_url:
             output_url = output_url.replace("api-local.sovfixer.com", "localhost:8000")
