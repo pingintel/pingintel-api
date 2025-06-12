@@ -61,7 +61,7 @@ class PingVisionAPIClient(APIClientBase):
         :param expiration_date: (Optional) Expiration date of the submission.
         :type expiration_date: datetime.date|None
 
-        :param delegate_to_company: (Optional) Requires delegation permissions. Specify the company you want to delegate to. Can be company uuid, short_name, or id. Requires `delegate_to_team` to also be set.
+        :param delegate_to_company: (Optional) Requires delegation permissions. Specify the company you want to delegate to. Can be company uuid, short_name, or id. If set but `delegate_to_team` is not set, the API will return an error if the company has multiple teams.
         :type delegate_to_company: str|None
 
         :param delegate_to_team: (Optional) Requires delegation permissions. Allows the user to assume the role of a user in another team. If set, `delegate_to_company` is required. Can be team uuid, or id.
@@ -92,9 +92,6 @@ class PingVisionAPIClient(APIClientBase):
             data["delegate_to_company"] = delegate_to_company
         if delegate_to_team:
             data["delegate_to_team"] = delegate_to_team
-
-        if delegate_to_company or delegate_to_team:
-            assert delegate_to_company and delegate_to_team, "For delegation both delegate_to_company and delegate_to_team must be set."
 
         response = self.post(url, files=multiple_files, data=data)
 
