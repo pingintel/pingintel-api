@@ -146,9 +146,9 @@ def _attributes_to_dict(ctx: click.Context, attribute: click.Option, attributes:
 )
 @click.option(
     "-D",
-    "--delegate-to",
-    metavar="ORG_SHORT_NAME",
-    help="Delegate to another organization. Provide the 'short name' of the desired delegatee.  Requires the `delegate` permission.",
+    "--delegate-to-team",
+    metavar="Team UUID",
+    help="Delegate to another team. Provide the 'uuid' of the desired delegatee.  Requires the `delegate` permission.",
 )
 @click.option(
     "--noinput",
@@ -173,7 +173,7 @@ def fix(
     extra_data,
     write,
     workflow,
-    delegate_to,
+    delegate_to_team,
     noinput,
     update_callback_url,
     no_ping_data_api,
@@ -195,7 +195,7 @@ def fix(
         output_formats=output_format,
         client_ref=client_ref,
         extra_data=extra_data,
-        delegate_to=delegate_to,
+        delegate_to_team=delegate_to_team,
         noinput=noinput,
         update_callback_url=update_callback_url,
         allow_ping_data_api=not no_ping_data_api,
