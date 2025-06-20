@@ -36,7 +36,6 @@ class SOVFixerAPIClient(APIClientBase):
         client_ref=None,
         integrations=None,
         extra_data=None,
-        delegate_to: str | None = None,
         delegate_to_team: str | None = None,
         update_callback_url=None,
         allow_ping_data_api=None,
@@ -70,8 +69,6 @@ class SOVFixerAPIClient(APIClientBase):
         if extra_data is not None:
             for k, v in extra_data.items():
                 data["extra_data_" + k] = v
-        if delegate_to is not None:
-            data["delegate_to"] = delegate_to
         if delegate_to_team is not None:
             data["delegate_to_team"] = delegate_to_team
         if allow_ping_data_api is not None:
@@ -216,7 +213,6 @@ class SOVFixerAPIClient(APIClientBase):
         client_ref=None,
         extra_data=None,
         update_callback_url=None,
-        delegate_to=None,
         delegate_to_team=None,
         noinput=True,
         allow_ping_data_api=True,
@@ -232,7 +228,6 @@ class SOVFixerAPIClient(APIClientBase):
             client_ref=client_ref,
             extra_data=extra_data,
             update_callback_url=update_callback_url,
-            delegate_to=delegate_to,
             delegate_to_team=delegate_to_team,
             allow_ping_data_api=allow_ping_data_api,
             workflow=workflow,
