@@ -36,7 +36,6 @@ class SOVFixerAPIClient(APIClientBase):
         client_ref=None,
         integrations=None,
         extra_data=None,
-        delegate_to: str | None = None,
         delegate_to_team: str | None = None,
         update_callback_url=None,
         allow_ping_data_api=None,
@@ -70,8 +69,6 @@ class SOVFixerAPIClient(APIClientBase):
         if extra_data is not None:
             for k, v in extra_data.items():
                 data["extra_data_" + k] = v
-        if delegate_to is not None:
-            data["delegate_to"] = delegate_to
         if delegate_to_team is not None:
             data["delegate_to_team"] = delegate_to_team
         if allow_ping_data_api is not None:
@@ -216,7 +213,6 @@ class SOVFixerAPIClient(APIClientBase):
         client_ref=None,
         extra_data=None,
         update_callback_url=None,
-        delegate_to=None,
         delegate_to_team=None,
         noinput=True,
         allow_ping_data_api=True,
@@ -232,7 +228,6 @@ class SOVFixerAPIClient(APIClientBase):
             client_ref=client_ref,
             extra_data=extra_data,
             update_callback_url=update_callback_url,
-            delegate_to=delegate_to,
             delegate_to_team=delegate_to_team,
             allow_ping_data_api=allow_ping_data_api,
             workflow=workflow,
@@ -545,7 +540,7 @@ class SOVFixerAPIClient(APIClientBase):
             return False
 
     def get_or_create_output_async_start(
-        self, sovid_or_sud: str, output_format: str, revision: int = -1, overwrite_existing=False
+        self, sovid_or_sud: str, output_format: str, revision: int = -1, overwrite_existing: bool=False, delegate_to_team: str | None = None,
     ):
         url = self.api_url + f"/api/v1/sov/{sovid_or_sud}/get_or_create_output"
         data = {}
@@ -555,6 +550,8 @@ class SOVFixerAPIClient(APIClientBase):
             data["revision"] = revision
         if overwrite_existing:
             data["overwrite_existing"] = overwrite_existing
+        if delegate_to_team is not None:
+            data["delegate_to_team"] = delegate_to_team
 
         response = self.post(url, data=data)
         raise_for_status(response)
@@ -572,13 +569,14 @@ class SOVFixerAPIClient(APIClientBase):
         revision: int = -1,
         overwrite_existing=False,
         timeout: timedelta | None = timedelta(minutes=5),
+        delegate_to_team: str | None = None,
     ) -> t.OutputData:
         """Synchronously get or create an output from a SOV Fixer request. If it exists, it will return immediately.
         If it does not exist, it will start the generation process and poll for completion, then return it."""
         client = self
 
         start_response = client.get_or_create_output_async_start(
-            sovid_or_sud, output_format, revision, overwrite_existing
+            sovid_or_sud, output_format, revision, overwrite_existing, delegate_to_team,
         )
 
         output_request_id = start_response["request"]["id"]
