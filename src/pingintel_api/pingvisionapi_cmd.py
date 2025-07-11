@@ -93,12 +93,16 @@ def get_client(ctx) -> PingVisionAPIClient:
     help="Team UUID to use for the submission. Optional unless you can access more than one team.",
 )
 @click.option(
+    "--delegate-to-company",
+    help="Delegate to another organization. Provide the company uuid, short_name, or id of the desired delegatee team.  Requires the `delegate` permission. If set but `delegate_to_team` is not set, the API will return an error if the company has multiple teams.",
+)
+@click.option(
     "--delegate-to",
     "--delegate-to-team",
     metavar="TEAM_UUID",
-    help="Delegate to another organization. Provide the 'uuid' of the desired delegatee team.  Requires the `delegate` permission.",
+    help="Delegate to another organization. Provide the 'uuid' of the desired delegatee team.  Requires the `delegate` permission. If set, `delegate_to_company` is required. Can be team uuid, or id",
 )
-def create(ctx, filename, poll_until_ready, team, insured_name, delegate_to):
+def create(ctx, filename, poll_until_ready, team, insured_name, delegate_to_company, delegate_to):
     """Create new submission from file(s)."""
 
     if isinstance(filename, pathlib.PosixPath):
@@ -106,7 +110,7 @@ def create(ctx, filename, poll_until_ready, team, insured_name, delegate_to):
 
     client = get_client(ctx)
     ret = client.create_submission(
-        filepaths=filename, delegate_to_team=delegate_to, insured_name=insured_name, team_uuid=team
+        filepaths=filename, delegate_to_team=delegate_to, delegate_to_company=delegate_to_company, insured_name=insured_name, team_uuid=team
     )
     pingid = ret["id"]
     url = ret["url"]
