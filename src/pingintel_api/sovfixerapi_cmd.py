@@ -315,10 +315,16 @@ def activity(
     default=False,
     help="If set, regenerate the file even if it already exists.",
 )
-def get_output(ctx, sovid_or_sudid, output_format, write, revision, overwrite_existing):
+@click.option(
+    "-D",
+    "--delegate-to-team",
+    metavar="Team UUID",
+    help="Delegate to another team. Provide the 'uuid' of the desired delegatee.  Requires the `delegate` permission.",
+)
+def get_output(ctx, sovid_or_sudid, output_format, write, revision, overwrite_existing, delegate_to_team):
     """Fetch or generate an output from a previous extraction."""
     client = get_client(ctx)
-    output_data = client.get_or_create_output(sovid_or_sudid, output_format, revision, overwrite_existing)
+    output_data = client.get_or_create_output(sovid_or_sudid, output_format, revision, overwrite_existing, delegate_to_team=delegate_to_team,)
     ret = client.activity_download(output_data, actually_write=write)
     click.echo(f"Downloaded: {ret}")
 
