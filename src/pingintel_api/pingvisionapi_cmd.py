@@ -110,7 +110,11 @@ def create(ctx, filename, poll_until_ready, team, insured_name, delegate_to_comp
 
     client = get_client(ctx)
     ret = client.create_submission(
-        filepaths=filename, delegate_to_team=delegate_to, delegate_to_company=delegate_to_company, insured_name=insured_name, team_uuid=team
+        filepaths=filename,
+        delegate_to_team=delegate_to,
+        delegate_to_company=delegate_to_company,
+        insured_name=insured_name,
+        team_uuid=team,
     )
     pingid = ret["id"]
     url = ret["url"]

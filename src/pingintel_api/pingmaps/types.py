@@ -1,3 +1,4 @@
+import enum
 from typing import Any, Dict, List, NotRequired, Optional, TypedDict
 
 
@@ -44,3 +45,32 @@ class PingMapsPolicyLocationRequest(TypedDict):
 
 class PingMapsPolicyBreakdownRequest(PingMapsPolicyLocationRequest):
     fields: NotRequired[list[str]]
+
+
+class COPEPreferences(str, enum.Enum):
+    SIMPLIFIED = "simplified"
+    AIR = "air"
+    RMS = "rms"
+    BOTH_MODELS = "both_models"
+
+
+class PingMapsLayer(TypedDict):
+    name: str
+    url: str
+
+
+class UserSettingOutputFormats(TypedDict):
+    output_format: str  # e.g. 'PPPTX'
+    display_name: str  # e.g. 'PowerPoint'
+
+
+class PingMapsUserSettings(TypedDict):
+    layers: dict[str, PingMapsLayer]
+    integrations: dict[str, str]  # integration name to integration display name
+
+    cope_preference: COPEPreferences
+    output_formats: list[UserSettingOutputFormats]
+
+
+class UserSettings(TypedDict):
+    pingmaps: PingMapsUserSettings

@@ -40,6 +40,7 @@ This package installs a number of commandline tools:
 `sovfixerapi`
 `pingvisionapi`
 `pingdataapi`
+`pingmapsapi`
 
 These tools are thin wrappers around the client API libraries.
 
@@ -76,6 +77,7 @@ Commands:
   get                       Get submission detail.
   list-submission-statuses  List submission statuses.
   list-teams                List teams.
+
 ```
 
 ### sovfixerapi
@@ -98,6 +100,8 @@ Commands:
   check-progress  Check the progress of a submission.
   fix             Extract insurance information from file(s).
   get-output      Fetch or generate an output from a previous extraction.
+  serverinfo
+
 ```
 
 #### pingdataapi
@@ -122,9 +126,34 @@ Options:
 Commands:
   bulk-enhance  Request data about multiple addresses using async API.
   enhance       Request data synchronously about a single address.
+
 ```
 
 For complete documentation on the REST API, please see https://docs.pingintel.com/.
+
+#### pingmapsapi
+
+```
+Usage: pingmapsapi [OPTIONS] COMMAND [ARGS]...
+
+Options:
+  -e, --environment [prod|prodeu|staging|dev]
+  -u, --api-url TEXT              Provide base url (instead of environment,
+                                  primarily for debugging)
+  --auth-token TEXT               Provide auth token via --auth-token or
+                                  PINGDATA_AUTH_TOKEN environment variable.
+  -v, --verbose                   Can be used multiple times. -v for INFO, -vv
+                                  for DEBUG, -vvv for very DEBUG.
+  -D, --delegate-to ORG_SHORT_NAME
+                                  Delegate to another organization. Provide
+                                  the 'short name' of the desired delegatee.
+                                  Requires the `delegate` permission.
+  --help                          Show this message and exit.
+
+Commands:
+  settings  Get current user's settings.
+
+```
 
 ### Contributing
 

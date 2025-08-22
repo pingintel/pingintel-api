@@ -33,6 +33,7 @@ files = ["requirements.txt"]
 sovfixerapi = "pingintel_api.sovfixerapi_cmd:main"
 pingvisionapi = "pingintel_api.pingvisionapi_cmd:main"
 pingdataapi = "pingintel_api.pingdataapi_cmd:main"
+pingmapsapi = "pingintel_api.pingmapsapi_cmd:main"
 
 [tool.black]
 line-length = 120

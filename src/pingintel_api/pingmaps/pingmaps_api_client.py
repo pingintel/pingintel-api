@@ -44,3 +44,10 @@ class PingMapsAPIClient(APIClientBase):
         raise_for_status(response)
         response_data = response.json()
         return response_data
+
+    def get_settings(self) -> t.UserSettings:
+        url = self.api_url + "/api/v1/pli/settings"
+        response = self.get(url)
+        raise_for_status(response)
+        response_data = response.json()
+        return response_data

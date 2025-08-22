@@ -4,7 +4,7 @@ help:
 set windows-shell := ["powershell.exe", "-NoLogo", "-Command"]
 
 
-# Build the pypi package
+# Build the pypi package. Everything should already be committed to main before using.
 publish version:
     git checkout main
     hatch version {{ version }}
@@ -23,3 +23,6 @@ pingvisionapi *args:
 
 pingdataapi *args:
     hatch run pingdataapi {{ args }}
+
+pingmapsapi *args:
+    hatch run pingmapsapi {{ args }}
