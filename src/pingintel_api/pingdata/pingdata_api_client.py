@@ -31,7 +31,7 @@ class PingDataAPIClient(APIClientBase):
         include_raw_response: bool = False,
         nocache: bool = False,
         delegate_to: str | None = None,
-        **extra_location_kwargs: Unpack[t.Location],
+        **extra_location_kwargs: Unpack[t.SingleLocation],
     ) -> t.EnhanceResponse:
         """
         Enhance one or more locations with additional geocoding data.
@@ -95,7 +95,7 @@ class PingDataAPIClient(APIClientBase):
     def bulk_enhance(
         self,
         *,
-        locations: list[t.Location],
+        locations: list[t.BatchLocation],
         sources: list[str],
         timeout: float | None = None,
         include_raw_response: bool = False,

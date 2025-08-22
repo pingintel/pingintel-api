@@ -115,8 +115,7 @@ class ResultStatus(str, enum.Enum):
     SUCCESS = "SUCCESS"
 
 
-class Location(TypedDict):
-    id: str
+class SingleLocation(TypedDict):
     address: NotRequired[str | None]
     latitude: NotRequired[float | None]
     longitude: NotRequired[float | None]
@@ -149,6 +148,11 @@ class Location(TypedDict):
     dtc_include_coastline_within_miles: NotRequired[float | None]
     dtc_return_connected_coastlines: NotRequired[bool | None]
     insured_name: NotRequired[str | None]
+
+Location = SingleLocation
+
+class BatchLocation(SingleLocation):
+    id: str
 
 
 class EnhanceResponse(TypedDict):
