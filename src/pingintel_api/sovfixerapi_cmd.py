@@ -162,6 +162,12 @@ def _attributes_to_dict(ctx: click.Context, attribute: click.Option, attributes:
     default=False,
     help="If set, do not allow ping data api calls.",
 )
+@click.option(
+    "--nowait",
+    is_flag=True,
+    default=False,
+    help="If set, do not wait for the SOV Fixer to complete processing. Instead, return immediately with the SOV ID.",
+)
 def fix(
     ctx,
     filename,
@@ -177,6 +183,7 @@ def fix(
     noinput,
     update_callback_url,
     no_ping_data_api,
+    nowait,
 ):
     """Extract insurance information from file(s).  The filename argument is required and can be specified multiple times."""
     if isinstance(filename, pathlib.Path):
@@ -186,23 +193,43 @@ def fix(
 
     client = get_client(ctx)
     # for fn in filename:
-    fix_sov_ret = client.fix_sov(
-        filenames,
-        document_type=document_type,
-        callback_url=callback_url,
-        actually_write=write,
-        integrations=integrations,
-        output_formats=output_format,
-        client_ref=client_ref,
-        extra_data=extra_data,
-        delegate_to_team=delegate_to_team,
-        noinput=noinput,
-        update_callback_url=update_callback_url,
-        allow_ping_data_api=not no_ping_data_api,
-        workflow=workflow,
-    )
+
+    if nowait:
+        fix_sov_ret = client.fix_sov_async_start(
+            filenames,
+            document_type=document_type,
+            callback_url=callback_url,
+            integrations=integrations,
+            output_formats=output_format,
+            client_ref=client_ref,
+            extra_data=extra_data,
+            # delegate_to=delegate_to,
+            delegate_to_team=delegate_to_team,
+            update_callback_url=update_callback_url,
+            allow_ping_data_api=not no_ping_data_api,
+            workflow=workflow,
+        )
+        local_outputs = None
+    else:
+        fix_sov_ret = client.fix_sov(
+            filenames,
+            document_type=document_type,
+            callback_url=callback_url,
+            actually_write=write,
+            integrations=integrations,
+            output_formats=output_format,
+            client_ref=client_ref,
+            extra_data=extra_data,
+            # delegate_to=delegate_to,
+            delegate_to_team=delegate_to_team,
+            noinput=noinput,
+            update_callback_url=update_callback_url,
+            allow_ping_data_api=not no_ping_data_api,
+            workflow=workflow,
+        )
+        local_outputs = fix_sov_ret["local_outputs"]
+
     sovid = fix_sov_ret["id"]
-    local_outputs = fix_sov_ret["local_outputs"]
     click.echo(f"Executed SOV Fixer, SOVID: {sovid}")
     if local_outputs:
         for output in local_outputs:
@@ -217,6 +244,14 @@ def check_progress(ctx, sovid):
     client = get_client(ctx)
     response = client.fix_sov_async_check_progress(sovid)
     pprint.pprint(response)
+
+
+@cli.command()
+@click.pass_context
+def serverinfo(ctx):
+    client = get_client(ctx)
+    response = client.get(client.api_url + "/api/v1/serverinfo")
+    pprint.pprint(response.json())
 
 
 @cli.command()
@@ -293,6 +328,7 @@ def activity(
 @click.option(
     "-o",
     "--output-format",
+    required=True,
     metavar="OUTPUT_FORMAT",
     help="Select an output format.",
 )

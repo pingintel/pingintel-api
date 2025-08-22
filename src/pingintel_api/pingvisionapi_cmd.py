@@ -120,9 +120,10 @@ def create(ctx, filename, poll_until_ready, team, insured_name, delegate_to_comp
 
     if poll_until_ready:
         while True:
-            ret = client.get_submission_detail(pingid=pingid)
+            ret = client.list_submission_activity(pingid=pingid)
+            ret = ret["results"][0] if ret["results"] else {}
             pprint.pprint(ret)
-            if ret["workflow_status"] == "completed":
+            if ret["workflow_status_name"] == "Completed":
                 break
             time.sleep(1.0)
 
