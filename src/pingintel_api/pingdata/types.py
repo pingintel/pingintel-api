@@ -89,7 +89,7 @@ class SOURCES(Choices):
     PING_SLOSH_ZONE = "PSZ", "Ping Slosh Zone"
     PING_USA_CONSTRUCTION = "PUC", "Ping USA Construction"
     PING_USDA_WILDFIRE = "PUSDAW", "Ping USDA Wildfire"
-    PING_PARCEL = "PBP", "Ping Parcel"
+    PING_PARCEL = "PLP", "Ping Parcel"
     PING_BUILDING = "PLB", "Ping Building"
     PING_ASSESSMENT = "PLA", "Ping Assessment"
     PRECISELY_GEOCODING = "PSG", "Precisely Geocoding"
