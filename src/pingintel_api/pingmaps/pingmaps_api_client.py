@@ -45,9 +45,9 @@ class PingMapsAPIClient(APIClientBase):
         response_data = response.json()
         return response_data
 
-    def get_settings(self) -> t.UserSettings:
+    def get_settings(self, **kwargs) -> t.UserSettings:
         url = self.api_url + "/api/v1/pli/settings"
-        response = self.get(url)
+        response = self.get(url, params=kwargs)
         raise_for_status(response)
         response_data = response.json()
         return response_data
