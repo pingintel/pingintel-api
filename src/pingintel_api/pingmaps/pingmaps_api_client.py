@@ -45,9 +45,18 @@ class PingMapsAPIClient(APIClientBase):
         response_data = response.json()
         return response_data
 
-    def get_settings(self, **kwargs) -> t.UserSettings:
+    def get_settings(
+        self,
+        delegate_to_team: str | None = None,
+        delegate_to_company: str | None = None,
+    ) -> t.UserSettings:
+        params = {}
+        if delegate_to_team is not None:
+            params["delegate_to_team"] = delegate_to_team
+        if delegate_to_company is not None:
+            params["delegate_to_company"] = delegate_to_company
         url = self.api_url + "/api/v1/pli/settings"
-        response = self.get(url, params=kwargs)
+        response = self.get(url, params=params)
         raise_for_status(response)
         response_data = response.json()
         return response_data

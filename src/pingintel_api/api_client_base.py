@@ -26,7 +26,12 @@ class APIClientBase:
     include_legacy_dashes: bool = False
 
     @overload
-    def __init__(self, api_url: str, environment: str | None = None, auth_token=None, delegate_to_team=None, delegate_to_company=None) -> None:
+    def __init__(
+        self,
+        api_url: str,
+        environment: str | None = None,
+        auth_token=None,
+    ) -> None:
         """Initialize the API client with an API URL and an optional auth token.
 
         :param api_url: The URL of the API.  e.g. "https://vision.pingintel.com"
@@ -34,15 +39,17 @@ class APIClientBase:
         ...
 
     @overload
-    def __init__(self, environment: str = "prod", auth_token=None, delegate_to_team=None, delegate_to_company=None) -> None: ...
+    def __init__(
+        self,
+        environment: str = "prod",
+        auth_token=None,
+    ) -> None: ...
 
     def __init__(
         self,
         api_url: str | None = None,
         environment: str | None = "prod",
         auth_token=None,
-        delegate_to_team=None, 
-        delegate_to_company=None
     ):
         self.logger = logging.getLogger(self.__class__.__name__)
 
@@ -102,8 +109,6 @@ class APIClientBase:
         self.api_url = api_url
         self.auth_token = auth_token
         self.environment = environment if api_url is None else None
-        self.delegate_to_team = delegate_to_team
-        self.delegate_to_company = delegate_to_company
         self.session = self._create_session()
 
     def get(self, url, **kwargs):
