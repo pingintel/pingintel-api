@@ -26,7 +26,12 @@ class APIClientBase:
     include_legacy_dashes: bool = False
 
     @overload
-    def __init__(self, api_url: str, environment: str | None = None, auth_token=None) -> None:
+    def __init__(
+        self,
+        api_url: str,
+        environment: str | None = None,
+        auth_token=None,
+    ) -> None:
         """Initialize the API client with an API URL and an optional auth token.
 
         :param api_url: The URL of the API.  e.g. "https://vision.pingintel.com"
@@ -34,7 +39,11 @@ class APIClientBase:
         ...
 
     @overload
-    def __init__(self, environment: str = "prod", auth_token=None) -> None: ...
+    def __init__(
+        self,
+        environment: str = "prod",
+        auth_token=None,
+    ) -> None: ...
 
     def __init__(
         self,
