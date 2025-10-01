@@ -540,7 +540,12 @@ class SOVFixerAPIClient(APIClientBase):
             return False
 
     def get_or_create_output_async_start(
-        self, sovid_or_sud: str, output_format: str, revision: int = -1, overwrite_existing: bool=False, delegate_to_team: str | None = None,
+        self,
+        sovid_or_sud: str,
+        output_format: str,
+        revision: int = -1,
+        overwrite_existing: bool = False,
+        delegate_to_team: str | None = None,
     ):
         url = self.api_url + f"/api/v1/sov/{sovid_or_sud}/get_or_create_output"
         data = {}
@@ -576,27 +581,36 @@ class SOVFixerAPIClient(APIClientBase):
         client = self
 
         start_response = client.get_or_create_output_async_start(
-            sovid_or_sud, output_format, revision, overwrite_existing, delegate_to_team,
+            sovid_or_sud,
+            output_format,
+            revision,
+            overwrite_existing,
+            delegate_to_team,
         )
 
+        request_status = start_response["request"]["status"]
         output_request_id = start_response["request"]["id"]
-        start_time = time.time()
-        while 1:
-            if timeout and time.time() - start_time > timeout.total_seconds():
-                raise TimeoutError(f"Timeout waiting for output generation: {output_request_id}")
-            response_data = client.get_or_create_output_async_check_progress(output_request_id)
-            request_status = response_data["request"]["status"]
-            POLL_SECS = 2.5
-            if request_status == "PENDING":
-                self.logger.info("  - Has not yet been queued for processing.")
-                time.sleep(POLL_SECS)
-            elif request_status == "IN_PROGRESS":
-                self.logger.info(f"  - Still in progress: {request_status}")
-                time.sleep(POLL_SECS)
-            else:
-                break
+        if request_status == "COMPLETE" or request_status == "FAILED":
+            response_data = start_response
+        else:
+            start_time = time.time()
+            while 1:
+                if timeout and time.time() - start_time > timeout.total_seconds():
+                    raise TimeoutError(f"Timeout waiting for output generation: {output_request_id}")
+                response_data = client.get_or_create_output_async_check_progress(output_request_id)
+                request_status = response_data["request"]["status"]
+                POLL_SECS = 2.5
+                if request_status == "PENDING":
+                    self.logger.info("  - Has not yet been queued for processing.")
+                    time.sleep(POLL_SECS)
+                elif request_status == "IN_PROGRESS":
+                    self.logger.info(f"  - Still in progress: {request_status}")
+                    time.sleep(POLL_SECS)
+                else:
+                    break
 
         self.logger.info(f"+ Finished with result {response_data.get('result',{}).get('status')}")
+
         result = response_data.get("result", {})
         if not result:
             raise ValueError(f"Invalid response: {response_data}")
