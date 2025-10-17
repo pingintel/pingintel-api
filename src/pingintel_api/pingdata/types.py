@@ -44,6 +44,7 @@ class SOURCES(Choices):
     NOOP = "NOOP", "No Op Datasource"
     AZURE_GEOCODING = "AZG", "Azure Geocoding"
     BETTERVIEW = "BV", "Betterview"
+    CAPE_ANALYTICS = "CA", "Cape Analytics"
     CORELOGICSPATIAL_COASTAL_STORM_RISK_SCORE = "CLS_CSRS", "CoreLogic Spatial Coastal Storm Risk Score"
     CORELOGICSPATIAL_CRIME_RISK_SCORE = "CLS_CRS", "CoreLogic Spatial Crime Risk Score"
     CORELOGICSPATIAL_DISTANCE_TO_FIRESTATION = "CLS_DTFST", "CoreLogic Spatial Distance to FireStation"
