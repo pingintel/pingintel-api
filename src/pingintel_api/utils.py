@@ -67,3 +67,11 @@ def censor(s, max=6):
         return s
 
     return s[:max] + "*" * (len(s) - max)
+
+
+def pretty_filesize(size_bytes):
+    for unit in ["", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "Zi"]:
+        if abs(size_bytes) < 1024.0:
+            return f"{size_bytes:.1f} {unit}B"
+        size_bytes /= 1024.0
+    return f"{size_bytes:.1f} YiB"

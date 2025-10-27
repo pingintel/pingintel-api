@@ -2,6 +2,8 @@
 
 # Copyright 2021-2024 Ping Data Intelligence
 
+import json
+import gzip
 import logging
 import os
 import pprint
@@ -11,7 +13,7 @@ from typing import Unpack
 from pingintel_api.api_client_base import APIClientBase
 from pingintel_api.pingdata import types as t
 
-from ..utils import raise_for_status
+from ..utils import raise_for_status, pretty_filesize
 
 logger = logging.getLogger(__name__)
 
@@ -256,7 +258,27 @@ class PingDataAPIClient(APIClientBase):
 
         # if not self.quiet:
         #     pprint.pprint(data)
-        response = self.post(self.api_url + "/api/v1/bulk_enhance", json=data, timeout=None)
+
+        additional_headers = {"Content-Type": "application/json"}
+        data2 = json.dumps(data).encode("utf-8")
+        uncompressed_json_size = len(data2)
+        if uncompressed_json_size > 50_000:
+            additional_headers["Content-Encoding"] = "gzip"
+            data2 = gzip.compress(data2)
+        actual_json_size = len(data2)
+        self.logger.debug(
+            f"About to POST {len(location_data)} locs, request timeout of {timeout}s, {pretty_filesize(actual_json_size)}, uncompressed {pretty_filesize(uncompressed_json_size)}."
+        )
+
+        # print(f"Submitting bulk enhance request with {len(data2)/1024:.1f} KB of data...")
+
+        response = self.post(
+            self.api_url + "/api/v1/bulk_enhance",
+            data=data2,
+            timeout=timeout,
+            headers=additional_headers,
+        )
+
         raise_for_status(response)
 
         response_data = response.json()
