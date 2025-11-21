@@ -41,6 +41,7 @@ class Choices(enum.Enum):
 
 class SOURCES(Choices):
 
+    NOOP = "NOOP", "No Op Datasource"
     AZURE_GEOCODING = "AZG", "Azure Geocoding"
     BETTERVIEW = "BV", "Betterview"
     CORELOGICSPATIAL_COASTAL_STORM_RISK_SCORE = "CLS_CSRS", "CoreLogic Spatial Coastal Storm Risk Score"
@@ -152,7 +153,9 @@ class SingleLocation(TypedDict):
     dtc_return_connected_coastlines: NotRequired[bool | None]
     insured_name: NotRequired[str | None]
 
+
 Location = SingleLocation
+
 
 class BatchLocation(SingleLocation):
     id: str
@@ -184,13 +187,24 @@ class BulkEnhanceResponseCheckProgressRequest(TypedDict):
     completed_at: datetime | None
 
 
+class BulkEnhanceResponseCheckProgressResultSources(TypedDict):
+    source: SOURCES
+    num_fetched: int
+    num_successes: int
+    num_fails: int
+    avg_fetch_duration: float | None
+    max_fetch_duration: float | None
+    min_fetch_duration: float | None
+    total_fetch_duration: float | None
+
+
 class BulkEnhanceResponseCheckProgressResult(TypedDict):
     status: str
     message: str
     total_processing_time: float
     outputs: NotRequired[list[BulkEnhanceResponseCheckProgressResultOutputFile]]
     additional_info: NotRequired[dict]
-    sources: NotRequired[list[dict]]
+    sources: NotRequired[list[BulkEnhanceResponseCheckProgressResultSources]]
 
 
 class BulkEnhanceResponseCheckProgress(TypedDict):
