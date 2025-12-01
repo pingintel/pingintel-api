@@ -1,5 +1,5 @@
 import enum
-from typing import Any, Dict, List, NotRequired, Optional, TypedDict
+from typing import Any, Dict, List, Literal, NotRequired, Optional, TypedDict
 
 
 class PingMapsPolicyLocationResponse(TypedDict):
@@ -59,9 +59,13 @@ class PingMapsLayer(TypedDict):
     url: str
 
 
+OutputFormatTag = Literal["final", "scrubber", "powerpoint", "json"]
+
+
 class UserSettingOutputFormats(TypedDict):
     output_format: str  # e.g. 'PPPTX'
     display_name: str  # e.g. 'PowerPoint'
+    tags: NotRequired[list[OutputFormatTag]]  # e.g. ['final', 'powerpoint']
 
 
 class PingMapsUserSettings(TypedDict):
