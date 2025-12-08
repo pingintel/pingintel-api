@@ -1,7 +1,7 @@
 # Copyright 2021-2024 Ping Data Intelligence
 import enum
 from datetime import datetime
-from typing import Any, NotRequired, TypedDict
+from typing import Any, Literal, NotRequired, TypedDict
 
 from ..common_types import PingMapsStatus
 
@@ -76,6 +76,51 @@ class FixSOVProcessResponse(TypedDict):
     start_response: FixSOVResponse
     final_response: FixSOVResponse
     local_outputs: list[str] | None
+
+
+class SOVUpdateInitiateRequest(TypedDict):
+    client_ref: NotRequired[str | None]
+    update_type: NotRequired[str | None]
+    callback_url: NotRequired[str | None]
+    username: NotRequired[str | None]
+
+
+class SOVUpdateResponseResultOutputs(TypedDict):
+    filename: str
+    url: str
+    description: str
+
+
+class SOVUpdateResponseRequest(TypedDict):
+    request_uuid: str
+    status: str
+    pct_complete: float | None
+    last_health_status: str | None
+    last_health_check_time: str | None
+    sudid: str
+    record_type: str
+    completed_at: str | None
+
+
+class SOVUpdateResponseResult(TypedDict):
+    status: Literal["FAILED", "SUCCESS"]
+    outputs: NotRequired[list[SOVUpdateResponseResultOutputs]]
+
+
+class SOVUpdateResponse(TypedDict):
+    """Sent by callback or progress check (/api/v1/sov/update/)"""
+
+    request: SOVUpdateResponseRequest
+    result: NotRequired[SOVUpdateResponseResult]
+
+
+class SOVUpdateAsyncAPIInitResponse(TypedDict):
+    id: str
+    message: str
+
+
+class SOVUpdateAsyncAPIResponse(TypedDict):
+    message: str
 
 
 class UpdateOutputData(TypedDict):

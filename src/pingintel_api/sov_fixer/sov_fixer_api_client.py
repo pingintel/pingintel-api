@@ -359,21 +359,24 @@ class SOVFixerAPIClient(APIClientBase):
     def update_sov_async_init(
         self,
         sovid: str,
-        client_ref=None,
-        update_type: str = None,
-        callback_url: str = None,
-    ):
+        client_ref: str | None = None,
+        update_type: str | None = None,
+        callback_url: str | None = None,
+        username: str | None = None,
+    ) -> t.SOVUpdateAsyncAPIInitResponse:
         if not sovid:
             raise ValueError("Invalid sovid.")
         url = self.api_url + f"/api/v1/sov/{sovid}/initiate_update"
 
-        data = {}
+        data: t.SOVUpdateInitiateRequest = {}
         if client_ref:
             data["client_ref"] = client_ref
         if update_type:
             data["update_type"] = update_type
         if callback_url:
             data["callback_url"] = callback_url
+        if username:
+            data["username"] = username
 
         response = self.post(url, data=data)
         if 200 <= response.status_code < 300:
@@ -392,7 +395,7 @@ class SOVFixerAPIClient(APIClientBase):
         sudid: str,
         file: IO[bytes] | str,
         filename=None,
-    ):
+    ) -> t.SOVUpdateAsyncAPIResponse:
         url = self.api_url + f"/api/v1/sov/update/{sudid}/add_locations"
         if is_fileobj(file):
             if filename is None:
@@ -427,7 +430,7 @@ class SOVFixerAPIClient(APIClientBase):
         policy_terms_format_name=None,
         output_formats=None,
         metadata=None,
-    ):
+    ) -> t.SOVUpdateAsyncAPIResponse:
         url = self.api_url + f"/api/v1/sov/update/{sudid}/start"
         data = {}
         if extra_data:
@@ -453,7 +456,7 @@ class SOVFixerAPIClient(APIClientBase):
         response_data = response.json()
         return response_data
 
-    def update_sov_async_check_progress(self, sudid):
+    def update_sov_async_check_progress(self, sudid) -> t.SOVUpdateResponse:
         status_url = self.api_url + f"/api/v1/sov/update/{sudid}"
 
         response = self.get(status_url)
@@ -476,7 +479,7 @@ class SOVFixerAPIClient(APIClientBase):
         callback_url=None,
         noinput=True,
         metadata=None,
-    ):
+    ) -> str:
         client = self
         init_response = client.update_sov_async_init(sovid, update_type=update_type, callback_url=callback_url)
         sudid = init_response["id"]
@@ -537,7 +540,7 @@ class SOVFixerAPIClient(APIClientBase):
             return sudid
         else:
             self.logger.warning(f"* SOV Update failed!  Raw API output:\n{response_data}")
-            return False
+            raise RuntimeError("SOV Update failed.")
 
     def get_or_create_output_async_start(
         self,
