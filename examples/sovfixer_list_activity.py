@@ -15,7 +15,7 @@ cnt = 0
 while True:
     response = api_client.list_activity(
         cursor_id=next_cursor_id,
-        fields=["filename", "status", "organization__short_name"],
+        fields=["filename", "status", "id", "revision"],
     )
     next_cursor_id = response.get("cursor_id")
     remaining_count = response.get("remaining_count")
@@ -27,7 +27,7 @@ while True:
         cnt += 1
 
         print(
-            f"{cnt}/{total_count}: {activity['filename']}: {activity['status']} {activity['organization__short_name']}"
+            f"{cnt}/{total_count}: {activity['filename']}: {activity['status']} {activity['id']} rev{activity['revision']}"
         )
 
     # time.sleep(0.25)
