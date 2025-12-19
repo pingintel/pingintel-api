@@ -6,6 +6,7 @@ build-backend = "hatchling.build"
 name = "pingintel-api"
 dynamic = ["version", "dependencies"]
 authors = [
+  { name="Ping Intel", email="support@pingintel.com" }, 
   { name="Scott Stafford", email="scott@pingintel.com" },
 ]
 description = "Python-based client to Ping Data Intelligence APIs"

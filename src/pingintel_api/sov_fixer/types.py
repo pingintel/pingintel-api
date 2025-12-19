@@ -133,12 +133,9 @@ class UpdateOutputData(TypedDict):
 
 class OutputData(TypedDict):
     label: str
-    # sovid: str
     scrubbed_filename: str
-    # sov_data_id: int
     output_format: str
     url: str
-    ping_certified_id: NotRequired[str]
 
 
 class UpdateData(TypedDict):
