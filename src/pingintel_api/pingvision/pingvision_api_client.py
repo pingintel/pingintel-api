@@ -166,7 +166,7 @@ class PingVisionAPIClient(APIClientBase):
             url = document_url
         else:
             url = self.api_url + document_url
-        
+
         assert url.startswith(self.api_url), f"document_url should start with {self.api_url} or / but got {url}"
 
         response = self.get(url)
@@ -213,7 +213,7 @@ class PingVisionAPIClient(APIClientBase):
         return response_data
 
     def update_submission(self, pingid: str, data: dict):
-        url = self.api_url + f"pi/v1/submission/{pingid}"
+        url = self.api_url + f"/api/v1/submission/{pingid}"
 
         response = self.patch(url, json=data)
         raise_for_status(response)
