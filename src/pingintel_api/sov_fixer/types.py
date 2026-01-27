@@ -196,3 +196,20 @@ class ActivityResponse(TypedDict):
     cursor_id: str | None
     prev_cursor_id: str | None
     remaining_count: int
+
+
+class HistoryItem(TypedDict):
+    id: str
+    sovid: str
+    pingid: str | None
+    revision: int
+    status: str
+    client_ref: str | None
+    completed_time: datetime
+    record_type: str
+    incremental: bool
+
+
+class HistoryResponse(TypedDict):
+    cursor_id: str | None
+    results: list[HistoryItem]

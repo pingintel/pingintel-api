@@ -2,6 +2,7 @@
 
 # Copyright 2021-2024 Ping Data Intelligence
 
+from datetime import datetime
 import json
 import logging
 import pathlib
@@ -256,6 +257,35 @@ def serverinfo(ctx):
 
 @cli.command()
 @click.pass_context
+@click.option("--cursor-id", help="Cursor ID to start from")
+@click.option("-l", "--page-size", "--limit", default=50)
+@click.option(
+    "--start",
+    type=click.DateTime(formats=["%Y-%m-%d", "%Y-%m-%d %H:%M:%S"]),
+    help="Start datetime to filter results from (e.g., '2024-06-01' or '2024-06-01 13:00:00')",
+)
+def history(
+    ctx,
+    cursor_id=None,
+    page_size=50,
+    start: datetime | None = None,
+):
+    """List submission activity."""
+    client = get_client(ctx)
+    results = client.list_history(
+        cursor_id=cursor_id,
+        page_size=page_size,
+        start=start,
+    )
+
+    for activity in results["results"]:
+        print(
+            f"{activity['id']}: {activity['record_type']} {activity['completed_time'].strftime('%Y-%m-%d %H:%M:%S')} Status: {activity['status']}"
+        )
+
+
+@cli.command()
+@click.pass_context
 @click.option("--id", "--sovid", help="SOV ID to retrieve")
 @click.option("--cursor-id", help="Cursor ID to start from")
 @click.option("--prev-cursor-id")
@@ -360,24 +390,17 @@ def activity(
 def get_output(ctx, sovid_or_sudid, output_format, write, revision, overwrite_existing, delegate_to_team):
     """Fetch or generate an output from a previous extraction."""
     client = get_client(ctx)
-    output_data = client.get_or_create_output(sovid_or_sudid, output_format, revision, overwrite_existing, delegate_to_team=delegate_to_team,)
+    output_data = client.get_or_create_output(
+        sovid_or_sudid,
+        output_format,
+        revision,
+        overwrite_existing,
+        delegate_to_team=delegate_to_team,
+    )
     ret = client.activity_download(output_data, actually_write=write)
     click.echo(f"Downloaded: {ret}")
 
 
-# Removed temporarily, incomplete without update bldg, remove bldg, etc.
-# @cli.command()
-# @click.pass_context
-# @click.argument("sovid")
-# @click.argument("building_data_path", type=click.Path(exists=True))
-# def add_building(ctx, sovid, building_data_path):
-#     """Adds a building as an annotation to an existing SOV."""
-
-#     client = get_client(ctx)
-#     with open(building_data_path, "r") as file:
-#         data = json.load(file)
-#     response = client.add_building(sovid, data)
-#     pprint.pprint(response)
 
 
 def main():

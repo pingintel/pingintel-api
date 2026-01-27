@@ -7,7 +7,7 @@ import pathlib
 import pprint
 import time
 from typing import IO, Collection, Literal
-from datetime import timedelta
+from datetime import timedelta, datetime
 import click
 
 from pingintel_api.api_client_base import APIClientBase
@@ -298,6 +298,33 @@ class SOVFixerAPIClient(APIClientBase):
                 "final_response": response_data,
                 "local_outputs": local_outputs,
             }
+
+    def list_history(
+        self,
+        cursor_id=None,
+        page_size=50,
+        start: datetime | None = None,
+    ) -> t.HistoryResponse:
+        url = self.api_url + "/api/v1/sov/history"
+        parameters = {}
+        if cursor_id:
+            parameters["cursor_id"] = cursor_id
+        if page_size:
+            parameters["page_size"] = page_size
+        if start:
+            if isinstance(start, datetime):
+                start_str = start.strftime("%Y%m%d%H%M%S")
+            else:
+                start_str = str(start)
+            parameters["start"] = start_str
+
+        response = self.get(url, params=parameters)
+        raise_for_status(response)
+
+        json = response.json()
+        for activity in json.get("results", []):
+            activity["completed_time"] = datetime.strptime(activity["completed_time"], "%Y-%m-%dT%H:%M:%S.%fZ")
+        return json
 
     def list_activity(
         self,
