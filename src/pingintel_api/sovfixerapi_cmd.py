@@ -264,11 +264,13 @@ def serverinfo(ctx):
     type=click.DateTime(formats=["%Y-%m-%d", "%Y-%m-%d %H:%M:%S"]),
     help="Start datetime to filter results from (e.g., '2024-06-01' or '2024-06-01 13:00:00')",
 )
+@click.option("--pretty", is_flag=True, default=False)
 def history(
     ctx,
     cursor_id=None,
     page_size=50,
     start: datetime | None = None,
+    pretty=False,
 ):
     """List submission activity."""
     client = get_client(ctx)
@@ -279,9 +281,12 @@ def history(
     )
 
     for activity in results["results"]:
-        print(
-            f"{activity['id']}: {activity['record_type']} {activity['completed_time'].strftime('%Y-%m-%d %H:%M:%S')} Status: {activity['status']}"
-        )
+        if pretty:
+            print(
+                f"{activity['pingid']}/{activity['id']}: {activity['record_type']} {activity['completed_time'].strftime('%Y-%m-%d %H:%M:%S')} Status: {activity['status']}"
+            )
+        else:
+            pprint.pprint(activity)
 
 
 @cli.command()
@@ -399,8 +404,6 @@ def get_output(ctx, sovid_or_sudid, output_format, write, revision, overwrite_ex
     )
     ret = client.activity_download(output_data, actually_write=write)
     click.echo(f"Downloaded: {ret}")
-
-
 
 
 def main():
