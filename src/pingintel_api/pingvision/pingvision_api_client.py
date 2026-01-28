@@ -11,7 +11,7 @@ import pathlib
 import pprint
 import time
 from timeit import default_timer as timer
-from typing import BinaryIO, TypedDict, overload, List
+from typing import BinaryIO, Literal, TypedDict, overload, List
 from typing import BinaryIO, TypedDict, Unpack, overload
 
 from pingintel_api.api_client_base import APIClientBase
@@ -124,7 +124,9 @@ class PingVisionAPIClient(APIClientBase):
         page_size: int | None = None,
         fields: list[str] | None = None,
         search: str | None = None,
-        organization__short_name: str | None = None,
+        sort_by: str | None = None,
+        sort_order: Literal["asc", "desc"] = "asc",
+        **filter_kwargs,
     ) -> t.PingVisionListActivityResponse:
         url = self.api_url + "/api/v1/submission"
 
@@ -141,8 +143,12 @@ class PingVisionAPIClient(APIClientBase):
             kwargs["fields"] = fields
         if search:
             kwargs["search"] = search
-        if organization__short_name:
-            kwargs["organization__short_name"] = organization__short_name
+        if sort_by:
+            kwargs["sort_by"] = sort_by
+        if sort_order:
+            kwargs["sort_order"] = sort_order
+
+        kwargs.update(filter_kwargs)
 
         response = self.get(url, params=kwargs)
 
@@ -258,6 +264,14 @@ class PingVisionAPIClient(APIClientBase):
         response = self.get(url)
         raise_for_status(response)
 
+        response_data = response.json()
+        return response_data
+
+    def list_team_members(self, team_uuid: str) -> list:
+        # https://vision.dev.pingintel.com/api/v1/memberships?team_uuid=01961739-3d24-754e-a78b-6959bde786a6
+        url = self.api_url + "/api/v1/memberships"
+        response = self.get(url, params={"team_uuid": team_uuid})
+        raise_for_status(response)
         response_data = response.json()
         return response_data
 

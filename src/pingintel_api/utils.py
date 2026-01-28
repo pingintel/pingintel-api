@@ -75,3 +75,19 @@ def pretty_filesize(size_bytes):
             return f"{size_bytes:.1f} {unit}B"
         size_bytes /= 1024.0
     return f"{size_bytes:.1f} YiB"
+
+
+def pretty_time_ago(dt):
+    now = time.time()
+    diff = now - dt.timestamp()
+    if diff < 60:
+        return f"{int(diff)} seconds ago"
+    elif diff < 3600:
+        minutes = int(diff // 60)
+        return f"{minutes} minutes ago"
+    elif diff < 86400:
+        hours = int(diff // 3600)
+        return f"{hours} hours ago"
+    else:
+        days = int(diff // 86400)
+        return f"{days} days ago"

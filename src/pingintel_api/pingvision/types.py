@@ -151,10 +151,14 @@ class PingVisionSubmissionBulkUpdateUpdatedData(TypedDict):
     workflow_status_id: NotRequired[int]
 
 
-class PingVisionSubmissionBulkUpdateResponse(TypedDict):
+class PingVisionSubmissionBulkUpdateItemResponse(TypedDict):
     id: str
     updated_data: PingVisionSubmissionBulkUpdateUpdatedData
     error: NotRequired[str]
+
+
+class PingVisionSubmissionBulkUpdateResponse(TypedDict):
+    results: list[PingVisionSubmissionBulkUpdateItemResponse]
 
 
 class PingVisionSubmissionBulkUpdateChangeItem(TypedDict):
