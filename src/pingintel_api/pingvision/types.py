@@ -14,6 +14,7 @@ class UI_VIEW_TYPES(str, enum.Enum):
 
 class PingVisionListActivityDetailDocumentResponse(TypedDict):
     document_type: str
+    label: str
     filename: str
     url: str
     preview_url: str | None  # non null for documents like .docx that use pdf type as preview
@@ -23,7 +24,6 @@ class PingVisionListActivityDetailDocumentResponse(TypedDict):
     archived_reason: str | None
     actions: list[str]
     extension: str | None
-    size: int | None
 
 
 class PingVisionListActivityDetailJobSovFixerDetailResponse(TypedDict):
@@ -81,9 +81,8 @@ class PingVisionListActivityDetailResponse(TypedDict):
 class PingVisionListActivityResponse(TypedDict):
     results: list[PingVisionListActivityDetailResponse]
     cursor_id: str | None
-    prev_cursor_id: str | None
-    # total_count: int
-    # returned_count: int
+    total_size_without_cursors: int
+    has_remaining: bool
 
 
 class PingVisionCreateSubmissionResponse(TypedDict):
