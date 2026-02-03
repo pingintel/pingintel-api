@@ -48,7 +48,10 @@ while check_job_json["request"]["status"] not in ("COMPLETE", "FAILED"):
     assert check_job_response.status_code in (200, 201)
     check_job_json = check_job_response.json()
 
+
 print(check_job_json)
+
+assert check_job_json["request"]["status"] != "FAILED", "SOV parsing job failed"
 
 # record filenames and urls of the processed SOV outputs
 outputs = []
