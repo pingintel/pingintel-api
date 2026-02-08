@@ -40,6 +40,7 @@ class SOVFixerAPIClient(APIClientBase):
         update_callback_url=None,
         allow_ping_data_api=None,
         workflow=None,
+        skip_prior_update_reuse: bool = False,
     ):
         """
         Start a SOV Fixer request from one or more files asynchronously.
@@ -75,6 +76,8 @@ class SOVFixerAPIClient(APIClientBase):
             data["allow_ping_data_api"] = allow_ping_data_api
         if workflow is not None:
             data["workflow"] = workflow
+
+        data["skip_prior_update_reuse"] = skip_prior_update_reuse
 
         response = self.post(url, files=files, data=data)
         if 200 <= response.status_code < 300:

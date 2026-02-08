@@ -39,6 +39,7 @@ class PingVisionAPIClient(APIClientBase):
         expiration_date: datetime.date | None = None,
         delegate_to_company: str | None = None,
         delegate_to_team: str | None = None,
+        skip_prior_update_reuse: bool = False,
     ) -> t.PingVisionCreateSubmissionResponse:
         """
         Initiate a new submission from one or more original files.
@@ -92,6 +93,8 @@ class PingVisionAPIClient(APIClientBase):
             data["delegate_to_company"] = delegate_to_company
         if delegate_to_team:
             data["delegate_to_team"] = delegate_to_team
+
+        data["skip_prior_update_reuse"] = skip_prior_update_reuse
 
         response = self.post(url, files=multiple_files, data=data)
 
