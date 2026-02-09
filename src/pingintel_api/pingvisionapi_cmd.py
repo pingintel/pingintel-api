@@ -144,12 +144,22 @@ def get(ctx, pingid):
 
 
 @cli.command()
+@click.option(
+    "--delegate-to-company",
+    help="Delegate to another organization. Provide the company uuid, short_name, or id of the desired delegatee team.  Requires the `delegate` permission. If set but `delegate_to_team` is not set, the API will return an error if the company has multiple teams.",
+)
+@click.option(
+    "--delegate-to",
+    "--delegate-to-team",
+    metavar="TEAM_UUID",
+    help="Delegate to another organization. Provide the 'uuid' of the desired delegatee team.  Requires the `delegate` permission. If set, `delegate_to_company` is required. Can be team uuid, or id",
+)
 @click.pass_context
-def list_teams(ctx):
+def list_teams(ctx, delegate_to_company, delegate_to):
     """List teams."""
     client = get_client(ctx)
 
-    ret = client.list_teams()
+    ret = client.list_teams(delegate_to_company=delegate_to_company, delegate_to_team=delegate_to)
     if not ret:
         print("No teams found.")
         return

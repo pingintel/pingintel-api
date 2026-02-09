@@ -262,9 +262,14 @@ class PingVisionAPIClient(APIClientBase):
         response_data = response.json()
         return response_data
 
-    def list_teams(self) -> list[t.PingVisionTeamsResponse]:
+    def list_teams(self, delegate_to_company=None, delegate_to_team=None) -> list[t.PingVisionTeamsResponse]:
         url = self.api_url + "/api/v1/user/teams"
-        response = self.get(url)
+        params = {}
+        if delegate_to_company:
+            params["delegate_to_company"] = delegate_to_company
+        if delegate_to_team:
+            params["delegate_to_team"] = delegate_to_team
+        response = self.get(url, params=params)
         raise_for_status(response)
 
         response_data = response.json()
