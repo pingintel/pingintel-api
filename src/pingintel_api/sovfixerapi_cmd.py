@@ -406,6 +406,94 @@ def get_output(ctx, sovid_or_sudid, output_format, write, revision, overwrite_ex
     click.echo(f"Downloaded: {ret}")
 
 
+@cli.command()
+@click.pass_context
+@click.argument("sovid")
+@click.argument(
+    "location_filename",
+    nargs=-1,
+    required=True,
+    type=click.Path(exists=True, dir_okay=False),
+    help="One or more location CSV files to update the SOV with.",
+)
+@click.option(
+    "-o",
+    "--output-format",
+    multiple=True,
+    metavar="OUTPUT_FORMAT",
+    help="Select one or more output formats.",
+)
+@click.option(
+    "--callback-url",
+    help="(Optional) Provide a URL to which results should be POSTed.",
+    metavar="URL",
+)
+@click.option(
+    "--update-type",
+    help="(Optional) Specify the update type.",
+)
+@click.option(
+    "-E",
+    "--extra_data",
+    help="Extra data to include in the request, in the form key=value. Can be specified multiple times.",
+    metavar="KEY=VALUE",
+    multiple=True,
+    callback=_attributes_to_dict,
+)
+@click.option(
+    "--write/--no-write",
+    is_flag=True,
+    default=True,
+    help="(default) Actually write the output. If disabled, download but do not persist the result to disk.",
+)
+@click.option(
+    "-D",
+    "--delegate-to-team",
+    metavar="Team UUID",
+    help="Delegate to another team. Provide the 'uuid' of the desired delegatee.  Requires the `delegate` permission.",
+)
+@click.option(
+    "--noinput",
+    is_flag=True,
+    default=False,
+    help="If set, do not prompt for confirmation.",
+)
+@click.option(
+    "--nowait",
+    is_flag=True,
+    default=False,
+    help="If set, do not wait for the update to complete. Instead, return immediately with the SUD ID.",
+)
+def update(
+    ctx,
+    sovid,
+    location_filename,
+    output_format,
+    callback_url,
+    update_type,
+    extra_data,
+    write,
+    delegate_to_team,
+    noinput,
+    nowait,
+):
+    """Update an existing SOV with new location data."""
+    client = get_client(ctx)
+    sudid = client.update_sov(
+        sovid,
+        location_filenames=location_filename,
+        output_formats=output_format if output_format else None,
+        callback_url=callback_url,
+        update_type=update_type,
+        extra_data=extra_data if extra_data else None,
+        actually_write=write,
+        delegate_to_team=delegate_to_team,
+        noinput=noinput,
+        wait_for_completion=not nowait,
+    )
+    click.echo(f"Executed SOV Update, SUDID: {sudid}")
+
+
 def main():
     cli()
 

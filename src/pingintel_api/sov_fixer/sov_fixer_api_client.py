@@ -8,6 +8,7 @@ import pprint
 import time
 from typing import IO, Collection, Literal
 from datetime import timedelta, datetime
+from uuid import UUID
 import click
 
 from pingintel_api.api_client_base import APIClientBase
@@ -36,7 +37,7 @@ class SOVFixerAPIClient(APIClientBase):
         client_ref=None,
         integrations=None,
         extra_data=None,
-        delegate_to_team: str | None = None,
+        delegate_to_team: UUID | str | int | None = None,
         update_callback_url=None,
         allow_ping_data_api=None,
         workflow=None,
@@ -216,7 +217,7 @@ class SOVFixerAPIClient(APIClientBase):
         client_ref=None,
         extra_data=None,
         update_callback_url=None,
-        delegate_to_team=None,
+        delegate_to_team: UUID | str | int | None = None,
         noinput=True,
         allow_ping_data_api=True,
         workflow=None,
@@ -393,6 +394,7 @@ class SOVFixerAPIClient(APIClientBase):
         update_type: str | None = None,
         callback_url: str | None = None,
         username: str | None = None,
+        delegate_to_team: UUID | str | int | None = None,
     ) -> t.SOVUpdateAsyncAPIInitResponse:
         if not sovid:
             raise ValueError("Invalid sovid.")
@@ -407,6 +409,8 @@ class SOVFixerAPIClient(APIClientBase):
             data["callback_url"] = callback_url
         if username:
             data["username"] = username
+        if delegate_to_team is not None:
+            data["delegate_to_team"] = delegate_to_team
 
         response = self.post(url, data=data)
         if 200 <= response.status_code < 300:
@@ -425,6 +429,7 @@ class SOVFixerAPIClient(APIClientBase):
         sudid: str,
         file: IO[bytes] | str,
         filename=None,
+        delegate_to_team: UUID | str | int | None = None,
     ) -> t.SOVUpdateAsyncAPIResponse:
         url = self.api_url + f"/api/v1/sov/update/{sudid}/add_locations"
         if is_fileobj(file):
@@ -439,6 +444,8 @@ class SOVFixerAPIClient(APIClientBase):
             files = {"file": open(file, "rb")}
 
         data = {}
+        if delegate_to_team is not None:
+            data["delegate_to_team"] = delegate_to_team
 
         response = self.post(url, files=files, data=data)
         if 200 <= response.status_code < 300:
@@ -460,6 +467,7 @@ class SOVFixerAPIClient(APIClientBase):
         policy_terms_format_name=None,
         output_formats=None,
         metadata=None,
+        delegate_to_team: UUID | str | int | None = None,
     ) -> t.SOVUpdateAsyncAPIResponse:
         url = self.api_url + f"/api/v1/sov/update/{sudid}/start"
         data = {}
@@ -473,6 +481,8 @@ class SOVFixerAPIClient(APIClientBase):
             data["output_formats"] = output_formats
         if metadata:
             data["metadata"] = metadata
+        if delegate_to_team is not None:
+            data["delegate_to_team"] = delegate_to_team
 
         response = self.post(url, json=data)
         if 200 <= response.status_code < 300:
@@ -509,15 +519,23 @@ class SOVFixerAPIClient(APIClientBase):
         callback_url=None,
         noinput=True,
         metadata=None,
+        delegate_to_team: UUID | str | int | None = None,
+        wait_for_completion: bool = True,
     ) -> str:
+        if actually_write and not wait_for_completion:
+            raise ValueError("Cannot use actually_write=True with wait_for_completion=False")
+
         client = self
-        init_response = client.update_sov_async_init(sovid, update_type=update_type, callback_url=callback_url)
+        init_response = client.update_sov_async_init(
+            sovid, update_type=update_type, callback_url=callback_url, delegate_to_team=delegate_to_team
+        )
         sudid = init_response["id"]
         # print(init_response)
         for location_filename in location_filenames:
             client.update_sov_async_add_locations(
                 sudid,
                 location_filename,
+                delegate_to_team=delegate_to_team,
             )
         start_response = client.update_sov_async_start(
             sudid,
@@ -526,7 +544,11 @@ class SOVFixerAPIClient(APIClientBase):
             policy_terms_format_name=policy_terms_format_name,
             output_formats=output_formats,
             metadata=metadata,
+            delegate_to_team=delegate_to_team,
         )
+
+        if not wait_for_completion:
+            return sudid
 
         while 1:
             response_data = client.update_sov_async_check_progress(sudid)
@@ -578,7 +600,7 @@ class SOVFixerAPIClient(APIClientBase):
         output_format: str,
         revision: int = -1,
         overwrite_existing: bool = False,
-        delegate_to_team: str | None = None,
+        delegate_to_team: UUID | str | int | None = None,
     ):
         url = self.api_url + f"/api/v1/sov/{sovid_or_sud}/get_or_create_output"
         data = {}
@@ -607,7 +629,7 @@ class SOVFixerAPIClient(APIClientBase):
         revision: int = -1,
         overwrite_existing=False,
         timeout: timedelta | None = timedelta(minutes=5),
-        delegate_to_team: str | None = None,
+        delegate_to_team: UUID | str | int | None = None,
     ) -> t.OutputData:
         """Synchronously get or create an output from a SOV Fixer request. If it exists, it will return immediately.
         If it does not exist, it will start the generation process and poll for completion, then return it."""
