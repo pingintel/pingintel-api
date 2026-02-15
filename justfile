@@ -3,9 +3,9 @@ help:
 
 set windows-shell := ["powershell.exe", "-NoLogo", "-Command"]
 
-
 # Build the pypi package. Everything should already be committed to main before using.
 publish version:
+    python -c "import sys; sys.exit(0 if '{{ version }}'[0:1].isdigit() else sys.exit('Version must start with a number'))"
     git checkout main
     hatch version {{ version }}
     git add src/pingintel_api/__about__.py
