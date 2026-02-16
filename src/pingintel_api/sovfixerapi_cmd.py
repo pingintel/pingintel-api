@@ -423,6 +423,13 @@ def get_output(ctx, sovid_or_sudid, output_format, write, revision, overwrite_ex
     help="Select one or more output formats.",
 )
 @click.option(
+    "-I",
+    "--integrations",
+    multiple=True,
+    metavar="INTEGRATION_ABBR",
+    help="Request one or more integrations.",
+)
+@click.option(
     "--callback-url",
     help="(Optional) Provide a URL to which results should be POSTed.",
     metavar="URL",
@@ -468,6 +475,7 @@ def update(
     sovid,
     location_filename,
     output_format,
+    integrations,
     callback_url,
     update_type,
     extra_data,
@@ -482,6 +490,7 @@ def update(
         sovid,
         location_filenames=location_filename,
         output_formats=output_format if output_format else None,
+        integrations=integrations if integrations else None,
         callback_url=callback_url,
         update_type=update_type,
         extra_data=extra_data if extra_data else None,
