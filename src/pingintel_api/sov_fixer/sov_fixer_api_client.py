@@ -467,6 +467,7 @@ class SOVFixerAPIClient(APIClientBase):
         policy_terms_format_name=None,
         output_formats=None,
         metadata=None,
+        integrations=None,
         delegate_to_team: UUID | str | int | None = None,
     ) -> t.SOVUpdateAsyncAPIResponse:
         url = self.api_url + f"/api/v1/sov/update/{sudid}/start"
@@ -481,6 +482,8 @@ class SOVFixerAPIClient(APIClientBase):
             data["output_formats"] = output_formats
         if metadata:
             data["metadata"] = metadata
+        if integrations is not None:
+            data["integrations"] = integrations
         if delegate_to_team is not None:
             data["delegate_to_team"] = delegate_to_team
 
@@ -519,6 +522,7 @@ class SOVFixerAPIClient(APIClientBase):
         callback_url=None,
         noinput=True,
         metadata=None,
+        integrations=None,
         delegate_to_team: UUID | str | int | None = None,
         wait_for_completion: bool = True,
     ) -> str:
@@ -544,6 +548,7 @@ class SOVFixerAPIClient(APIClientBase):
             policy_terms_format_name=policy_terms_format_name,
             output_formats=output_formats,
             metadata=metadata,
+            integrations=integrations,
             delegate_to_team=delegate_to_team,
         )
 
