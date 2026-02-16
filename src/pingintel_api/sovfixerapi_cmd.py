@@ -414,7 +414,6 @@ def get_output(ctx, sovid_or_sudid, output_format, write, revision, overwrite_ex
     nargs=-1,
     required=True,
     type=click.Path(exists=True, dir_okay=False),
-    help="One or more location CSV files to update the SOV with.",
 )
 @click.option(
     "-o",
