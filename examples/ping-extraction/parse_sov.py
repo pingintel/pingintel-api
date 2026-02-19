@@ -70,6 +70,8 @@ for output in outputs:
     # ensure response is in a good state
     assert fetch_outputs_response.status_code in (200, 201)
     print(f"saving {output['filename']}")
-    with open(f"workflow_example_results/{output['filename']}", "wb") as outfile:
+    output_path = f"workflow_example_results/{output['filename']}"
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    with open(output_path, "wb") as outfile:
         outfile.write(fetch_outputs_response.content)    
     print(f"saved {output['filename']}")
