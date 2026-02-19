@@ -50,7 +50,6 @@ while check_job_json["request"]["status"] not in ("COMPLETE", "FAILED"):
 
 print(check_job_json)
 
-
 # record filenames and urls of the processed SOV outputs
 outputs = []
 for output in check_job_json["result"]["outputs"]:
