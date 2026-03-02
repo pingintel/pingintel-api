@@ -1,8 +1,8 @@
 """
-PingVision Clearance & Triage Workflow — Raw API Example
+Ping.Vision Clearance & Triage Workflow — Raw API Example
 
 This script demonstrates an end-to-end clearance workflow using direct HTTP requests
-to the PingVision API. It uploads a submission (.eml file), monitors status changes
+to the Ping.Vision API. It uploads a submission (.eml file), monitors status changes
 via polling, programmatically advances the submission through clearance stages,
 waits for human certification, and finally downloads the finished SOV Fixer outputs.
 
@@ -11,8 +11,8 @@ show exactly what HTTP calls are being made without the abstraction of the
 pingintel_api client library.
 
 Prerequisites:
-  - A valid PingVision API auth token set in PINGVISION_AUTH_TOKEN_LOCAL environment variable
-  - Network access to the PingVision instance at the configured BASE_URL
+  - A valid Ping.Vision API auth token set in PINGVISION_AUTH_TOKEN_LOCAL environment variable
+  - Network access to the Ping.Vision instance at the configured BASE_URL
   - An .eml file containing the submission you want to process
 
 Usage:
@@ -54,12 +54,14 @@ def color_text(text: str, color: str) -> str:
 
 def authenticate(api_url: str, auth_token: str) -> dict:
     """
-    Authenticate to the PingVision API and return the necessary headers and base URL.
+    Authenticate to the Ping.Vision API and return the necessary headers and base URL.
     """
     if auth_token is None:
         auth_token = os.environ.get("PINGVISION_AUTH_TOKEN_LOCAL")
     if not auth_token:
-        raise RuntimeError("No auth token provided. Set PINGVISION_AUTH_TOKEN_LOCAL or pass --auth-token")
+        raise RuntimeError(
+            "No auth token provided. Set PINGVISION_AUTH_TOKEN_LOCAL or pass --auth-token"
+        )
 
     base_url = api_url.rstrip("/")
     if not base_url.endswith("/api/v1"):
@@ -71,9 +73,9 @@ def authenticate(api_url: str, auth_token: str) -> dict:
 
 def get_team(base_url: str, headers: dict, company_name: str, team_name: str) -> dict:
     """
-    Look up a PingVision team by its company and team display names.
+    Look up a Ping.Vision team by its company and team display names.
 
-    This calls the PingVision list_teams endpoint and searches for an exact
+    This calls the Ping.Vision list_teams endpoint and searches for an exact
     match on both company_name and team_name. Use it early in your workflow
     to obtain the team_uuid and division_uuid you'll need for submission
     creation and status lookups.
@@ -138,7 +140,9 @@ def create_submission(
         if client_ref:
             payload["client_ref"] = client_ref
         create_submission_url = f"{base_url}/submission"
-        response = requests.post(create_submission_url, data=payload, files=files, headers=headers)
+        response = requests.post(
+            create_submission_url, data=payload, files=files, headers=headers
+        )
     if response.status_code not in (200, 201):
         raise RuntimeError(f"Failed to create submission: {response.status_code}")
 
@@ -191,9 +195,13 @@ def poll_submission_events(
             if last_cursor_id:
                 events_params["cursor_id"] = last_cursor_id
 
-            response = requests.get(submission_events_url, params=events_params, headers=headers)
+            response = requests.get(
+                submission_events_url, params=events_params, headers=headers
+            )
             if response.status_code not in (200, 201):
-                print(color_text(f"Error polling events: {response.status_code}", "red"))
+                print(
+                    color_text(f"Error polling events: {response.status_code}", "red")
+                )
                 continue
 
             events_json = response.json()
@@ -204,7 +212,9 @@ def poll_submission_events(
                     new_status = event.get("new_value", "")
                     db[pingid] = new_status
                     print(
-                        color_text(f"Status change: {event.get('message', '')}", "green"),
+                        color_text(
+                            f"Status change: {event.get('message', '')}", "green"
+                        ),
                         event.get("old_value", ""),
                         "->",
                         new_status,
@@ -235,14 +245,18 @@ def wait_for_status(
             print(color_text(f"Status for {pingid} reached: {desired_status}", "green"))
             return
 
-        current_status_name = next((k for k, v in status_uuids.items() if v == status_uuid), "unknown")
+        current_status_name = next(
+            (k for k, v in status_uuids.items() if v == status_uuid), "unknown"
+        )
         print(
             f"Waiting for {pingid} to reach {color_text(desired_status, 'green')} "
             f"(current: {color_text(current_status_name, 'yellow')})"
         )
         time.sleep(6)
 
-    raise TimeoutError(f"Timed out waiting for {pingid} to reach '{desired_status}' after {timeout}s")
+    raise TimeoutError(
+        f"Timed out waiting for {pingid} to reach '{desired_status}' after {timeout}s"
+    )
 
 
 def wait_for_job(
@@ -273,7 +287,9 @@ def wait_for_job(
             "team_uuid": team_uuid,
             "division_uuid": division_uuid,
         }
-        response = requests.get(submission_activity_url, params=activity_params, headers=headers)
+        response = requests.get(
+            submission_activity_url, params=activity_params, headers=headers
+        )
 
         if response.status_code not in (200, 201):
             print(color_text(f"Error checking activity: {response.status_code}", "red"))
@@ -321,7 +337,9 @@ def change_status(base_url: str, headers: dict, pingid: str, new_status_uuid: st
         raise RuntimeError(f"Failed to change status: {response.status_code}")
 
 
-def update_submission(base_url: str, headers: dict, pingid: str, attr_to_update: str, value):
+def update_submission(
+    base_url: str, headers: dict, pingid: str, attr_to_update: str, value
+):
     """
     Update a property of the submission.
 
@@ -348,7 +366,9 @@ def update_submission(base_url: str, headers: dict, pingid: str, attr_to_update:
         raise RuntimeError(f"Failed to update submission: {response.status_code}")
 
 
-def download_document(base_url: str, headers: dict, pingid: str, filename: str, output_path: str):
+def download_document(
+    base_url: str, headers: dict, pingid: str, filename: str, output_path: str
+):
     """
     Download a document from a submission.
 
@@ -376,11 +396,11 @@ def run_clearance_workflow(
 
     This is the main entry point. It performs the following steps:
 
-      1. Resolves the team and division from PingVision.
+      1. Resolves the team and division from Ping.Vision.
       2. Uploads the .eml file as a new submission (USER ACTION).
       3. Starts a background thread to monitor status-change events (USER ACTION).
       4. Waits for "Pending Clearance", advances to "Cleared" and "Data Entry" (PING).
-      5. Ping certifies data (PING - demo simplifies via Update Submission API).
+      5. Ping prepares the data for underwriting (PING - demo simplifies via Update Submission API).
       6. Waits for "Underwriting" status (USER ACTION polling).
       7. Waits for the RUN_OUTPUTTERS job to finish (PING).
       8. Downloads the SOVFIXER_JSON document (USER ACTION).
@@ -407,7 +427,7 @@ def run_clearance_workflow(
     # Step 2: Create Submission
     # ==========================================================================
     # USER ACTION: A broker or underwriter uploads a submission (e.g., an email
-    # with SOV attachment) to PingVision for processing. This kicks off the
+    # with SOV attachment) to Ping.Vision for processing. This kicks off the
     # automated intake and clearance workflow.
     # ==========================================================================
     print(color_text("\nStep 2: Creating submission...", "yellow"))
@@ -461,7 +481,7 @@ def run_clearance_workflow(
     wait_for_status(pingid, "Data Entry", status_uuids)
 
     # ==========================================================================
-    # Step 5: Ping Certifies Data
+    # Step 5: Ping Prepares Data for Undewriting
     # ==========================================================================
     # PING: Ping's AI and human-in-the-loop process downloads the scrubber,
     # reviews/corrects the extracted data, and certifies the submission.
@@ -471,8 +491,8 @@ def run_clearance_workflow(
     #   - Only do this in staging, not production
     #   - Uses Update Submission API with is_building_data_ready=True
     # ==========================================================================
-    print(color_text("\nStep 5: Ping certifies data...", "yellow"))
-    print(color_text("  (In production: Ping's team certifies via scrubber)", "red"))
+    print(color_text("\nStep 5: Ping corrects data...", "yellow"))
+    print(color_text("  (In production: Ping's team works to perfect the data)", "red"))
 
     # [DEMO] Auto-advance to Underwriting and mark data as ready
     # In production, this is triggered by Ping's certification process
@@ -482,7 +502,9 @@ def run_clearance_workflow(
     # Mark building data as ready - this triggers the RUN_OUTPUTTERS job
     # In production, this flag is set when Ping's certification is complete
     print(color_text("  [DEMO] Marking building data as ready...", "yellow"))
-    update_submission(base_url, headers, pingid, to_update="is_building_data_ready", value=True)
+    update_submission(
+        base_url, headers, pingid, to_update="is_building_data_ready", value=True
+    )
 
     # ==========================================================================
     # Step 6: Wait for Underwriting Status
@@ -501,7 +523,9 @@ def run_clearance_workflow(
     # ==========================================================================
     print(color_text("\nStep 7: Waiting for final outputs...", "yellow"))
 
-    submission = wait_for_job(base_url, headers, pingid, team_uuid, division_uuid, "RUN_OUTPUTTERS")
+    submission = wait_for_job(
+        base_url, headers, pingid, team_uuid, division_uuid, "RUN_OUTPUTTERS"
+    )
 
     # ==========================================================================
     # Step 8: Download Output Documents
@@ -530,7 +554,7 @@ def run_clearance_workflow(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Run PingVision clearance workflow using raw HTTP requests",
+        description="Run Ping.Vision clearance workflow using raw HTTP requests",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -539,12 +563,12 @@ Examples:
         """,
     )
     parser.add_argument("--eml", required=True, help="Path to .eml file to submit")
-    parser.add_argument("--company", required=True, help="Company name in PingVision")
-    parser.add_argument("--team", required=True, help="Team name in PingVision")
+    parser.add_argument("--company", required=True, help="Company name in Ping.Vision")
+    parser.add_argument("--team", required=True, help="Team name in Ping.Vision")
     parser.add_argument(
         "--api-url",
         default="http://localhost:8002",
-        help="PingVision API base URL (default: localhost:8002)",
+        help="Ping.Vision API base URL (default: localhost:8002)",
     )
     parser.add_argument(
         "--auth-token",
