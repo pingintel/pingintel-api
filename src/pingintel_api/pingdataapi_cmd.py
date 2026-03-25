@@ -27,6 +27,18 @@ pingdataapi.py
 Example Python commandline script for using the Ping Data Technologies Data API to enhance locations with additional data.
 """
 
+def _attributes_to_dict(ctx: click.Context, attribute: click.Option, attributes: tuple[str, ...]) -> dict[str, str]:
+    """Click callback that converts attributes specified in the form `key=value` to a
+    dictionary. Thanks to https://stackoverflow.com/a/76601290/237091"""
+    result = {}
+    for arg in attributes:
+        k, v = arg.split("=")
+        if k in result:
+            raise click.BadParameter(f"Attribute {k!r} is specified twice")
+        result[k] = v
+
+    return result
+
 
 @click.group()
 @click.option(
@@ -98,6 +110,14 @@ def get_client(ctx) -> PingDataAPIClient:
 @click.option("--longitude", type=float, default=None, help="Optional. Specify longitude.")
 @click.option("--timeout", type=float, default=None, help="Optional. Maximum time to wait for response in seconds.")
 @click.option("-r", "--include-raw-response", is_flag=True, help="Optional. Include raw response from all sources.")
+@click.option(
+    "-E",
+    "--extra-location-kwargs",
+    help="Extra location kwargs in the form of key=value pairs. These will be passed through to the geocoders and other data sources.",
+    metavar="KEY=VALUE",
+    multiple=True,
+    callback=_attributes_to_dict,
+)
 @click.option("--nocache", is_flag=True, help="If set, do not use cache.")
 def enhance(
     ctx: click.Context,
@@ -109,11 +129,11 @@ def enhance(
     timeout: float | None = None,
     include_raw_response: bool = False,
     nocache: bool = False,
+    extra_location_kwargs: dict[str, str] | None = None,
 ):
     """Request data synchronously about a single address."""
 
     client = get_client(ctx)
-
     response_data = client.enhance(
         address=address,
         country=country,
@@ -124,6 +144,7 @@ def enhance(
         include_raw_response=include_raw_response,
         nocache=nocache,
         delegate_to=ctx.obj["delegate_to"],
+        **(extra_location_kwargs or {}),
     )
     click.echo(f"+ Finished querying with result:\n{pprint.pformat(response_data)}")
 

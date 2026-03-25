@@ -153,6 +153,10 @@ class SingleLocation(TypedDict):
     dtc_include_coastline_within_miles: NotRequired[float | None]
     dtc_return_connected_coastlines: NotRequired[bool | None]
     insured_name: NotRequired[str | None]
+    deductible_amount: NotRequired[float | None]
+    deductible_amount2: NotRequired[float | None]
+    deductible_amount3: NotRequired[float | None]
+    deductible_type: NotRequired[int | None]
 
 
 Location = SingleLocation
