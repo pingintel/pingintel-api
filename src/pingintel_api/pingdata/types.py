@@ -156,7 +156,7 @@ class SingleLocation(TypedDict):
     deductible_amount: NotRequired[float | None]
     deductible_amount2: NotRequired[float | None]
     deductible_amount3: NotRequired[float | None]
-    deductible_type: NotRequired[str | None]
+    deductible_type: NotRequired[int | None]
 
 
 Location = SingleLocation
