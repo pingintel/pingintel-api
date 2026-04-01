@@ -11,7 +11,7 @@ import click
 from pingintel_api import PingDataAPIClient
 
 from pingintel_api.api_client_base import AuthTokenNotFound
-from pingintel_api.pingdata.types import SOURCES, Location
+from pingintel_api.pingdata.types import Location
 from pingintel_api.utils import set_verbosity
 
 logger = logging.getLogger(__name__)
@@ -83,6 +83,24 @@ def get_client(ctx) -> PingDataAPIClient:
     return client
 
 
+def parse_extra_kwargs(extra: tuple[str, ...]) -> dict:
+    """Parse key=value pairs into a dictionary, converting numeric values."""
+    result = {}
+    for item in extra:
+        if "=" not in item:
+            raise click.BadParameter(f"Invalid format '{item}'. Expected key=value")
+        key, value = item.split("=", 1)
+        # Try to convert to int, then float, otherwise keep as string
+        try:
+            result[key] = int(value)
+        except ValueError:
+            try:
+                result[key] = float(value)
+            except ValueError:
+                result[key] = value
+    return result
+
+
 @cli.command()
 @click.pass_context
 @click.option("-a", "--address", multiple=True)
@@ -90,7 +108,6 @@ def get_client(ctx) -> PingDataAPIClient:
     "-s",
     "--sources",
     multiple=True,
-    type=click.Choice(SOURCES.get_options(), case_sensitive=False),
     required=True,
 )
 @click.option("-c", "--country", type=str, default=None, help="Optional. Provides a country hint to the geocoders.")
@@ -99,6 +116,13 @@ def get_client(ctx) -> PingDataAPIClient:
 @click.option("--timeout", type=float, default=None, help="Optional. Maximum time to wait for response in seconds.")
 @click.option("-r", "--include-raw-response", is_flag=True, help="Optional. Include raw response from all sources.")
 @click.option("--nocache", is_flag=True, help="If set, do not use cache.")
+@click.option(
+    "-x",
+    "--extra",
+    multiple=True,
+    metavar="KEY=VALUE",
+    help="Extra location kwargs (e.g., -x const__code_rms=RC -x const__num_stories=3). Can be used multiple times.",
+)
 def enhance(
     ctx: click.Context,
     address: str,
@@ -109,10 +133,13 @@ def enhance(
     timeout: float | None = None,
     include_raw_response: bool = False,
     nocache: bool = False,
+    extra: tuple[str, ...] = (),
 ):
     """Request data synchronously about a single address."""
 
     client = get_client(ctx)
+
+    extra_location_kwargs = parse_extra_kwargs(extra)
 
     response_data = client.enhance(
         address=address,
@@ -124,6 +151,7 @@ def enhance(
         include_raw_response=include_raw_response,
         nocache=nocache,
         delegate_to=ctx.obj["delegate_to"],
+        **extra_location_kwargs,
     )
     click.echo(f"+ Finished querying with result:\n{pprint.pformat(response_data)}")
 
@@ -136,7 +164,6 @@ def enhance(
     "-s",
     "--sources",
     multiple=True,
-    type=click.Choice(SOURCES.get_options(), case_sensitive=False),
     # required=True,
 )
 @click.option("--timeout", type=float, default=None, help="Optional. Maximum time to wait for response in seconds.")
