@@ -44,6 +44,8 @@ class PingVisionAPIClient(APIClientBase):
         """
         Initiate a new submission from one or more original files.
 
+        Docs: https://docs.pingintel.com/ping-vision/create-submission/initiate-new-submission
+
         :param filepaths: List of file paths to submit.
         :type filepaths: list[str|pathlib.Path]
 
@@ -110,6 +112,7 @@ class PingVisionAPIClient(APIClientBase):
         return response_data
 
     def get_submission_detail(self, pingid: str):  # -> t.PingVisionSubmissionDetailResponse:
+        """Get submission history/detail."""
         url = self.api_url + f"/api/v1/submission/{pingid}/history"
 
         response = self.get(url)
@@ -131,6 +134,7 @@ class PingVisionAPIClient(APIClientBase):
         sort_order: Literal["asc", "desc"] = "asc",
         **filter_kwargs,
     ) -> t.PingVisionListActivityResponse:
+        """Docs: https://docs.pingintel.com/ping-vision/get-submission-data/list-recent-submission-activity"""
         url = self.api_url + "/api/v1/submission"
 
         kwargs = {}
@@ -167,6 +171,7 @@ class PingVisionAPIClient(APIClientBase):
     def download_document(self, output_path_or_stream, *, pingid: str, filename: str) -> None: ...
 
     def download_document(self, output_path_or_stream, document_url=None, pingid=None, filename=None) -> None:
+        """Docs: https://docs.pingintel.com/ping-vision/get-submission-data/download-submission-document"""
         if not document_url:
             encoded_filename = urllib.parse.quote(filename)
             document_url = f"/api/v1/submission/{pingid}/document/{encoded_filename}"
@@ -188,6 +193,7 @@ class PingVisionAPIClient(APIClientBase):
                 f.write(response.content)
 
     def list_submission_statuses(self, division: str) -> list[t.PingVisionListSubmissionStatusItemResponse]:
+        """Docs: https://docs.pingintel.com/ping-vision/miscellaneous/list-submission-statuses"""
         url = self.api_url + f"/api/v1/submission-status"
 
         response = self.get(url, params={"division": division})
@@ -197,6 +203,7 @@ class PingVisionAPIClient(APIClientBase):
         return response_data
 
     def change_status(self, pingid: str, workflow_status_id: int) -> t.PingVisionChangeSubmissionStatusResponse:
+        """Docs: https://docs.pingintel.com/ping-vision/update-submission/change-submission-status"""
         url = self.api_url + f"/api/v1/submission/{pingid}/change_status"
 
         data = {
@@ -210,6 +217,7 @@ class PingVisionAPIClient(APIClientBase):
     def bulk_update_submission(
         self, pingids: list[str], changes: List[t.PingVisionSubmissionBulkUpdateChangeItem]
     ) -> List[t.PingVisionSubmissionBulkUpdateResponse]:
+        """Docs: https://docs.pingintel.com/ping-vision/update-submission/action-submissions"""
         url = self.api_url + f"/api/v1/submission/bulkupdate"
 
         data = {
@@ -222,6 +230,7 @@ class PingVisionAPIClient(APIClientBase):
         return response_data
 
     def update_submission(self, pingid: str, data: dict):
+        """Docs: https://docs.pingintel.com/ping-vision/update-submission/update-submission-details"""
         url = self.api_url + f"/api/v1/submission/{pingid}"
 
         response = self.patch(url, json=data)
@@ -233,6 +242,7 @@ class PingVisionAPIClient(APIClientBase):
         self,
         **kwargs: Unpack[t.PingVisionSubmissionEventsRequest],
     ) -> t.PingVisionSubmissionEventsResponse:
+        """Docs: https://docs.pingintel.com/ping-vision/get-submission-data/list-submission-events"""
         url = self.api_url + f"/api/v1/submission-events"
 
         pingid = kwargs.get("pingid")
@@ -263,6 +273,7 @@ class PingVisionAPIClient(APIClientBase):
         return response_data
 
     def list_teams(self, delegate_to_company=None, delegate_to_team=None) -> list[t.PingVisionTeamsResponse]:
+        """Docs: https://docs.pingintel.com/ping-vision/user-memberships/list-user-teams"""
         url = self.api_url + "/api/v1/user/teams"
         params = {}
         if delegate_to_company:
@@ -276,7 +287,7 @@ class PingVisionAPIClient(APIClientBase):
         return response_data
 
     def list_team_members(self, team_uuid: str) -> list:
-        # https://vision.dev.pingintel.com/api/v1/memberships?team_uuid=01961739-3d24-754e-a78b-6959bde786a6
+        """Docs: https://docs.pingintel.com/ping-vision/user-memberships/list-user-memberships"""
         url = self.api_url + "/api/v1/memberships"
         response = self.get(url, params={"team_uuid": team_uuid})
         raise_for_status(response)
@@ -284,6 +295,7 @@ class PingVisionAPIClient(APIClientBase):
         return response_data
 
     def add_data_items(self, pingid: str, action: t.DATA_ITEM_ACTIONS, items: dict[str, str | int | float | bool]):
+        """Docs: https://docs.pingintel.com/ping-vision/update-submission/store-additional-data-on-submission"""
         url = self.api_url + f"/api/v1/submission/{pingid}/add_data_items"
         response = self.post(url, json={"items": items, "action": action})
         raise_for_status(response)

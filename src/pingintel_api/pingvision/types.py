@@ -214,6 +214,7 @@ class PingVisionTeamsResponse(TypedDict):
     division_name: str
     company_uuid: str
     company_name: str
+    company_short_name: str
 
     membership_type: Literal["member", "admin", "owner"]
 

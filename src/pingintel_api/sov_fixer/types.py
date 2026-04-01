@@ -94,7 +94,7 @@ class SOVUpdateResponseResultOutputs(TypedDict):
 class SOVUpdateResponseRequest(TypedDict):
     request_uuid: str
     status: str
-    pct_complete: float | None
+    pct_complete: int | None
     last_health_status: str | None
     last_health_check_time: str | None
     sudid: str
@@ -103,7 +103,8 @@ class SOVUpdateResponseRequest(TypedDict):
 
 
 class SOVUpdateResponseResult(TypedDict):
-    status: Literal["FAILED", "SUCCESS"]
+    status: Literal["SUCCESS", "FAILED_TO_PARSE", "FAILED_TO_PROCESS"]
+    message: str
     outputs: NotRequired[list[SOVUpdateResponseResultOutputs]]
 
 
@@ -156,6 +157,7 @@ class UpdateData(TypedDict):
     contract_terms_policy_number: NotRequired[str]
     completed_time: NotRequired[datetime]
     client_ref: NotRequired[str | None]
+    extra_data: NotRequired[dict[str, Any] | None]
 
 
 class SOVData(TypedDict):

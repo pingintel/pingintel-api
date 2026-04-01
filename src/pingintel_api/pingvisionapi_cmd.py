@@ -144,6 +144,9 @@ def get(ctx, pingid):
 
 
 @cli.command()
+@click.option("--pretty", is_flag=True, default=False)
+@click.option("--include-statuses", is_flag=True, default=False, help="Include status names and UUIDs in pretty output")
+@click.option("-f", "--filter", "filter_str", help="Filter teams by name or company (case-insensitive substring match)")
 @click.option(
     "--delegate-to-company",
     help="Delegate to another organization. Provide the company uuid, short_name, or id of the desired delegatee team.  Requires the `delegate` permission. If set but `delegate_to_team` is not set, the API will return an error if the company has multiple teams.",
@@ -155,7 +158,7 @@ def get(ctx, pingid):
     help="Delegate to another organization. Provide the 'uuid' of the desired delegatee team.  Requires the `delegate` permission. If set, `delegate_to_company` is required. Can be team uuid, or id",
 )
 @click.pass_context
-def list_teams(ctx, delegate_to_company, delegate_to):
+def list_teams(ctx, pretty, include_statuses, filter_str, delegate_to_company, delegate_to):
     """List teams."""
     client = get_client(ctx)
 
@@ -164,9 +167,30 @@ def list_teams(ctx, delegate_to_company, delegate_to):
         print("No teams found.")
         return
 
-    print(f"{'Team Name':<40}{'UUID':<36}")
-    for team in ret:
-        print(f"{team['team_name']:<40}{team['team_uuid']:<36}")
+    if filter_str:
+        filter_lower = filter_str.lower()
+        ret = [
+            team
+            for team in ret
+            if filter_lower in team.get("team_name", "").lower()
+            or filter_lower in team.get("company_short_name", "").lower()
+        ]
+
+    if pretty:
+        print(f"{'Company':<50}{'Division':<60}{'Team':<60}")
+        for team in ret:
+            company = f"{team['company_short_name']} ({team['company_uuid']})"
+            division = team["division_name"] + f" ({team['division_uuid']})"
+            team_name = team["team_name"] + f" ({team['team_uuid']})"
+            print(f"{company:<50}{division:<60}{team_name:<60}")
+
+            if include_statuses:
+                statuses = team.get("statuses", [])
+                print("  Statuses:")
+                for status in statuses:
+                    print(f"    {status.get('name', ''):<30}{status.get('uuid', ''):<36}")
+    else:
+        pprint.pprint(ret)
 
 
 @cli.command()
