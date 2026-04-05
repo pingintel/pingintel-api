@@ -202,8 +202,14 @@ def list_teams(ctx, pretty, include_statuses, filter_str, delegate_to_company, d
 @click.option("-l", "--page-size", "--limit", default=50)
 @click.option("--fields", multiple=True)
 @click.option("--search", help="Filter key fields by an arbitrary string")
+@click.option(
+    "--sort-order",
+    type=click.Choice(["asc", "desc"], case_sensitive=False),
+    default="desc",
+    show_default=True,
+)
 # @click.option("--organization__short_name")
-def activity(ctx, pretty, id, cursor_id, prev_cursor_id, page_size, fields, search):
+def activity(ctx, pretty, id, cursor_id, prev_cursor_id, page_size, fields, search, sort_order):
     """List submission activity."""
     client = get_client(ctx)
 
@@ -214,6 +220,7 @@ def activity(ctx, pretty, id, cursor_id, prev_cursor_id, page_size, fields, sear
         prev_cursor_id=prev_cursor_id,
         fields=fields,
         search=search,
+        sort_order=sort_order,
     )
     if pretty:
         print(f"{'Activity ID':<36}{'Status':<30}{'Created':<20}")
