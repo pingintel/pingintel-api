@@ -10,6 +10,7 @@ import os
 import pathlib
 import pprint
 import time
+from datetime import timedelta
 from timeit import default_timer as timer
 from typing import BinaryIO, Literal, TypedDict, overload, List
 from typing import BinaryIO, TypedDict, Unpack, overload
@@ -293,6 +294,79 @@ class PingVisionAPIClient(APIClientBase):
         raise_for_status(response)
         response_data = response.json()
         return response_data
+
+    def get_or_create_output_async_start(
+        self,
+        pingid: str,
+        output_format: str,
+        overwrite_existing: bool = False,
+    ):
+        url = self.api_url + f"/api/v1/submission/{pingid}/get_or_create_output"
+        data = {}
+        if output_format:
+            data["output_format"] = output_format
+        if overwrite_existing:
+            data["overwrite_existing"] = overwrite_existing
+
+        response = self.post(url, data=data)
+        raise_for_status(response)
+        return response.json()
+
+    def get_or_create_output_async_check_progress(self, output_request_id: str):
+        url = self.api_url + f"/api/v1/submission/get_or_create_output/{output_request_id}"
+        response = self.get(url)
+        return response.json()
+
+    def get_or_create_output(
+        self,
+        pingid: str,
+        output_format: str,
+        overwrite_existing: bool = False,
+        timeout: timedelta | None = timedelta(minutes=5),
+    ) -> t.OutputData:
+        """Synchronously get or create an output from a Ping Vision submission. If it exists, it will return immediately.
+        If it does not exist, it will start the generation process and poll for completion, then return it."""
+        client = self
+
+        start_response = client.get_or_create_output_async_start(
+            pingid,
+            output_format,
+            overwrite_existing,
+        )
+
+        request_status = start_response["request"]["status"]
+        output_request_id = start_response["request"]["id"]
+        if request_status == "COMPLETE" or request_status == "FAILED":
+            response_data = start_response
+        else:
+            start_time = time.time()
+            while 1:
+                if timeout and time.time() - start_time > timeout.total_seconds():
+                    raise TimeoutError(f"Timeout waiting for output generation: {output_request_id}")
+                response_data = client.get_or_create_output_async_check_progress(output_request_id)
+                request_status = response_data["request"]["status"]
+                POLL_SECS = 2.5
+                if request_status == "PENDING":
+                    self.logger.info("  - Has not yet been queued for processing.")
+                    time.sleep(POLL_SECS)
+                elif request_status == "IN_PROGRESS":
+                    self.logger.info(f"  - Still in progress: {request_status}")
+                    time.sleep(POLL_SECS)
+                else:
+                    break
+
+        self.logger.info(f"+ Finished with result {response_data.get('result',{}).get('status')}")
+
+        result = response_data.get("result", {})
+        if not result:
+            raise ValueError(f"Invalid response: {response_data}")
+        output = t.OutputData(
+            label=result.get("label", None),
+            scrubbed_filename=result.get("scrubbed_filename", None),
+            output_format=result.get("output_format", None),
+            url=result.get("url", None),
+        )
+        return output
 
     def add_data_items(self, pingid: str, action: t.DATA_ITEM_ACTIONS, items: dict[str, str | int | float | bool]):
         """Docs: https://docs.pingintel.com/ping-vision/update-submission/store-additional-data-on-submission"""
