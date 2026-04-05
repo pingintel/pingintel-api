@@ -222,3 +222,10 @@ class PingVisionTeamsResponse(TypedDict):
 class DATA_ITEM_ACTIONS(str, enum.Enum):
     UPSERT = "upsert"
     REPLACE = "replace"
+
+
+class OutputData(TypedDict):
+    label: str
+    scrubbed_filename: str
+    output_format: str
+    url: str

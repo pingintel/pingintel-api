@@ -258,6 +258,45 @@ def download_document(ctx, document_url, output):
 
 @cli.command()
 @click.pass_context
+@click.argument("pingid")
+@click.option(
+    "-o",
+    "--output-format",
+    required=True,
+    metavar="OUTPUT_FORMAT",
+    help="Select an output format.",
+)
+@click.option(
+    "--write/--no-write",
+    is_flag=True,
+    default=True,
+    help="(default) Actually write the output. If disabled, download but do not persist the result to disk.",
+)
+@click.option(
+    "--overwrite-existing/--no-overwrite-existing",
+    is_flag=True,
+    default=False,
+    help="If set, regenerate the file even if it already exists.",
+)
+def get_output(ctx, pingid, output_format, write, overwrite_existing):
+    """Fetch or generate an output from a previous submission."""
+    client = get_client(ctx)
+    output_data = client.get_or_create_output(
+        pingid,
+        output_format,
+        overwrite_existing,
+    )
+    output_url = output_data["url"]
+    filename = output_data.get("scrubbed_filename") or pathlib.Path(output_url).name
+    if write:
+        client.download_document(filename, document_url=output_url)
+        click.echo(f"Downloaded: {filename}")
+    else:
+        click.echo(output_url)
+
+
+@cli.command()
+@click.pass_context
 @click.option("-d", "--division", type=str, help="Division UUID to filter by")
 def list_submission_statuses(ctx, division):
     """List submission statuses."""
