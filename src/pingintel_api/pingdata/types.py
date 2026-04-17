@@ -124,9 +124,6 @@ class SingleLocation(TypedDict):
     address: NotRequired[str | None]
     latitude: NotRequired[float | None]
     longitude: NotRequired[float | None]
-    limits__building_limit: NotRequired[float | None]
-    limits__bpp_limit: NotRequired[float | None]
-    limits__bi_limit: NotRequired[float | None]
     address_line_1: NotRequired[str | None]
     address_line_2: NotRequired[str | None]
     city: NotRequired[str | None]
@@ -135,9 +132,10 @@ class SingleLocation(TypedDict):
     country: NotRequired[str | None]
     county: NotRequired[str | None]
     bldg_name: NotRequired[str | None]
-    # ping_occupancy_data: NotRequired[str | None]
-    # llm_text_blob: NotRequired[str | None]
-    # address_field_data: NotRequired[str | None]
+    lightbox_assessment_id: NotRequired[str | None]
+    lightbox_building_id: NotRequired[str | None]
+    lightbox_parcel_id: NotRequired[str | None]
+    lightbox_parcel_wkt: NotRequired[str | None]
     occupancy__type_desc: NotRequired[str | None]
     occupancy__desc_ping: NotRequired[str | None]
     occupancy__code_air: NotRequired[str | None]
@@ -149,10 +147,14 @@ class SingleLocation(TypedDict):
     const__wall_type: NotRequired[str | None]
     const__bldg_year_built: NotRequired[int | None]
     const__num_stories: NotRequired[int | None]
+    const__num_stories_below_gnd: NotRequired[int | None]
     const__bldg_area: NotRequired[int | None]
+    limits__building_limit: NotRequired[float | None]
+    limits__bpp_limit: NotRequired[float | None]
+    limits__bi_limit: NotRequired[float | None]
+    limits__signs_and_other_limit: NotRequired[float | None]
     dtc_include_coastline_within_miles: NotRequired[float | None]
     dtc_return_connected_coastlines: NotRequired[bool | None]
-    insured_name: NotRequired[str | None]
 
 
 Location = SingleLocation
@@ -160,6 +162,8 @@ Location = SingleLocation
 
 class BatchLocation(SingleLocation):
     id: str
+    sources: NotRequired[list[str] | None]
+    datasource_config: NotRequired[dict | None]
 
 
 class EnhanceResponse(TypedDict):

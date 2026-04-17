@@ -162,7 +162,7 @@ class PingDataAPIClient(APIClientBase):
             delegate_to=delegate_to,
         )
         request_id = response_data["id"]
-        message = response_data["message"]
+        message = response_data.get("message", "")
 
         self.logger.info(
             f"+ Dispatched {request_id}: {message}.  Now, polling for results at {self.bulk_enhance_async_get_status_url(request_id=request_id)}."
@@ -299,3 +299,21 @@ class PingDataAPIClient(APIClientBase):
         raise_for_status(response)
         response_data = response.json()
         return response_data
+
+    def fetch_bulk_enhance_output(self, request_id: str, filename: str, output_path: str | None = None) -> bytes:
+        """
+        Download a result file from a completed bulk enhance job.
+
+        :param request_id: The bulk enhance job ID.
+        :param filename: The output filename (from result.outputs[].filename).
+        :param output_path: If provided, write the result to this local file path.
+        :return: Raw response bytes.
+        """
+        url = self.api_url + f"/api/v1/bulk_enhance/{request_id}/output/{filename}"
+        response = self.get(url)
+        raise_for_status(response)
+        if output_path:
+            with open(output_path, "wb") as fd:
+                for chunk in response.iter_content(chunk_size=128):
+                    fd.write(chunk)
+        return response.content
