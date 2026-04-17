@@ -316,6 +316,52 @@ def list_submission_statuses(ctx, division):
     pprint.pprint(results)
 
 
+@cli.command()
+@click.pass_context
+@click.option("--pretty", is_flag=True, default=False)
+@click.option("--pingid", help="Filter by Ping ID")
+@click.option("--division", help="Filter by division UUID or short name")
+@click.option("--team", help="Filter by team UUID or short name")
+@click.option("--start", help="Start datetime filter (YYYYMMDDHHmmss UTC)")
+@click.option("--cursor-id", help="Cursor ID for pagination")
+@click.option("-l", "--page-size", "--limit", default=50)
+def events(ctx, pretty, pingid, division, team, start, cursor_id, page_size):
+    """List submission events."""
+    import datetime
+
+    client = get_client(ctx)
+
+    if not any([pingid, division, team]):
+        raise click.UsageError("One or more of --pingid, --division, or --team must be provided.")
+
+    start_dt = None
+    if start:
+        start_dt = datetime.datetime.strptime(start, "%Y%m%d%H%M%S")
+
+    results = client.list_submission_events(
+        pingid=pingid,
+        division=division,
+        team=team,
+        start=start_dt,
+        cursor_id=cursor_id,
+        page_size=page_size,
+    )
+    if pretty:
+        print(f"{'Ping ID':<36}{'Event Type':<30}{'Created':<20}{'Message'}")
+        for event in results["results"]:
+            created = event["created_time"]
+            try:
+                created = time.strftime("%Y-%m-%d %H:%M", time.strptime(created, "%Y-%m-%dT%H:%M:%S.%fZ"))
+            except ValueError:
+                pass
+            print(f"{event['pingid']:<36}{event['event_type']:<30}{created:<20}{event.get('message', '')}")
+        cursor = results.get("cursor_id")
+        if cursor:
+            print(f"\nNext cursor: {cursor}")
+    else:
+        pprint.pprint(results)
+
+
 def main():
     cli()
 
