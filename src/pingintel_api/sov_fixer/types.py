@@ -83,6 +83,7 @@ class SOVUpdateInitiateRequest(TypedDict):
     update_type: NotRequired[str | None]
     callback_url: NotRequired[str | None]
     username: NotRequired[str | None]
+    delegate_to_team: NotRequired[str | int | None]
 
 
 class SOVUpdateResponseResultOutputs(TypedDict):
@@ -165,6 +166,7 @@ class SOVData(TypedDict):
     document_type: str | None
     pct_complete: float | None
     filename: str | None
+    additional_filenames: list[str] | None
     status: str | None
     status_display: str | None
     last_health_status: str | None
@@ -173,12 +175,17 @@ class SOVData(TypedDict):
     output_data: list[OutputData] | None
     origin: str | None
     organization__short_name: str | None
+    company__short_name: str | None
+    team__name: str | None
+    division__short_name: str | None
     global_request_id: str | None
     ping_maps_url: str | None
+    ping_vision_url: str | None
     input_file_url: str | None
     extra_data: dict[str, Any] | None
     updates: dict[str, UpdateData] | None
     all_updates: list[UpdateData] | None
+    latest_revision: int | None
     completed_time: str | None
     created_time: str | None
     subject: str | None
@@ -198,6 +205,9 @@ class ActivityResponse(TypedDict):
     cursor_id: str | None
     prev_cursor_id: str | None
     remaining_count: int
+    has_remaining: bool
+    total_count: int
+    total_size_without_cursors: str
 
 
 class HistoryItem(TypedDict):
@@ -210,8 +220,36 @@ class HistoryItem(TypedDict):
     completed_time: datetime
     record_type: str
     incremental: bool
+    is_data_ready: NotRequired[bool | None]
 
 
 class HistoryResponse(TypedDict):
     cursor_id: str | None
     results: list[HistoryItem]
+
+
+class SOVHistoryOutputItem(TypedDict):
+    url: str
+    output_format: str
+    completed_time: str
+
+
+class SOVHistoryResult(TypedDict):
+    sovid: str
+    previous_sovid: str
+    original_sovid: str
+    sheet_name: str
+    outputs: list[SOVHistoryOutputItem]
+
+
+class SOVHistoryResponse(TypedDict):
+    result: SOVHistoryResult
+
+
+class CreateSubmissionResponse(TypedDict):
+    message: str
+    id: int
+
+
+class GetPublicShareableUrlResponse(TypedDict):
+    url: str

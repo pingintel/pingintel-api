@@ -42,6 +42,8 @@ class SOVFixerAPIClient(APIClientBase):
         allow_ping_data_api=None,
         workflow=None,
         skip_prior_update_reuse: bool = False,
+        company: str | None = None,
+        team: str | None = None,
     ):
         """
         Start a SOV Fixer request from one or more files asynchronously.
@@ -77,6 +79,10 @@ class SOVFixerAPIClient(APIClientBase):
             data["allow_ping_data_api"] = allow_ping_data_api
         if workflow is not None:
             data["workflow"] = workflow
+        if company is not None:
+            data["company"] = company
+        if team is not None:
+            data["team"] = team
 
         data["skip_prior_update_reuse"] = skip_prior_update_reuse
 
@@ -250,7 +256,7 @@ class SOVFixerAPIClient(APIClientBase):
             if request_status == "PENDING":
                 self.logger.info("  - Has not yet been queued for processing.")
                 time.sleep(POLL_SECS)
-            elif request_status == "IN_PROGRESS":
+            elif request_status in t.INCOMPLETE_STATUSES:
                 self.logger.info(f"  - Still in progress ({pct_complete}% complete): {last_status}")
                 time.sleep(POLL_SECS)
             else:
@@ -340,27 +346,28 @@ class SOVFixerAPIClient(APIClientBase):
         search=None,
         origin: Literal["api", "email"] | None = None,
         status: Literal["P", "I", "E", "R", "C", "F"] | None = None,
-        organization__short_name=None,
+        company__short_name: str | list[str] | None = None,
+        division__short_name: str | list[str] | None = None,
+        pingid: str | None = None,
+        completed_time__gt: str | None = None,
+        completed_time__gte: str | None = None,
+        completed_time__lt: str | None = None,
+        completed_time__lte: str | None = None,
     ) -> t.ActivityResponse:
         """List activity in the SOV Fixer system.
-        id: str
-            The ID of the activity to retrieve.
-        cursor_id: str
-            The cursor ID to use for pagination. Do not set on the first call, but provide the value from each previous call to the next to get the next page.
-        prev_cursor_id: str
-            See cursor_id, but this goes backwards.
-        page_size: int
-            The number of results to return per page. Default is 50.
-        fields: str
-            The fields to include in the response. Default is all fields.
-        search: str
-            A search term to filter results by.
-        origin: str
-            Filter by the origin of the activity. Can be "api" or "email".
-        status: str
-            Filter by the status of the activity. Can be "P" (pending), "I" (in progress), "E" (enriching), "R" (re-enriching), "C" (complete), or "F" (failed).
-        organization__short_name: str
-            Filter by the short name of the organization that created the activity
+
+        id: filter by sovid.
+        cursor_id: pagination cursor from a previous response.
+        prev_cursor_id: reverse pagination cursor.
+        page_size: max results per page (default 50, max 250).
+        fields: list of field names to include on each result.
+        search: global case-insensitive search substring.
+        origin: filter by "api" or "email".
+        status: filter by status
+        company__short_name: filter by company short name(s).
+        division__short_name: filter by division short name(s).
+        pingid: filter by Ping ID.
+        completed_time__gt/gte/lt/lte: filter by completed_time (format: YYYYMMDDHHmmss, UTC).
         """
         parameters = {}
         if id:
@@ -379,8 +386,20 @@ class SOVFixerAPIClient(APIClientBase):
             parameters["origin"] = origin
         if status:
             parameters["status"] = status
-        if organization__short_name:
-            parameters["organization__short_name"] = organization__short_name
+        if company__short_name:
+            parameters["company__short_name"] = company__short_name
+        if division__short_name:
+            parameters["division__short_name"] = division__short_name
+        if pingid:
+            parameters["pingid"] = pingid
+        if completed_time__gt:
+            parameters["completed_time__gt"] = completed_time__gt
+        if completed_time__gte:
+            parameters["completed_time__gte"] = completed_time__gte
+        if completed_time__lt:
+            parameters["completed_time__lt"] = completed_time__lt
+        if completed_time__lte:
+            parameters["completed_time__lte"] = completed_time__lte
 
         url = self.api_url + "/api/v1/sov/activity"
         response = self.get(url, params=parameters)
@@ -464,20 +483,19 @@ class SOVFixerAPIClient(APIClientBase):
         sudid: str,
         extra_data=None,
         policy_terms=None,
-        policy_terms_format_name=None,
+        outputter_name: str | None = None,
         output_formats=None,
         metadata=None,
         integrations=None,
         delegate_to_team: UUID | str | int | None = None,
     ) -> t.SOVUpdateAsyncAPIResponse:
         url = self.api_url + f"/api/v1/sov/update/{sudid}/start"
-        data = {}
-        if extra_data:
-            data["extra_data"] = extra_data
+        data: dict = {}
+        data["extra_data"] = extra_data or {}
         if policy_terms:
             data["policy_terms"] = policy_terms
-        if policy_terms_format_name:
-            data["policy_terms_format_name"] = policy_terms_format_name
+        if outputter_name:
+            data["outputter_name"] = outputter_name
         if output_formats:
             data["output_formats"] = output_formats
         if metadata:
@@ -515,7 +533,7 @@ class SOVFixerAPIClient(APIClientBase):
         location_filenames,
         extra_data=None,
         policy_terms=None,
-        policy_terms_format_name=None,
+        outputter_name: str | None = None,
         output_formats=None,
         actually_write=False,
         update_type=None,
@@ -545,7 +563,7 @@ class SOVFixerAPIClient(APIClientBase):
             sudid,
             extra_data=extra_data,
             policy_terms=policy_terms,
-            policy_terms_format_name=policy_terms_format_name,
+            outputter_name=outputter_name,
             output_formats=output_formats,
             metadata=metadata,
             integrations=integrations,
@@ -625,6 +643,7 @@ class SOVFixerAPIClient(APIClientBase):
     def get_or_create_output_async_check_progress(self, output_request_id: str):
         url = self.api_url + f"/api/v1/sov/get_or_create_output/{output_request_id}"
         response = self.get(url)
+        raise_for_status(response)
         return response.json()
 
     def get_or_create_output(
@@ -697,3 +716,86 @@ class SOVFixerAPIClient(APIClientBase):
 
         response_data = response.json()
         return response_data
+
+    def fetch_sov_output(self, sov_id: str, filename: str, output_path: str | None = None) -> bytes:
+        """
+        Download an output file from a completed SOV parsing job.
+
+        :param sov_id: The SOV job ID.
+        :param filename: The output filename (from result.outputs[].filename).
+        :param output_path: If provided, write the result to this local file path.
+        :return: Raw response bytes.
+        """
+        url = self.api_url + f"/api/v1/sov/{sov_id}/output/{filename}"
+        response = self.get(url)
+        raise_for_status(response)
+        if output_path:
+            with open(output_path, "wb") as fd:
+                for chunk in response.iter_content(chunk_size=1024 * 1024):
+                    fd.write(chunk)
+        return response.content
+
+    def get_history_item(self, id: str) -> t.SOVHistoryResponse:
+        """
+        Get a specific historical SOV or SOV Update by its ID.
+
+        :param id: SOV ID (sovid) or SOV Update ID (sudid).
+        :return: Historical SOV data including outputs.
+        """
+        url = self.api_url + f"/api/v1/sov/history/{id}"
+        response = self.get(url)
+        raise_for_status(response)
+        return response.json()
+
+    def get_building(self, item_key: str) -> dict:
+        """
+        Retrieve a specific building by its item key.
+
+        :param item_key: Unique building identifier, e.g. "i-s-e-xxxxxxx!SOV!1".
+        :return: Building data dict.
+        """
+        url = self.api_url + f"/api/v1/building/{item_key}"
+        response = self.get(url)
+        raise_for_status(response)
+        return response.json()
+
+    def get_public_shareable_url(self, sovid: str) -> t.GetPublicShareableUrlResponse:
+        """
+        Get a publicly shareable Ping.Maps URL for the given SOV.
+
+        :param sovid: The SOV ID.
+        :return: Dict with a "url" key containing the shareable URL.
+        """
+        url = self.api_url + f"/api/v1/pli/policy/{sovid}/get_public_shareable_url"
+        response = self.get(url)
+        raise_for_status(response)
+        return response.json()
+
+    def create_submission(
+        self,
+        document_type: str = "SOV",
+        client_ref: str | None = None,
+        extra_data: dict | None = None,
+        filename: str | None = None,
+    ) -> t.CreateSubmissionResponse:
+        """
+        Create a new empty submission. Follow with update_sov_async_add_locations then update_sov_async_start.
+
+        :param document_type: "SOV", "PREM_BDX", "CLAIM_BDX", or "SOV_BDX". Default "SOV".
+        :param client_ref: Optional user reference identifier.
+        :param extra_data: Optional dict of extra_data_* fields (e.g. insured_name, inception_date).
+        :param filename: Optional filename for the submission.
+        :return: Dict with "id" (int) and "message".
+        """
+        url = self.api_url + "/api/v1/submission"
+        data: dict = {"document_type": document_type}
+        if client_ref:
+            data["client_ref"] = client_ref
+        if extra_data:
+            for k, v in extra_data.items():
+                data["extra_data_" + k] = v
+        if filename:
+            data["filename"] = filename
+        response = self.post(url, data=data)
+        raise_for_status(response)
+        return response.json()
