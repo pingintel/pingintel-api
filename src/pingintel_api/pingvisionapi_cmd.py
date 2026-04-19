@@ -347,14 +347,14 @@ def events(ctx, pretty, pingid, division, team, start, cursor_id, page_size):
         page_size=page_size,
     )
     if pretty:
-        print(f"{'Ping ID':<36}{'Event Type':<30}{'Created':<20}{'Message'}")
+        print(f"{'Ping ID':<20}{'Event Type':<6}{'Created':<20}{'Message'}")
         for event in results["results"]:
             created = event["created_time"]
             try:
                 created = time.strftime("%Y-%m-%d %H:%M", time.strptime(created, "%Y-%m-%dT%H:%M:%S.%fZ"))
             except ValueError:
                 pass
-            print(f"{event['pingid']:<36}{event['event_type']:<30}{created:<20}{event.get('message', '')}")
+            print(f"{event['pingid']:<20}{event['event_type']:<6}{created:<20}{event.get('message', '')}")
         cursor = results.get("cursor_id")
         if cursor:
             print(f"\nNext cursor: {cursor}")
