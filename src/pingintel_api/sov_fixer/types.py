@@ -253,3 +253,14 @@ class CreateSubmissionResponse(TypedDict):
 
 class GetPublicShareableUrlResponse(TypedDict):
     url: str
+
+
+class OutputFormatItem(TypedDict):
+    output_format: str
+    label: str
+    is_public: bool
+    output_extension: str | None
+
+
+class OutputFormatsResponse(TypedDict):
+    output_formats: list[OutputFormatItem]

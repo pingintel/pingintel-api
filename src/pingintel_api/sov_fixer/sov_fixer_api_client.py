@@ -759,6 +759,25 @@ class SOVFixerAPIClient(APIClientBase):
         raise_for_status(response)
         return response.json()
 
+    def list_output_formats(
+        self,
+        sovid: str | None = None,
+        division_uuid: str | None = None,
+        team_uuid: str | None = None,
+    ) -> t.OutputFormatsResponse:
+        """List available output formats for the given context."""
+        url = self.api_url + "/api/v1/output_formats"
+        params = {}
+        if sov_id:
+            params["sovid"] = sovid
+        if division_uuid:
+            params["division_uuid"] = division_uuid
+        if team_uuid:
+            params["team_uuid"] = team_uuid
+        response = self.get(url, params=params)
+        raise_for_status(response)
+        return response.json()
+
     def get_public_shareable_url(self, sovid: str) -> t.GetPublicShareableUrlResponse:
         """
         Get a publicly shareable Ping.Maps URL for the given SOV.

@@ -502,6 +502,25 @@ def update(
     click.echo(f"Executed SOV Update, SUDID: {sudid}")
 
 
+@cli.command()
+@click.pass_context
+@click.option("--sovid", help="Scope to a specific SOV ID")
+@click.option("--division-uuid", help="Scope to a division UUID")
+@click.option("--team-uuid", help="Scope to a team UUID")
+@click.option("--pretty", is_flag=True, default=False)
+def list_output_formats(ctx, sovid, division_uuid, team_uuid, pretty):
+    """List available output formats."""
+    client = get_client(ctx)
+    results = client.list_output_formats(sovid=sovid, division_uuid=division_uuid, team_uuid=team_uuid)
+    if pretty:
+        print(f"{'Format':<30}{'Label':<40}{'Extension':<12}{'Public'}")
+        for fmt in results["output_formats"]:
+            ext = fmt.get("output_extension") or ""
+            print(f"{fmt['output_format']:<30}{fmt['label']:<40}{ext:<12}{fmt['is_public']}")
+    else:
+        pprint.pprint(results)
+
+
 def main():
     cli()
 
