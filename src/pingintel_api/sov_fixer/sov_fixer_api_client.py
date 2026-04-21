@@ -624,6 +624,7 @@ class SOVFixerAPIClient(APIClientBase):
         revision: int = -1,
         overwrite_existing: bool = False,
         delegate_to_team: UUID | str | int | None = None,
+        **kwargs,
     ):
         url = self.api_url + f"/api/v1/sov/{sovid_or_sud}/get_or_create_output"
         data = {}
@@ -635,6 +636,8 @@ class SOVFixerAPIClient(APIClientBase):
             data["overwrite_existing"] = overwrite_existing
         if delegate_to_team is not None:
             data["delegate_to_team"] = delegate_to_team
+        if kwargs:
+            data.update(kwargs)
 
         response = self.post(url, data=data)
         raise_for_status(response)
@@ -654,6 +657,7 @@ class SOVFixerAPIClient(APIClientBase):
         overwrite_existing=False,
         timeout: timedelta | None = timedelta(minutes=5),
         delegate_to_team: UUID | str | int | None = None,
+        get_or_create_output_async_start_kwargs=None,
     ) -> t.OutputData:
         """Synchronously get or create an output from a SOV Fixer request. If it exists, it will return immediately.
         If it does not exist, it will start the generation process and poll for completion, then return it."""
@@ -665,6 +669,7 @@ class SOVFixerAPIClient(APIClientBase):
             revision,
             overwrite_existing,
             delegate_to_team,
+            **(get_or_create_output_async_start_kwargs or {}),
         )
 
         request_status = start_response["request"]["status"]
