@@ -74,7 +74,7 @@ class PingMapsUserSettings(TypedDict):
 
     cope_preference: COPEPreferences
     output_formats: list[UserSettingOutputFormats]
-    required_fields: Dict[str, Any]
+    required_fields: Dict[Any, Any]
     integration_overrides: Dict[str, Any]
     auto_pull_integrations: list[str]
     aoa_input_options: Dict[str, Any]
