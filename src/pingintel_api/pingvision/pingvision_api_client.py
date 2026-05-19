@@ -12,7 +12,7 @@ import pprint
 import time
 from datetime import timedelta
 from timeit import default_timer as timer
-from typing import BinaryIO, Literal, TypedDict, overload, List
+from typing import BinaryIO, Literal, TypedDict, overload, List, Dict
 from typing import BinaryIO, TypedDict, Unpack, overload
 
 from pingintel_api.api_client_base import APIClientBase
@@ -373,3 +373,35 @@ class PingVisionAPIClient(APIClientBase):
         url = self.api_url + f"/api/v1/submission/{pingid}/add_data_items"
         response = self.post(url, json={"items": items, "action": action})
         raise_for_status(response)
+
+    def create_acc_loc_job(
+        self,
+        pingid: str,
+        modeling_option_uuids: list[str] | None = None,
+        cat_model_type: str | None = None,
+        use_secondary_modifiers: bool | None = None,
+        use_ping_geocoding: bool | None = None,
+        layer_output: str | None = None,
+        air_modeling_workflow_name: str | None = None,
+        rms_edm_name: str | None = None,
+    ) -> Dict: # TODO - add type definition
+        """ initiate acc/loc file generation job"""
+        url = self.api_url + f"/api/v1/submission/{pingid}/cat/acc-loc-files"
+
+        data = {
+            'modeling_option_uuids': modeling_option_uuids,
+            'cat_model_type': cat_model_type,
+            'use_secondary_modifiers': use_secondary_modifiers,
+            'use_ping_geocoding': use_ping_geocoding,
+            'layer_output': layer_output,
+            'air_modeling_workflow_name': air_modeling_workflow_name,
+            'rms_edm_name': rms_edm_name,
+        }
+
+
+        response = self.post(url, data=data)
+        raise_for_status(response)
+
+        self.logger.info(f"Acc/loc job created: {response.json()}")
+        response_data = response.json()
+        return response_data

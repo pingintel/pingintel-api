@@ -362,6 +362,41 @@ def events(ctx, pretty, pingid, division, team, start, cursor_id, page_size):
         pprint.pprint(results)
 
 
+@cli.command()
+@click.pass_context
+@click.option("--pingid", help="Filter by Ping ID")
+@click.option("--modeling-option-uuids", multiple=True, help="Filter by modeling option UUIDs")
+@click.option("--cat-model-type", help="AIR/RMS")
+@click.option("--use-secondary-modifiers", type=bool, help="Use secondary modifiers (True/False)")
+@click.option("--use-ping-geocoding", type=bool, help="Use Ping geocoding (True/False)")
+@click.option("--layer-output", help="Layer output")
+@click.option("--air-modeling-workflow-name", help="AIR modeling workflow name")
+@click.option("--rms-edm-name", help="RMS EDM name")
+def create_acc_loc_job(ctx, pingid, modeling_option_uuids, cat_model_type, use_secondary_modifiers, use_ping_geocoding, layer_output, air_modeling_workflow_name, rms_edm_name):
+    """Create an ACC LOC file generation job.
+    
+    pingvisionapi create-acc-loc-job --pingid <pingid> [--modeling-option-uuids <uuid1> --modeling-option-uuids <uuid2> ...] [--cat-model-type <AIR/RMS>] [--use-secondary-modifiers True/False] [--use-ping-geocoding True/False] [--layer-output <layer_output>] [--air-modeling-workflow-name <workflow_name>] [--rms-edm-name <edm_name>]
+    """
+
+    client = get_client(ctx)
+
+    if not pingid:
+        raise click.UsageError("The --pingid option is required.")
+
+    results = client.create_acc_loc_job(
+        pingid=pingid,
+        modeling_option_uuids=modeling_option_uuids,
+        cat_model_type=cat_model_type,
+        use_secondary_modifiers=use_secondary_modifiers,
+        use_ping_geocoding=use_ping_geocoding,
+        layer_output=layer_output,
+        air_modeling_workflow_name=air_modeling_workflow_name,
+        rms_edm_name=rms_edm_name,
+    )
+
+    pprint.pprint(results)
+
+
 def main():
     cli()
 
