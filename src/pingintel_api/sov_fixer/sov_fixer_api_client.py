@@ -770,10 +770,12 @@ class SOVFixerAPIClient(APIClientBase):
         division_uuid: str | None = None,
         team_uuid: str | None = None,
     ) -> t.OutputFormatsResponse:
-        """List available output formats for the given context."""
+        """Returns the list of output formats available for the given context. Provide one of sovid,
+        division_uuid, or team_uuid to scope the results; if none are provided, the requesting user's
+        default team/division is used. Precedence: sovid > division_uuid > team_uuid > user default."""
         url = self.api_url + "/api/v1/output_formats"
         params = {}
-        if sov_id:
+        if sovid:
             params["sovid"] = sovid
         if division_uuid:
             params["division_uuid"] = division_uuid
