@@ -221,3 +221,17 @@ class BulkEnhanceResponse(TypedDict):
     id: str
     success: bool
     output_files: NotRequired[list[BulkEnhanceResponseOutputFile]]
+
+
+class UsageBucket(TypedDict):
+    bucket_time: str
+    source: str | None
+    count: int
+
+
+class UsageResponse(TypedDict):
+    granularity: Literal["5m", "1h", "1d"]
+    start: str
+    end: str
+    buckets: list[UsageBucket]
+    totals: dict[str, int]

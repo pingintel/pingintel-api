@@ -210,6 +210,51 @@ def bulk_enhance(
     click.echo(f"+ Finished querying with result:\n{pprint.pformat(response_data)}")
 
 
+@cli.command()
+@click.pass_context
+@click.option(
+    "--start",
+    type=str,
+    default=None,
+    help="Start of the time range. Relative offset (-5m, -1h, -30d) or ISO 8601 UTC timestamp. Defaults to -30d.",
+)
+@click.option(
+    "--end",
+    type=str,
+    default=None,
+    help="End of the time range. Relative offset or ISO 8601 UTC timestamp. Defaults to now.",
+)
+@click.option(
+    "--username",
+    type=str,
+    default=None,
+    help="Filter by username. Defaults to the requesting user. Staff only when querying another user.",
+)
+@click.option(
+    "--org-short-name",
+    type=str,
+    default=None,
+    help="Filter by organization short name (e.g. 'AMWNS'). Staff only. Mutually exclusive with --username.",
+)
+def usage(
+    ctx: click.Context,
+    start: str | None,
+    end: str | None,
+    username: str | None,
+    org_short_name: str | None,
+):
+    """Get API credit usage over a time range, broken down by data source and time bucket."""
+    client = get_client(ctx)
+    response_data = client.get_usage(
+        start=start,
+        end=end,
+        username=username,
+        org_short_name=org_short_name,
+        delegate_to=ctx.obj["delegate_to"],
+    )
+    click.echo(pprint.pformat(response_data))
+
+
 def main():
     cli()
 

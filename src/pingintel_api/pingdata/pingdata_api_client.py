@@ -300,6 +300,46 @@ class PingDataAPIClient(APIClientBase):
         response_data = response.json()
         return response_data
 
+    def get_usage(
+        self,
+        *,
+        start: str | None = None,
+        end: str | None = None,
+        username: str | None = None,
+        org_short_name: str | None = None,
+        delegate_to: str | None = None,
+    ) -> t.UsageResponse:
+        """
+        Returns API credit usage over a time range, broken down by data source and time bucket.
+
+        :param start: Start of the time range. Accepts a relative offset (-5m, -1h, -30d) or an ISO 8601 UTC
+                     timestamp. Defaults to -30d.
+        :param end: End of the time range. Accepts a relative offset or ISO 8601 UTC timestamp. Defaults to now.
+        :param username: Filter by this username. Defaults to the requesting user. Staff only when querying
+                        another user.
+        :param org_short_name: Filter by organization short name (e.g. 'AMWNS'). Staff only. Mutually exclusive
+                              with username.
+        :param delegate_to: Optional delegate to use for the request.
+
+        :return: Dict containing granularity, resolved start/end, time-bucketed counts and per-source totals.
+        """
+        url = self.api_url + "/api/v1/usage"
+        params: dict = {}
+        if start is not None:
+            params["start"] = start
+        if end is not None:
+            params["end"] = end
+        if username is not None:
+            params["username"] = username
+        if org_short_name is not None:
+            params["org_short_name"] = org_short_name
+        if delegate_to:
+            params["delegate_to"] = delegate_to
+
+        response = self.get(url, params=params)
+        raise_for_status(response)
+        return response.json()
+
     def fetch_bulk_enhance_output(self, request_id: str, filename: str, output_path: str | None = None) -> bytes:
         """
         Download a result file from a completed bulk enhance job.
