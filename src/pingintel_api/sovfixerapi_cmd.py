@@ -299,7 +299,8 @@ def history(
 @click.option("--search", help="Filter key fields by an arbitrary string")
 @click.option("--origin", type=click.Choice(["api", "email"]))
 @click.option("--status", type=click.Choice(["P", "I", "E", "R", "C", "F"]))
-@click.option("--organization__short_name")
+@click.option("--company__short_name", multiple=True)
+@click.option("--division__short_name", multiple=True)
 @click.option(
     "-D",
     "--download",
@@ -317,7 +318,8 @@ def activity(
     search=None,
     origin: Literal["api", "email"] | None = None,
     status: Literal["P", "I", "E", "R", "C", "F"] | None = None,
-    organization__short_name=None,
+    company__short_name: tuple[str, ...] = (),
+    division__short_name: tuple[str, ...] = (),
     download=None,
 ):
     """List submission activity."""
@@ -331,7 +333,8 @@ def activity(
         search=search,
         origin=origin,
         status=status,
-        organization__short_name=organization__short_name,
+        company__short_name=list(company__short_name) or None,
+        division__short_name=list(division__short_name) or None,
     )
     pprint.pprint(results)
 

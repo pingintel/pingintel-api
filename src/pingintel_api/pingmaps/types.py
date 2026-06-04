@@ -1,5 +1,5 @@
 import enum
-from typing import Any, Dict, List, Literal, NotRequired, Optional, TypedDict
+from typing import Any, Literal, NotRequired, TypedDict
 
 
 class PingMapsPolicyLocationResponse(TypedDict):
@@ -74,10 +74,11 @@ class PingMapsUserSettings(TypedDict):
 
     cope_preference: COPEPreferences
     output_formats: list[UserSettingOutputFormats]
-    required_fields: Dict[Any, Any]
-    integration_overrides: Dict[str, Any]
+    required_fields: dict[Any, Any]
+    integration_overrides: dict[str, list[dict]]
     auto_pull_integrations: list[str]
-    aoa_input_options: Dict[str, Any]
+    aoa_input_options: dict[str, Any]
+
 
 class UserSettings(TypedDict):
     pingmaps: PingMapsUserSettings
