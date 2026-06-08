@@ -30,8 +30,8 @@ resp = requests.post(
     f"{BASE_URL}/sov/{SOVID}/initiate_update",
     headers=headers,
 )
-resp.raise_for_status()
 print(resp.json())
+resp.raise_for_status()
 UPDATE_ID = resp.json()["id"]
 print("initiated update job:", UPDATE_ID)
 
@@ -43,8 +43,8 @@ with open(LOCATIONS_CSV, "rb") as f:
         files={"file": (LOCATIONS_CSV, f)},
         headers=headers,
     )
-resp.raise_for_status()
 print(resp.json())
+resp.raise_for_status()
 
 
 # 3. Start the job. extra_data carries policy-level fields into the output
@@ -53,8 +53,8 @@ resp = requests.post(
     json={"extra_data": EXTRA_DATA, "output_formats": OUTPUT_FORMATS},
     headers=headers,
 )
-resp.raise_for_status()
 print(resp.json())
+resp.raise_for_status()
 
 
 # 4. Poll until the job reaches a terminal state
