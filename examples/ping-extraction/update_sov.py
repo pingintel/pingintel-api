@@ -18,7 +18,7 @@ BASE_URL = "https://api.sovfixer.com/api/v1"
 
 SOVID = "s-no-ping-hggcsk"
 LOCATIONS_CSV = "corrections.csv"
-EXTRA_DATA = {"insured_name": "Acme Corp"}  # policy-level fields to carry into output
+EXTRA_DATA = {"insured_name": "Acme Corp"}  # optional. drives the output filename
 OUTPUT_FORMATS = ["json"]
 POLL_SECONDS = 3
 
@@ -47,7 +47,7 @@ print(resp.json())
 resp.raise_for_status()
 
 
-# 3. Start the job. extra_data carries policy-level fields into the output
+# 3. Start the job. extra_data is optional but drives the output filename
 resp = requests.post(
     f"{BASE_URL}/sov/update/{UPDATE_ID}/start",
     json={"extra_data": EXTRA_DATA, "output_formats": OUTPUT_FORMATS},
