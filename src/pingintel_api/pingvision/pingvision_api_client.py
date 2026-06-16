@@ -384,7 +384,7 @@ class PingVisionAPIClient(APIClientBase):
         layer_output: str | None = None,
         air_modeling_workflow_name: str | None = None,
         rms_edm_name: str | None = None,
-    ) -> Dict: # TODO - add type definition
+    ) -> t.ModelingJobResponse:
         """ initiate acc/loc file generation job"""
         url = self.api_url + f"/api/v1/submission/{pingid}/cat/acc-loc-files"
 

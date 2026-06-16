@@ -229,3 +229,10 @@ class OutputData(TypedDict):
     scrubbed_filename: str
     output_format: str
     url: str
+
+
+class ModelingJobResponse(TypedDict):
+    uuid: str
+    processing_pct_complete: int
+    status: str
+    modeling_sets: list[dict[str, Any]]
