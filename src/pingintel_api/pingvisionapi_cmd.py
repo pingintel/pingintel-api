@@ -362,6 +362,162 @@ def events(ctx, pretty, pingid, division, team, start, cursor_id, page_size):
         pprint.pprint(results)
 
 
+# ---------------------------------------------------------------------------
+# Policy Term Layer Structure APIs
+# ---------------------------------------------------------------------------
+
+@cli.command()
+@click.pass_context
+@click.option("--pingid", required=True, help="Ping ID of the submission.")
+@click.option("--layer-structure-uuid", required=True, help="UUID of the layer structure to duplicate.")
+@click.option("--name", default=None, help="Name for the duplicate. Defaults to the source name.")
+def duplicate_layer_structure(ctx, pingid, layer_structure_uuid, name):
+    """Duplicate a layer structure, copying all of its layers.
+
+    pingvisionapi duplicate-layer-structure --pingid <pingid> --layer-structure-uuid <uuid> [--name <name>]
+    """
+
+    client = get_client(ctx)
+
+    results = client.duplicate_layer_structure(
+        pingid=pingid,
+        layer_structure_uuid=layer_structure_uuid,
+        name=name,
+    )
+
+    pprint.pprint(results)
+
+
+@cli.command()
+@click.pass_context
+@click.option("--pingid", required=True, help="Ping ID of the submission.")
+def list_layer_structures(ctx, pingid):
+    """List all layer structures for a submission.
+
+    pingvisionapi list-layer-structures --pingid <pingid>
+    """
+
+    client = get_client(ctx)
+
+    results = client.list_layer_structures(pingid=pingid)
+
+    pprint.pprint(results)
+
+
+@cli.command()
+@click.pass_context
+@click.option("--pingid", required=True, help="Ping ID of the submission.")
+@click.option("--name", default=None, help="Layer structure name. Auto-generated if omitted.")
+def create_layer_structure(ctx, pingid, name):
+    """Create a layer structure for a submission.
+
+    pingvisionapi create-layer-structure --pingid <pingid> [--name <name>]
+    """
+
+    client = get_client(ctx)
+
+    results = client.create_layer_structure(pingid=pingid, name=name)
+
+    pprint.pprint(results)
+
+
+@cli.command()
+@click.pass_context
+@click.option("--pingid", required=True, help="Ping ID of the submission.")
+@click.option("--layer-structure-uuid", required=True, help="UUID of the layer structure.")
+@click.option("--name", default=None, help="Layer name. Auto-generated from limit/attachment if omitted.")
+@click.option("--included/--not-included", default=None, help="Whether the layer is included.")
+@click.option("--attachment", type=float, default=None, help="Attachment point.")
+@click.option("--limit", type=float, default=None, help="Layer limit.")
+@click.option("--participation-amount", type=float, default=None, help="Participation as a currency amount.")
+@click.option("--participation-percent", type=float, default=None, help="Participation as a percentage.")
+@click.option("--premium", type=float, default=None, help="Layer premium.")
+def add_layer_to_layer_structure(ctx, pingid, layer_structure_uuid, name, included, attachment, limit, participation_amount, participation_percent, premium):
+    """Add a layer to a layer structure.
+
+    pingvisionapi add-layer-to-layer-structure --pingid <pingid> --layer-structure-uuid <uuid> [--name <name>] [--attachment <amount>] [--limit <amount>]
+    """
+
+    client = get_client(ctx)
+
+    results = client.add_layer_to_layer_structure(
+        pingid=pingid,
+        layer_structure_uuid=layer_structure_uuid,
+        name=name,
+        included=included,
+        attachment=attachment,
+        limit=limit,
+        participation_amount=participation_amount,
+        participation_percent=participation_percent,
+        premium=premium,
+    )
+
+    pprint.pprint(results)
+
+
+# ---------------------------------------------------------------------------
+# Policy Term Coverage Option APIs
+# ---------------------------------------------------------------------------
+
+@cli.command()
+@click.pass_context
+@click.option("--pingid", required=True, help="Ping ID of the submission.")
+@click.option("--coverage-option-uuid", required=True, help="UUID of the coverage option to duplicate.")
+@click.option("--name", default=None, help="Name for the duplicate. Defaults to the source name.")
+def duplicate_coverage_option(ctx, pingid, coverage_option_uuid, name):
+    """Duplicate a coverage option, copying all of its peril and zone terms.
+
+    pingvisionapi duplicate-coverage-option --pingid <pingid> --coverage-option-uuid <uuid> [--name <name>]
+    """
+
+    client = get_client(ctx)
+
+    results = client.duplicate_coverage_option(
+        pingid=pingid,
+        coverage_option_uuid=coverage_option_uuid,
+        name=name,
+    )
+
+    pprint.pprint(results)
+
+
+@cli.command()
+@click.pass_context
+@click.option("--pingid", required=True, help="Ping ID of the submission.")
+def list_coverage_options(ctx, pingid):
+    """List all coverage options for a submission.
+
+    pingvisionapi list-coverage-options --pingid <pingid>
+    """
+
+    client = get_client(ctx)
+
+    results = client.list_coverage_options(pingid=pingid)
+
+    pprint.pprint(results)
+
+
+@cli.command()
+@click.pass_context
+@click.option("--pingid", required=True, help="Ping ID of the submission.")
+@click.option("--name", default=None, help="Coverage option name. Defaults to 'Coverage Option' if omitted.")
+def create_coverage_option(ctx, pingid, name):
+    """Create a coverage option for a submission.
+
+    pingvisionapi create-coverage-option --pingid <pingid> [--name <name>]
+    """
+
+    client = get_client(ctx)
+
+    results = client.create_coverage_option(pingid=pingid, name=name)
+
+    pprint.pprint(results)
+
+
+# ---------------------------------------------------------------------------
+# Policy Term Acc/Loc Job APIs
+# ---------------------------------------------------------------------------
+
 @cli.command()
 @click.pass_context
 @click.option("--pingid", help="Filter by Ping ID")
@@ -374,7 +530,7 @@ def events(ctx, pretty, pingid, division, team, start, cursor_id, page_size):
 @click.option("--rms-edm-name", help="RMS EDM name")
 def create_acc_loc_job(ctx, pingid, modeling_option_uuids, cat_model_type, use_secondary_modifiers, use_ping_geocoding, layer_output, air_modeling_workflow_name, rms_edm_name):
     """Create an ACC LOC file generation job.
-    
+
     pingvisionapi create-acc-loc-job --pingid <pingid> [--modeling-option-uuids <uuid1> --modeling-option-uuids <uuid2> ...] [--cat-model-type <AIR/RMS>] [--use-secondary-modifiers True/False] [--use-ping-geocoding True/False] [--layer-output <layer_output>] [--air-modeling-workflow-name <workflow_name>] [--rms-edm-name <edm_name>]
     """
 
@@ -393,6 +549,90 @@ def create_acc_loc_job(ctx, pingid, modeling_option_uuids, cat_model_type, use_s
         air_modeling_workflow_name=air_modeling_workflow_name,
         rms_edm_name=rms_edm_name,
     )
+
+    pprint.pprint(results)
+
+
+@cli.command()
+@click.pass_context
+@click.option("--pingid", required=True, help="Ping ID of the submission.")
+@click.option("--job-uuid", required=True, help="UUID of the acc/loc file generation job.")
+def get_acc_loc_job(ctx, pingid, job_uuid):
+    """Get the status of an ACC LOC file generation job.
+
+    pingvisionapi get-acc-loc-job --pingid <pingid> --job-uuid <job_uuid>
+    """
+
+    client = get_client(ctx)
+
+    results = client.get_acc_loc_job(
+        pingid=pingid,
+        job_uuid=job_uuid,
+    )
+
+    pprint.pprint(results)
+
+
+# ---------------------------------------------------------------------------
+# Policy Term Modeling Option APIs
+# ---------------------------------------------------------------------------
+
+@cli.command()
+@click.pass_context
+@click.option("--pingid", required=True, help="Ping ID of the submission.")
+@click.option("--layer-structure-uuid", required=True, help="UUID of the layer structure.")
+@click.option("--coverage-option-uuids", multiple=True, required=True, help="Coverage option UUID(s) to add.")
+def add_modeling_options_all_layers(ctx, pingid, layer_structure_uuid, coverage_option_uuids):
+    """Associate coverage options with every layer in a layer structure.
+
+    pingvisionapi add-modeling-options-all-layers --pingid <pingid> --layer-structure-uuid <uuid> --coverage-option-uuids <uuid1> --coverage-option-uuids <uuid2>
+    """
+
+    client = get_client(ctx)
+
+    results = client.add_modeling_options_all_layers(
+        pingid=pingid,
+        layer_structure_uuid=layer_structure_uuid,
+        coverage_option_uuids=list(coverage_option_uuids),
+    )
+
+    pprint.pprint(results)
+
+
+@cli.command()
+@click.pass_context
+@click.option("--pingid", required=True, help="Ping ID of the submission.")
+@click.option("--layer-structure-uuid", required=True, help="UUID of the layer structure.")
+@click.option("--coverage-option-uuids", multiple=True, required=True, help="Coverage option UUID(s) to remove.")
+def remove_modeling_options_all_layers(ctx, pingid, layer_structure_uuid, coverage_option_uuids):
+    """Remove coverage options from every layer in a layer structure.
+
+    pingvisionapi remove-modeling-options-all-layers --pingid <pingid> --layer-structure-uuid <uuid> --coverage-option-uuids <uuid1> --coverage-option-uuids <uuid2>
+    """
+
+    client = get_client(ctx)
+
+    results = client.remove_modeling_options_all_layers(
+        pingid=pingid,
+        layer_structure_uuid=layer_structure_uuid,
+        coverage_option_uuids=list(coverage_option_uuids),
+    )
+
+    pprint.pprint(results)
+
+
+@cli.command()
+@click.pass_context
+@click.option("--pingid", required=True, help="Ping ID of the submission.")
+def export_modeling_options(ctx, pingid):
+    """Export all modeling options for a submission.
+
+    pingvisionapi export-modeling-options --pingid <pingid>
+    """
+
+    client = get_client(ctx)
+
+    results = client.export_modeling_options(pingid=pingid)
 
     pprint.pprint(results)
 
