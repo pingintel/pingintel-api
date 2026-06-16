@@ -229,3 +229,61 @@ class OutputData(TypedDict):
     scrubbed_filename: str
     output_format: str
     url: str
+
+
+class ModelingJobResponse(TypedDict):
+    uuid: str
+    processing_pct_complete: int
+    status: str
+    modeling_sets: list[dict[str, Any]]
+
+
+class ModelingOptionExportItem(TypedDict):
+    uuid: str
+    created_time: str
+    modified_time: str
+    coverage_option: dict[str, Any]
+    layer_structure: dict[str, Any]
+    layers: list[dict[str, Any]]
+
+
+class ModelingOptionLayerStructureResponse(TypedDict):
+    layer_structure_uuid: str
+    layer_structure_name: str
+    layers: list[dict[str, Any]]
+
+
+class CoverageOptionResponse(TypedDict):
+    uuid: str
+    name: str
+    created_time: str
+    modified_time: str
+    bi_limit_type: str | None
+    default_bi_period_days: int | None
+
+
+class CoverageOptionDetailResponse(CoverageOptionResponse):
+    peril_sections: list[dict[str, Any]]
+    per_zone_terms: list[dict[str, Any]]
+
+
+class LayerStructureResponse(TypedDict):
+    uuid: str
+    name: str
+    created_time: str
+    modified_time: str
+
+
+class LayerStructureDetailResponse(LayerStructureResponse):
+    layers: list[dict[str, Any]]
+
+
+class LayerResponse(TypedDict):
+    uuid: str
+    name: str
+    included: bool
+    attachment: float | None
+    limit: float | None
+    participation_amount: float | None
+    participation_percent: float | None
+    premium: float | None
