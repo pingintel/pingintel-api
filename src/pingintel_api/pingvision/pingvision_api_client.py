@@ -12,7 +12,7 @@ import pprint
 import time
 from datetime import timedelta
 from timeit import default_timer as timer
-from typing import BinaryIO, Literal, TypedDict, overload, List
+from typing import BinaryIO, Literal, TypedDict, overload, List, Dict
 from typing import BinaryIO, TypedDict, Unpack, overload
 
 from pingintel_api.api_client_base import APIClientBase
@@ -373,3 +373,229 @@ class PingVisionAPIClient(APIClientBase):
         url = self.api_url + f"/api/v1/submission/{pingid}/add_data_items"
         response = self.post(url, json={"items": items, "action": action})
         raise_for_status(response)
+
+    def create_acc_loc_job(
+        self,
+        pingid: str,
+        modeling_option_uuids: list[str] | None = None,
+        cat_model_type: str | None = None,
+        use_secondary_modifiers: bool | None = None,
+        use_ping_geocoding: bool | None = None,
+        layer_output: str | None = None,
+        air_modeling_workflow_name: str | None = None,
+        rms_edm_name: str | None = None,
+    ) -> t.ModelingJobResponse:
+        """ initiate acc/loc file generation job"""
+        url = self.api_url + f"/api/v1/submission/{pingid}/cat/acc-loc-files"
+
+        data = {
+            'modeling_option_uuids': modeling_option_uuids,
+            'cat_model_type': cat_model_type,
+            'use_secondary_modifiers': use_secondary_modifiers,
+            'use_ping_geocoding': use_ping_geocoding,
+            'layer_output': layer_output,
+            'air_modeling_workflow_name': air_modeling_workflow_name,
+            'rms_edm_name': rms_edm_name,
+        }
+
+
+        response = self.post(url, data=data)
+        raise_for_status(response)
+
+        self.logger.info(f"Acc/loc job created: {response.json()}")
+        response_data = response.json()
+        return response_data
+
+    def duplicate_coverage_option(
+        self,
+        pingid: str,
+        coverage_option_uuid: str,
+        name: str | None = None,
+    ) -> t.CoverageOptionDetailResponse:
+        """Duplicate a coverage option, copying all of its peril and zone terms."""
+        url = self.api_url + f"/api/v1/submission/{pingid}/cat/coverage-option/{coverage_option_uuid}/duplicate"
+
+        data = {}
+        if name is not None:
+            data["name"] = name
+
+        response = self.post(url, json=data)
+        raise_for_status(response)
+
+        response_data = response.json()
+        return response_data
+
+    def list_coverage_options(
+        self,
+        pingid: str,
+    ) -> list[t.CoverageOptionResponse]:
+        """List all coverage options for a submission."""
+        url = self.api_url + f"/api/v1/submission/{pingid}/cat/coverage-options"
+
+        response = self.get(url)
+        raise_for_status(response)
+
+        response_data = response.json()
+        return response_data
+
+    def create_coverage_option(
+        self,
+        pingid: str,
+        name: str | None = None,
+    ) -> t.CoverageOptionResponse:
+        """Create a coverage option for a submission."""
+        url = self.api_url + f"/api/v1/submission/{pingid}/cat/coverage-options"
+
+        data = {}
+        if name is not None:
+            data["name"] = name
+
+        response = self.post(url, json=data)
+        raise_for_status(response)
+
+        response_data = response.json()
+        return response_data
+
+    def list_layer_structures(
+        self,
+        pingid: str,
+    ) -> list[t.LayerStructureResponse]:
+        """List all layer structures for a submission."""
+        url = self.api_url + f"/api/v1/submission/{pingid}/cat/layer-structures"
+
+        response = self.get(url)
+        raise_for_status(response)
+
+        response_data = response.json()
+        return response_data
+
+    def create_layer_structure(
+        self,
+        pingid: str,
+        name: str | None = None,
+    ) -> t.LayerStructureResponse:
+        """Create a layer structure for a submission."""
+        url = self.api_url + f"/api/v1/submission/{pingid}/cat/layer-structures"
+
+        data = {}
+        if name is not None:
+            data["name"] = name
+
+        response = self.post(url, json=data)
+        raise_for_status(response)
+
+        response_data = response.json()
+        return response_data
+
+    def duplicate_layer_structure(
+        self,
+        pingid: str,
+        layer_structure_uuid: str,
+        name: str | None = None,
+    ) -> t.LayerStructureDetailResponse:
+        """Duplicate a layer structure, copying all of its layers."""
+        url = self.api_url + f"/api/v1/submission/{pingid}/cat/layer-structure/{layer_structure_uuid}/duplicate"
+
+        data = {}
+        if name is not None:
+            data["name"] = name
+
+        response = self.post(url, json=data)
+        raise_for_status(response)
+
+        response_data = response.json()
+        return response_data
+
+    def add_layer_to_layer_structure(
+        self,
+        pingid: str,
+        layer_structure_uuid: str,
+        name: str | None = None,
+        included: bool | None = None,
+        attachment: float | None = None,
+        limit: float | None = None,
+        participation_amount: float | None = None,
+        participation_percent: float | None = None,
+        premium: float | None = None,
+    ) -> t.LayerResponse:
+        """Add a layer to a layer structure."""
+        url = self.api_url + f"/api/v1/submission/{pingid}/cat/layer-structure/{layer_structure_uuid}/layers"
+
+        data = {}
+        if name is not None:
+            data["name"] = name
+        if included is not None:
+            data["included"] = included
+        if attachment is not None:
+            data["attachment"] = attachment
+        if limit is not None:
+            data["limit"] = limit
+        if participation_amount is not None:
+            data["participation_amount"] = participation_amount
+        if participation_percent is not None:
+            data["participation_percent"] = participation_percent
+        if premium is not None:
+            data["premium"] = premium
+
+        response = self.post(url, json=data)
+        raise_for_status(response)
+
+        response_data = response.json()
+        return response_data
+
+    def add_modeling_options_all_layers(
+        self,
+        pingid: str,
+        layer_structure_uuid: str,
+        coverage_option_uuids: list[str],
+    ) -> t.ModelingOptionLayerStructureResponse:
+        """Associate coverage options with every layer in a layer structure."""
+        url = self.api_url + f"/api/v1/submission/{pingid}/cat/layer-structure/{layer_structure_uuid}/modeling-options/add"
+
+        response = self.post(url, json={"coverage_option_uuids": coverage_option_uuids})
+        raise_for_status(response)
+
+        response_data = response.json()
+        return response_data
+
+    def remove_modeling_options_all_layers(
+        self,
+        pingid: str,
+        layer_structure_uuid: str,
+        coverage_option_uuids: list[str],
+    ) -> t.ModelingOptionLayerStructureResponse:
+        """Remove coverage options from every layer in a layer structure, deleting the modeling option records."""
+        url = self.api_url + f"/api/v1/submission/{pingid}/cat/layer-structure/{layer_structure_uuid}/modeling-options/remove"
+
+        response = self.post(url, json={"coverage_option_uuids": coverage_option_uuids})
+        raise_for_status(response)
+
+        response_data = response.json()
+        return response_data
+
+    def export_modeling_options(
+        self,
+        pingid: str,
+    ) -> list[t.ModelingOptionExportItem]:
+        """Get all modeling options for a submission."""
+        url = self.api_url + f"/api/v1/submission/{pingid}/cat/modeling-options/export"
+
+        response = self.get(url)
+        raise_for_status(response)
+
+        response_data = response.json()
+        return response_data
+
+    def get_acc_loc_job(
+        self,
+        pingid: str,
+        job_uuid: str,
+    ) -> t.ModelingJobResponse:
+        """Get the status of an acc/loc file generation job."""
+        url = self.api_url + f"/api/v1/submission/{pingid}/cat/acc-loc-files/{job_uuid}"
+
+        response = self.get(url)
+        raise_for_status(response)
+
+        response_data = response.json()
+        return response_data
