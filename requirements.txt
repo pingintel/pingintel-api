@@ -1,2 +1,3 @@
 requests
 click
+typing_extensions>=4.13

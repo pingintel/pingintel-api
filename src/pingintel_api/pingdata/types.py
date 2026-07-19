@@ -1,5 +1,6 @@
 # Copyright 2021-2024 Ping Data Intelligence
-from typing import Any, Dict, List, NotRequired, Optional, TypedDict, Literal
+from typing import Any, Dict, List, Optional, Literal
+from typing_extensions import NotRequired, TypedDict
 from datetime import datetime
 import enum
 import functools
@@ -242,3 +243,35 @@ class UsageResponse(TypedDict):
     end: str
     buckets: list[UsageBucket]
     totals: dict[str, int]
+
+
+class DatasourceOutputField(TypedDict, extra_items=Any):
+    type: str
+    description: NotRequired[str]
+    display_type: NotRequired[str]
+    return_values: NotRequired[Any]
+    category: NotRequired[list[str]]
+
+
+class DatasourceConfig(TypedDict):
+    source_name: str
+    source_code: str
+    required_attrs: list[str]
+    optional_attrs: list[str]
+    requires_credentials: bool
+    non_supported_input_values: dict[str, list[str]] | None
+    supported_countries: list[str] | None
+    supported_us_states: list[str] | None
+    excluded_us_states: list[str] | None
+    geocode_confidence_required: int | None
+    geocode_precision_required: int | None
+    output_fields: dict[str, DatasourceOutputField]
+    base_output_fields: dict[str, DatasourceOutputField]
+
+
+class ListDatasourcesResponse(TypedDict):
+    configs: dict[str, DatasourceConfig]
+
+
+class GetDatasourceResponse(TypedDict):
+    config: DatasourceConfig

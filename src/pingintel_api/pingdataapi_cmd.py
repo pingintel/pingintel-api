@@ -2,6 +2,7 @@
 
 # Copyright 2021-2024 Ping Data Intelligence
 
+import json
 import logging
 import pprint
 import time
@@ -253,6 +254,191 @@ def usage(
         delegate_to=ctx.obj["delegate_to"],
     )
     click.echo(pprint.pformat(response_data))
+
+
+@cli.command()
+@click.pass_context
+def list_datasources(ctx: click.Context):
+    """List the datasource configurations the authenticated user has access to."""
+    client = get_client(ctx)
+    response_data = client.list_datasources(delegate_to=ctx.obj["delegate_to"])
+    click.echo(pprint.pformat(response_data))
+
+
+def _field_description(info: dict) -> str:
+    """Extract the human-readable description from an output-field entry.
+
+    Field metadata (description, display_type, etc.) is spread flat alongside `type`.
+    """
+    return str((info or {}).get("description", "") or "")
+
+
+def _render_datasource_markdown(config: dict) -> str:
+    """Render a single datasource config dict as human-readable Markdown."""
+    lines: list[str] = []
+
+    name = config.get("source_name") or config.get("source_code") or "Datasource"
+    code = config.get("source_code") or ""
+    lines.append(f"# {name} ({code})" if code else f"# {name}")
+    lines.append("")
+
+    conf = config.get("geocode_confidence_required")
+    prec = config.get("geocode_precision_required")
+    lines.append(f"- **Source code:** {code or 'None'}")
+    lines.append(f"- **Requires credentials:** {'Yes' if config.get('requires_credentials') else 'No'}")
+    lines.append(f"- **Geocode confidence required:** {conf if conf is not None else 'None'}")
+    lines.append(f"- **Geocode precision required:** {prec if prec is not None else 'None'}")
+    lines.append("")
+
+    required = config.get("required_attrs") or []
+    optional = config.get("optional_attrs") or []
+    lines.append("## Input attributes")
+    lines.append("")
+    lines.append(f"- **Required:** {', '.join(required) if required else 'None'}")
+    lines.append(f"- **Optional:** {', '.join(optional) if optional else 'None'}")
+    lines.append("")
+
+    countries = config.get("supported_countries")
+    states = config.get("supported_us_states")
+    excluded = config.get("excluded_us_states")
+    if countries or states or excluded:
+        lines.append("## Supported regions")
+        lines.append("")
+        if countries:
+            lines.append(f"- **Countries:** {', '.join(countries)}")
+        if states:
+            lines.append(f"- **US states:** {', '.join(states)}")
+        if excluded:
+            lines.append(f"- **Excluded US states:** {', '.join(excluded)}")
+        lines.append("")
+
+    non_supported = config.get("non_supported_input_values")
+    if non_supported:
+        lines.append("## Non-supported input values")
+        lines.append("")
+        for field, values in non_supported.items():
+            lines.append(f"- **{field}:** {', '.join(values) if values else 'None'}")
+        lines.append("")
+
+    def _append_field_table(title: str, fields: dict) -> None:
+        if not fields:
+            return
+        lines.append(f"## {title}")
+        lines.append("")
+        lines.append("| Field | Type | Description |")
+        lines.append("| --- | --- | --- |")
+        for field_name, info in fields.items():
+            field_type = str((info or {}).get("type", "")).replace("|", "\\|")
+            description = _field_description(info).replace("|", "\\|").replace("\n", " ")
+            lines.append(f"| {field_name} | {field_type} | {description} |")
+            # Nested object fields declare their sub-attributes under `fields`.
+            for sub_name, sub_info in ((info or {}).get("fields") or {}).items():
+                sub_type = str((sub_info or {}).get("type", "")).replace("|", "\\|")
+                sub_desc = _field_description(sub_info).replace("|", "\\|").replace("\n", " ")
+                lines.append(f"| {field_name}.{sub_name} | {sub_type} | {sub_desc} |")
+        lines.append("")
+
+    _append_field_table("Output fields", config.get("output_fields") or {})
+    _append_field_table("Base output fields", config.get("base_output_fields") or {})
+
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def _render_datasource_pretty(config: dict) -> str:
+    """Render a single datasource config dict as plain readable text (no Markdown tables)."""
+    lines: list[str] = []
+
+    name = config.get("source_name") or config.get("source_code") or "Datasource"
+    code = config.get("source_code") or ""
+    heading = f"{name} ({code})" if code else name
+    lines.append(heading)
+    lines.append("=" * len(heading))
+    lines.append("")
+
+    conf = config.get("geocode_confidence_required")
+    prec = config.get("geocode_precision_required")
+    lines.append(f"Source code:                 {code or 'None'}")
+    lines.append(f"Requires credentials:        {'Yes' if config.get('requires_credentials') else 'No'}")
+    lines.append(f"Geocode confidence required: {conf if conf is not None else 'None'}")
+    lines.append(f"Geocode precision required:  {prec if prec is not None else 'None'}")
+    lines.append("")
+
+    required = config.get("required_attrs") or []
+    optional = config.get("optional_attrs") or []
+    lines.append("Input attributes:")
+    lines.append(f"  Required: {', '.join(required) if required else 'None'}")
+    lines.append(f"  Optional: {', '.join(optional) if optional else 'None'}")
+    lines.append("")
+
+    countries = config.get("supported_countries")
+    states = config.get("supported_us_states")
+    excluded = config.get("excluded_us_states")
+    if countries or states or excluded:
+        lines.append("Supported regions:")
+        if countries:
+            lines.append(f"  Countries: {', '.join(countries)}")
+        if states:
+            lines.append(f"  US states: {', '.join(states)}")
+        if excluded:
+            lines.append(f"  Excluded US states: {', '.join(excluded)}")
+        lines.append("")
+
+    non_supported = config.get("non_supported_input_values")
+    if non_supported:
+        lines.append("Non-supported input values:")
+        for field, values in non_supported.items():
+            lines.append(f"  {field}: {', '.join(values) if values else 'None'}")
+        lines.append("")
+
+    def _append_field_section(title: str, fields: dict) -> None:
+        if not fields:
+            return
+        lines.append(f"{title}:")
+        for field_name, info in fields.items():
+            field_type = str((info or {}).get("type", ""))
+            lines.append(f"  {field_name} ({field_type})" if field_type else f"  {field_name}")
+            description = _field_description(info).strip()
+            for desc_line in description.splitlines():
+                lines.append(f"      {desc_line}")
+            # Nested object fields declare their sub-attributes under `fields`.
+            for sub_name, sub_info in ((info or {}).get("fields") or {}).items():
+                sub_type = str((sub_info or {}).get("type", ""))
+                dotted = f"{field_name}.{sub_name}"
+                lines.append(f"    {dotted} ({sub_type})" if sub_type else f"    {dotted}")
+                for desc_line in _field_description(sub_info).strip().splitlines():
+                    lines.append(f"        {desc_line}")
+        lines.append("")
+
+    _append_field_section("Output fields", config.get("output_fields") or {})
+    _append_field_section("Base output fields", config.get("base_output_fields") or {})
+
+    return "\n".join(lines).rstrip() + "\n"
+
+
+@cli.command()
+@click.pass_context
+@click.argument("code", type=str)
+@click.option(
+    "--format",
+    "output_format",
+    type=click.Choice(["json", "markdown", "pretty"], case_sensitive=False),
+    default="markdown",
+    show_default=True,
+    help="Output format for the datasource config.",
+)
+def get_datasource(ctx: click.Context, code: str, output_format: str):
+    """Get the configuration for a single datasource by its source code (e.g. PG, PH, DTC)."""
+    client = get_client(ctx)
+    response_data = client.get_datasource(code=code, delegate_to=ctx.obj["delegate_to"])
+    output_format = output_format.lower()
+    if output_format == "json":
+        click.echo(json.dumps(response_data, indent=2))
+        return
+    config = response_data.get("config", response_data)
+    if output_format == "pretty":
+        click.echo(_render_datasource_pretty(config))
+    else:
+        click.echo(_render_datasource_markdown(config))
 
 
 def main():

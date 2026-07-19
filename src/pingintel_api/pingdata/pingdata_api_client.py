@@ -340,6 +340,53 @@ class PingDataAPIClient(APIClientBase):
         raise_for_status(response)
         return response.json()
 
+    def list_datasources(
+        self,
+        *,
+        delegate_to: str | None = None,
+    ) -> t.ListDatasourcesResponse:
+        """
+        List the datasource configurations the authenticated user has access to.
+
+        :param delegate_to: Optional delegate to use for the request.
+
+        :return: Dict with a 'configs' key mapping each source code (e.g. 'PG', 'PH') to its
+                 datasource configuration (required/optional attributes, supported regions,
+                 output fields, etc.).
+        """
+        url = self.api_url + "/api/v1/datasources"
+        params: dict = {}
+        if delegate_to:
+            params["delegate_to"] = delegate_to
+
+        response = self.get(url, params=params)
+        raise_for_status(response)
+        return response.json()
+
+    def get_datasource(
+        self,
+        *,
+        code: str,
+        delegate_to: str | None = None,
+    ) -> t.GetDatasourceResponse:
+        """
+        Get the configuration for a single datasource by its source code.
+
+        :param code: Datasource source code (e.g. 'PG', 'PH', 'DTC'). Case-insensitive.
+        :param delegate_to: Optional delegate to use for the request.
+
+        :return: Dict with a 'config' key containing the datasource configuration
+                 (required/optional attributes, supported regions, output fields, etc.).
+        """
+        url = self.api_url + f"/api/v1/datasources/{code}"
+        params: dict = {}
+        if delegate_to:
+            params["delegate_to"] = delegate_to
+
+        response = self.get(url, params=params)
+        raise_for_status(response)
+        return response.json()
+
     def fetch_bulk_enhance_output(self, request_id: str, filename: str, output_path: str | None = None) -> bytes:
         """
         Download a result file from a completed bulk enhance job.

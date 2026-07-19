@@ -74,7 +74,9 @@ Commands:
   activity                  List submission activity.
   create                    Create new submission from file(s).
   download-document         Download document by document URL.
+  events                    List submission events.
   get                       Get submission detail.
+  get-output                Fetch or generate an output from a previous...
   list-submission-statuses  List submission statuses.
   list-teams                List teams.
 
@@ -96,11 +98,14 @@ Options:
   --help                          Show this message and exit.
 
 Commands:
-  activity        List submission activity.
-  check-progress  Check the progress of a submission.
-  fix             Extract insurance information from file(s).
-  get-output      Fetch or generate an output from a previous extraction.
+  activity             List submission activity.
+  check-progress       Check the progress of a submission.
+  fix                  Extract insurance information from file(s).
+  get-output           Fetch or generate an output from a previous...
+  history              List submission activity.
+  list-output-formats  List available output formats.
   serverinfo
+  update               Update an existing SOV with new location data.
 
 ```
 
@@ -124,8 +129,11 @@ Options:
   --help                          Show this message and exit.
 
 Commands:
-  bulk-enhance  Request data about multiple addresses using async API.
-  enhance       Request data synchronously about a single address.
+  bulk-enhance      Request data about multiple addresses using async API.
+  enhance           Request data synchronously about a single address.
+  get-datasource    Get the configuration for a single datasource by its...
+  list-datasources  List the datasource configurations the authenticated...
+  usage             Get API credit usage over a time range, broken down...
 
 ```
 
@@ -144,10 +152,6 @@ Options:
                                   PINGDATA_AUTH_TOKEN environment variable.
   -v, --verbose                   Can be used multiple times. -v for INFO, -vv
                                   for DEBUG, -vvv for very DEBUG.
-  -D, --delegate-to ORG_SHORT_NAME
-                                  Delegate to another organization. Provide
-                                  the 'short name' of the desired delegatee.
-                                  Requires the `delegate` permission.
   --help                          Show this message and exit.
 
 Commands:
