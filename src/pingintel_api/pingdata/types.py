@@ -166,9 +166,16 @@ class BatchLocation(SingleLocation):
     datasource_config: NotRequired[dict | None]
 
 
+class EnhanceResponseItem(TypedDict, extra_items=Any):
+    is_success: bool
+    status_code: int
+    fetch_time: float
+    error_message: NotRequired[str | None]
+
+
 class EnhanceResponse(TypedDict):
     id: str
-    location_data: dict[SOURCES, dict]
+    location_data: dict[SOURCES, EnhanceResponseItem]
 
 
 class BulkEnhanceResponseCheckProgressResultOutputFile(TypedDict):
