@@ -164,3 +164,4 @@ release.bat
 
 .DS_Store
 *.bak
+.python-version

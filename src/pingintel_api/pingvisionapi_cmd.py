@@ -315,6 +315,62 @@ def list_submission_statuses(ctx, division):
         return
     pprint.pprint(results)
 
+@cli.command()
+@click.pass_context
+@click.argument("pingid", type=str)
+def modeling_options(ctx, pingid):
+    """Export modeling options for a submission."""
+    client = get_client(ctx)
+
+    ret = client.export_modeling_options(pingid=pingid)
+    pprint.pprint(ret)
+
+@cli.command()
+@click.pass_context
+@click.argument("pingid", type=str)
+@click.option("-m", "--modeling-option-uuids", type=str, multiple=True, help="Generate files for specific modeling options (all if not provided)")
+@click.option("--cat-model-type",type=click.Choice(
+        [
+            "air",
+            "rms",
+        ],
+        case_sensitive=False,
+    ), help="Cat models to generate files for (all if not provided)")
+@click.option("--use-secondary-modifiers",type=bool)
+@click.option("--use-ping-geocoding",type=bool)
+@click.option("--layer-output",type=click.Choice(
+        [
+            "C",
+            "P",
+        ],
+        case_sensitive=False,
+    ),help="C (Combined) or P (Per Layer)",)
+@click.option(
+    "--write/--no-write",
+    is_flag=True,
+    default=True,
+    help="(default) Download and write the acc/loc files to disk.",
+)
+def generate_acc_loc_files(ctx, pingid,modeling_option_uuids,cat_model_type,use_secondary_modifiers,use_ping_geocoding,layer_output, write):
+    """List submission activity."""
+    client = get_client(ctx)
+    ret = client.generate_acc_loc_files(pingid, modeling_option_uuids,cat_model_type,use_secondary_modifiers,use_ping_geocoding,layer_output)
+    
+    if write:
+        if ret.get("status") == "C":
+            for modeling_set in ret.get("modeling_sets", {}):
+                if modeling_set.get("status") == "C":
+                    acc_file_url = modeling_set.get("acc_file_url")
+                    if acc_file_url:
+                        ctx.invoke(download_document, document_url=acc_file_url, output=None)
+                    loc_file_url = modeling_set.get("loc_file_url")
+                    if loc_file_url:
+                        ctx.invoke(download_document, document_url=loc_file_url, output=None)
+
+    pprint.pprint(ret)
+
+
+
 
 @cli.command()
 @click.pass_context

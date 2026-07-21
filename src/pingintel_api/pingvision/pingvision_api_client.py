@@ -373,3 +373,88 @@ class PingVisionAPIClient(APIClientBase):
         url = self.api_url + f"/api/v1/submission/{pingid}/add_data_items"
         response = self.post(url, json={"items": items, "action": action})
         raise_for_status(response)
+
+    def export_modeling_options(self, pingid: str):
+        url = self.api_url + f"/api/v1/submission/{pingid}/cat/modeling-options/export"
+
+        response = self.get(url)
+
+        raise_for_status(response)
+
+        response_data = response.json()
+        return response_data
+    
+    def generate_acc_loc_files_async_start(
+        self,
+        pingid: str,
+        modeling_option_uuids: list[str] = None,
+        cat_model_type: str = None,
+        use_secondary_modifiers: bool = None,
+        use_ping_geocoding: bool = None,
+        layer_output: str = None,
+    ):
+        url = self.api_url + f"/api/v1/submission/{pingid}/cat/acc-loc-files"
+    
+        data = {}
+        if modeling_option_uuids:
+            data["modeling_option_uuids"] = modeling_option_uuids
+        if cat_model_type:
+            data["cat_model_type"] = cat_model_type
+        if use_secondary_modifiers:
+            data["use_secondary_modifiers"] = use_secondary_modifiers
+        if use_ping_geocoding:
+            data["use_ping_geocoding"] = use_ping_geocoding
+        if layer_output:
+            data["layer_output"] = layer_output
+
+        response = self.post(url, json=data)
+        if 200 <= response.status_code < 300:
+            pass
+            # pprint.pprint(response.json())
+        else:
+            self.logger.warning(f"Error starting Generate Acc/Loc file request:\n{pprint.pformat(response.text)}")
+
+        raise_for_status(response)
+
+        response_data = response.json()
+        return response_data
+
+    def generate_acc_loc_files_async_check_progress(self, pingid, uuid):
+        status_url = self.api_url + f"/api/v1/submission/{pingid}/cat/acc-loc-files/{uuid}"
+
+        response = self.get(status_url)
+        # pprint.pprint(response.json())
+        raise_for_status(response)
+
+        response_data = response.json()
+        return response_data
+
+    def generate_acc_loc_files(
+        self,
+        pingid: str,
+        modeling_option_uuids: list[str] = None,
+        cat_model_type: str = None,
+        use_secondary_modifiers: bool = None,
+        use_ping_geocoding: bool = None,
+        layer_output: str = None,
+    ):
+        client = self
+        response = client.generate_acc_loc_files_async_start(pingid, modeling_option_uuids, cat_model_type, use_secondary_modifiers, use_ping_geocoding, layer_output)
+        uuid = response.get("uuid")
+        assert uuid
+
+        response_data = None
+        while 1:
+            response_data = client.generate_acc_loc_files_async_check_progress(pingid, uuid)
+            status = response_data.get("status")
+            progress = response_data.get("processing_pct_complete")
+            POLL_SECS = 2.5
+            if status == "N" or status == "I":
+                self.logger.info(f"  - Still in progress: {status} ({progress}%)")
+                time.sleep(POLL_SECS)
+            else:
+                break
+
+        return response_data
+    
+
