@@ -374,6 +374,51 @@ class PingVisionAPIClient(APIClientBase):
         response = self.post(url, json={"items": items, "action": action})
         raise_for_status(response)
 
+    def transfer_to_ftp(
+        self,
+        pingid: str,
+        ftp_host: str,
+        ftp_username: str,
+        remote_path: str,
+        *,
+        filename: str | None = None,
+        file_uri: str | None = None,
+        ftp_port: int | None = None,
+        ftp_password: str | None = None,
+        ftp_private_key: str | None = None,
+    ) -> t.PingVisionTransferToFTPResponse:
+        """Transfer a submission document to a client-controlled FTP/SFTP server.
+
+        Docs: https://docs.pingintel.com/ping-vision/update-submission/transfer-document-to-ftp
+
+        Exactly one of `filename` or `file_uri` must be given, and one of `ftp_password`/`ftp_private_key`
+        is required for authentication.
+        """
+        assert bool(filename) != bool(file_uri), "Exactly one of filename or file_uri must be given."
+        assert ftp_password or ftp_private_key, "Either ftp_password or ftp_private_key is required."
+
+        url = self.api_url + f"/api/v1/submission/{pingid}/transfer-to-ftp"
+
+        ftp: dict[str, str | int] = {"host": ftp_host, "username": ftp_username}
+        if ftp_port:
+            ftp["port"] = ftp_port
+
+        data = {"ftp": ftp, "remote_path": remote_path}
+        if filename:
+            data["filename"] = filename
+        if file_uri:
+            data["file_uri"] = file_uri
+
+        headers = {}
+        if ftp_password:
+            headers["X-FTP-Password"] = ftp_password
+        if ftp_private_key:
+            headers["X-FTP-Private-Key"] = ftp_private_key
+
+        response = self.post(url, json=data, headers=headers)
+        raise_for_status(response)
+        return response.json()
+
     def export_modeling_options(self, pingid: str):
         url = self.api_url + f"/api/v1/submission/{pingid}/cat/modeling-options/export"
 

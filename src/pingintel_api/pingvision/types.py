@@ -229,3 +229,8 @@ class OutputData(TypedDict):
     scrubbed_filename: str
     output_format: str
     url: str
+
+
+class PingVisionTransferToFTPResponse(TypedDict):
+    message: str
+    filename: NotRequired[str]
