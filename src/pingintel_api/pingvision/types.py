@@ -30,6 +30,9 @@ class PingVisionListActivityDetailJobSovFixerDetailResponse(TypedDict):
     sovfixer_sovid: NotRequired[str | None]
     sovfixer_result_status: NotRequired[str | None]
     sovfixer_result_message: NotRequired[str | None]
+    sovfixer_request_type: NotRequired[str | None]
+    job_type_label: NotRequired[str | None]
+    cat_model_types: NotRequired[list[Literal['RMS', 'AIR']]] | None
 
 
 class DOCUMENT_PROCESSING_STATUS(str, enum.Enum):
