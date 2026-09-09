@@ -70,8 +70,6 @@ class PingVisionAPIClient(APIClientBase):
 
         :param delegate_to_team: (Optional) Requires delegation permissions. Allows the user to assume the role of a user in another team. If set, `delegate_to_company` is required. Can be team uuid, or id.
         :type delegate_to_team: str|None
-
-        :param kwargs: (Optional) Any further form fields to send with the request, passed through verbatim (e.g. `skip_prior_update_reuse=True`).
         """
 
         url = self.api_url + "/api/v1/submission"

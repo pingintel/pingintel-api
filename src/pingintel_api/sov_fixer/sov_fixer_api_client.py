@@ -52,7 +52,6 @@ class SOVFixerAPIClient(APIClientBase):
         :param document_type: The type of document being processed.  Default is "SOV".
         :param filename: The name of the file.  If file is a file object, this is required. If file is a list of file objects, this must be a list of filenames.
         :param callback_url: The URL to call when the request is complete.
-        :param kwargs: Any further form fields to send with the request, passed through verbatim (e.g. `skip_prior_update_reuse=True`).
         """
 
         url = self.api_url + "/api/v1/sov"
