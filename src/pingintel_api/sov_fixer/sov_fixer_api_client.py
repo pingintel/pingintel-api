@@ -42,6 +42,7 @@ class SOVFixerAPIClient(APIClientBase):
         allow_ping_data_api=None,
         workflow=None,
         skip_prior_update_reuse: bool = False,
+        skip_machine_certification: bool = False,
         company: str | None = None,
         team: str | None = None,
     ):
@@ -85,6 +86,7 @@ class SOVFixerAPIClient(APIClientBase):
             data["team"] = team
 
         data["skip_prior_update_reuse"] = skip_prior_update_reuse
+        data["skip_machine_certification"] = skip_machine_certification
 
         response = self.post(url, files=files, data=data)
         if 200 <= response.status_code < 300:
