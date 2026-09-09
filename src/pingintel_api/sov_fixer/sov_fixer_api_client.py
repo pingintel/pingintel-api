@@ -41,9 +41,9 @@ class SOVFixerAPIClient(APIClientBase):
         update_callback_url=None,
         allow_ping_data_api=None,
         workflow=None,
-        skip_prior_update_reuse: bool = False,
         company: str | None = None,
         team: str | None = None,
+        **kwargs,
     ):
         """
         Start a SOV Fixer request from one or more files asynchronously.
@@ -84,7 +84,7 @@ class SOVFixerAPIClient(APIClientBase):
         if team is not None:
             data["team"] = team
 
-        data["skip_prior_update_reuse"] = skip_prior_update_reuse
+        data.update(kwargs)
 
         response = self.post(url, files=files, data=data)
         if 200 <= response.status_code < 300:
