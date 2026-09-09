@@ -40,8 +40,7 @@ class PingVisionAPIClient(APIClientBase):
         expiration_date: datetime.date | None = None,
         delegate_to_company: str | None = None,
         delegate_to_team: str | None = None,
-        skip_prior_update_reuse: bool = False,
-        skip_machine_certification: bool = False,
+        **kwargs,
     ) -> t.PingVisionCreateSubmissionResponse:
         """
         Initiate a new submission from one or more original files.
@@ -72,8 +71,7 @@ class PingVisionAPIClient(APIClientBase):
         :param delegate_to_team: (Optional) Requires delegation permissions. Allows the user to assume the role of a user in another team. If set, `delegate_to_company` is required. Can be team uuid, or id.
         :type delegate_to_team: str|None
 
-        :param skip_machine_certification: (Optional) Set true to keep this submission out of automatic machine certification, so it goes through scrubbing even if the passthrough model would have certified it.
-        :type skip_machine_certification: bool
+        :param kwargs: (Optional) Any further form fields to send with the request, passed through verbatim (e.g. `skip_prior_update_reuse=True`).
         """
 
         url = self.api_url + "/api/v1/submission"
@@ -101,8 +99,7 @@ class PingVisionAPIClient(APIClientBase):
         if delegate_to_team:
             data["delegate_to_team"] = delegate_to_team
 
-        data["skip_prior_update_reuse"] = skip_prior_update_reuse
-        data["skip_machine_certification"] = skip_machine_certification
+        data.update(kwargs)
 
         response = self.post(url, files=multiple_files, data=data)
 

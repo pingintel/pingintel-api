@@ -41,10 +41,9 @@ class SOVFixerAPIClient(APIClientBase):
         update_callback_url=None,
         allow_ping_data_api=None,
         workflow=None,
-        skip_prior_update_reuse: bool = False,
-        skip_machine_certification: bool = False,
         company: str | None = None,
         team: str | None = None,
+        **kwargs,
     ):
         """
         Start a SOV Fixer request from one or more files asynchronously.
@@ -53,6 +52,7 @@ class SOVFixerAPIClient(APIClientBase):
         :param document_type: The type of document being processed.  Default is "SOV".
         :param filename: The name of the file.  If file is a file object, this is required. If file is a list of file objects, this must be a list of filenames.
         :param callback_url: The URL to call when the request is complete.
+        :param kwargs: Any further form fields to send with the request, passed through verbatim (e.g. `skip_prior_update_reuse=True`).
         """
 
         url = self.api_url + "/api/v1/sov"
@@ -85,8 +85,7 @@ class SOVFixerAPIClient(APIClientBase):
         if team is not None:
             data["team"] = team
 
-        data["skip_prior_update_reuse"] = skip_prior_update_reuse
-        data["skip_machine_certification"] = skip_machine_certification
+        data.update(kwargs)
 
         response = self.post(url, files=files, data=data)
         if 200 <= response.status_code < 300:
