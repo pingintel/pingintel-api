@@ -5,6 +5,10 @@ import os
 
 # authentication token that allows you to make requests to the API
 API_KEY=os.environ.get('SOVFIXER_AUTH_TOKEN')
+if not API_KEY:
+    raise RuntimeError(
+        "SOVFIXER_AUTH_TOKEN is not set. Set it to your Ping API token."
+    )
 headers = {"Authorization": f"Token {API_KEY}"}
 
 # file being submitted
@@ -28,7 +32,10 @@ start_job_response = requests.post(start_job_url, data=payload, files=files, hea
 if start_job_response.status_code in (200, 201):
     sovid = start_job_response.json()["id"]
 else:
-    raise RuntimeError
+    raise RuntimeError(
+        f"Start SOV Parsing Job failed with HTTP {start_job_response.status_code}: "
+        f"{start_job_response.text}"
+    )
 
 ## ... 
 
@@ -36,7 +43,7 @@ else:
 check_job_url = f"https://api.sovfixer.com/api/v1/sov/{sovid}"
 check_job_response = requests.get(check_job_url, headers=headers)
 # ensure response is in a good state
-assert check_job_response.status_code in (200, 201)
+assert check_job_response.status_code in (200, 201), check_job_response.text
 check_job_json = check_job_response.json()
 # Poll every three seconds for job completion
 while check_job_json["request"]["status"] not in ("COMPLETE", "FAILED"):
@@ -45,7 +52,7 @@ while check_job_json["request"]["status"] not in ("COMPLETE", "FAILED"):
     time.sleep(3)
     check_job_response = requests.get(check_job_url, headers=headers)
     # ensure response is in a good state
-    assert check_job_response.status_code in (200, 201)
+    assert check_job_response.status_code in (200, 201), check_job_response.text
     check_job_json = check_job_response.json()
 
 
@@ -68,7 +75,7 @@ for output in check_job_json["result"]["outputs"]:
 for output in outputs:
     fetch_outputs_response = requests.get(output["url"], headers=headers)
     # ensure response is in a good state
-    assert fetch_outputs_response.status_code in (200, 201)
+    assert fetch_outputs_response.status_code in (200, 201), fetch_outputs_response.text
     print(f"saving {output['filename']}")
     output_path = f"workflow_example_results/{output['filename']}"
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
