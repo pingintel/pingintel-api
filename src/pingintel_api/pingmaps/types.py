@@ -52,6 +52,7 @@ class COPEPreferences(str, enum.Enum):
     AIR = "air"
     RMS = "rms"
     BOTH_MODELS = "both_models"
+    AIR_ONLY = "air_only"
 
 
 class PingMapsLayer(TypedDict):
