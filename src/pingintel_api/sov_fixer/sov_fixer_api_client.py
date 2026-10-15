@@ -6,7 +6,7 @@ import os
 import pathlib
 import pprint
 import time
-from typing import IO, Collection, Literal
+from typing import IO, Callable, Collection, Literal
 from datetime import timedelta, datetime
 from uuid import UUID
 import click
@@ -136,6 +136,8 @@ class SOVFixerAPIClient(APIClientBase):
         """
 
         output_url = output_ret["url"]
+        if not output_url:
+            raise ValueError(f"Output has no download URL (was generation successful?): {output_ret}")
 
         # if output_url does not have the base_url then add it.
         if not output_url.startswith("http"):
@@ -164,6 +166,8 @@ class SOVFixerAPIClient(APIClientBase):
         actually_write=False,
         output_description=None,
     ):
+        if not download_url:
+            raise ValueError(f"No download URL provided for {output_description!r} output.")
         self.logger.info(f"Requesting output from {download_url}...")
         if download_url.startswith("/"):
             download_url = self.api_url + download_url
@@ -183,6 +187,8 @@ class SOVFixerAPIClient(APIClientBase):
 
     def activity_download(self, output_ret, actually_write=False, output_path=None):
         output_url = output_ret["url"]
+        if not output_url:
+            raise ValueError(f"Output has no download URL (was generation successful?): {output_ret}")
         is_update_output_ret = "filename" not in output_ret and "scrubbed_filename" not in output_ret
         is_input_ret = "label" not in output_ret and not is_update_output_ret
 
@@ -199,6 +205,8 @@ class SOVFixerAPIClient(APIClientBase):
             output_filename = output_ret["scrubbed_filename"]
         if output_path is None:
             output_path = output_filename
+        if actually_write and not output_path:
+            raise ValueError(f"Output has no filename; provide output_path explicitly: {output_ret}")
 
         try:
             return self.download_file(
@@ -658,9 +666,13 @@ class SOVFixerAPIClient(APIClientBase):
         timeout: timedelta | None = timedelta(minutes=5),
         delegate_to_team: UUID | str | int | None = None,
         get_or_create_output_async_start_kwargs=None,
+        on_progress: Callable[[dict], None] | None = None,
     ) -> t.OutputData:
         """Synchronously get or create an output from a SOV Fixer request. If it exists, it will return immediately.
-        If it does not exist, it will start the generation process and poll for completion, then return it."""
+        If it does not exist, it will start the generation process and poll for completion, then return it.
+
+        on_progress: optional callback invoked with the raw progress response on each poll, for progress display.
+        """
         client = self
 
         start_response = client.get_or_create_output_async_start(
@@ -686,23 +698,39 @@ class SOVFixerAPIClient(APIClientBase):
                 POLL_SECS = 2.5
                 if request_status == "PENDING":
                     self.logger.info("  - Has not yet been queued for processing.")
+                    if on_progress:
+                        on_progress(response_data)
                     time.sleep(POLL_SECS)
                 elif request_status == "IN_PROGRESS":
                     self.logger.info(f"  - Still in progress: {request_status}")
+                    if on_progress:
+                        on_progress(response_data)
                     time.sleep(POLL_SECS)
                 else:
                     break
 
-        self.logger.info(f"+ Finished with result {response_data.get('result',{}).get('status')}")
+        result = response_data.get("result") or {}
+        # a successful result carries the output data directly and may omit "status" entirely
+        result_status = result.get("status")
+        self.logger.info(f"+ Finished with result {result_status or 'SUCCESS'}")
 
-        result = response_data.get("result", {})
         if not result:
-            raise ValueError(f"Invalid response: {response_data}")
+            raise ValueError(f"Output generation for {sovid_or_sud} returned no result: {response_data}")
+        if result_status is not None and result_status != "SUCCESS":
+            raise RuntimeError(
+                f"Output generation for {sovid_or_sud} (format {output_format!r}) finished with status "
+                f"{result_status!r}: {result.get('message') or result}"
+            )
+        if not result.get("url"):
+            raise ValueError(
+                f"Output generation for {sovid_or_sud} (format {output_format!r}) finished but "
+                f"returned no download URL: {result}"
+            )
         output = t.OutputData(
             label=result.get("label", None),
             scrubbed_filename=result.get("scrubbed_filename", None),
             output_format=result.get("output_format", None),
-            url=result.get("url", None),
+            url=result["url"],
         )
         return output
 

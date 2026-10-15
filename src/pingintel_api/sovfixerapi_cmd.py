@@ -398,15 +398,35 @@ def activity(
 def get_output(ctx, sovid_or_sudid, output_format, write, revision, overwrite_existing, delegate_to_team):
     """Fetch or generate an output from a previous extraction."""
     client = get_client(ctx)
-    output_data = client.get_or_create_output(
-        sovid_or_sudid,
-        output_format,
-        revision,
-        overwrite_existing,
-        delegate_to_team=delegate_to_team,
-    )
-    ret = client.activity_download(output_data, actually_write=write)
-    click.echo(f"Downloaded: {ret}")
+    click.echo(f"Requesting {output_format} output for {sovid_or_sudid}...")
+
+    def show_progress(response_data):
+        request = response_data.get("request", {})
+        status = request.get("status")
+        pct = request.get("pct_complete")
+        pct_str = f", {pct}% complete" if pct is not None else ""
+        click.echo(f"  - {status}{pct_str}...")
+
+    try:
+        output_data = client.get_or_create_output(
+            sovid_or_sudid,
+            output_format,
+            revision,
+            overwrite_existing,
+            delegate_to_team=delegate_to_team,
+            on_progress=show_progress,
+        )
+        filename = output_data.get("scrubbed_filename") or output_format
+        click.echo(f"Output ready, downloading {filename}...")
+        ret = client.activity_download(output_data, actually_write=write)
+    except (RuntimeError, ValueError, TimeoutError) as e:
+        raise click.ClickException(str(e))
+    if write:
+        if ret is None:
+            raise click.ClickException(f"Download of {filename} failed; see warning above for details.")
+        click.echo(f"Downloaded: {ret}")
+    else:
+        click.echo("Download complete (not written to disk; --no-write).")
 
 
 @cli.command()
