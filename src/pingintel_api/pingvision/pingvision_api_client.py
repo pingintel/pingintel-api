@@ -386,6 +386,7 @@ class PingVisionAPIClient(APIClientBase):
         ftp_port: int | None = None,
         ftp_password: str | None = None,
         ftp_private_key: str | None = None,
+        async_transfer: bool = False,
     ) -> t.PingVisionTransferToFTPResponse:
         """Transfer a submission document to a client-controlled FTP/SFTP server.
 
@@ -408,6 +409,8 @@ class PingVisionAPIClient(APIClientBase):
             data["filename"] = filename
         if file_uri:
             data["file_uri"] = file_uri
+        if async_transfer:
+            data["async"] = True
 
         headers = {}
         if ftp_password:
@@ -416,6 +419,70 @@ class PingVisionAPIClient(APIClientBase):
             headers["X-FTP-Private-Key"] = ftp_private_key
 
         response = self.post(url, json=data, headers=headers)
+        raise_for_status(response)
+        return response.json()
+
+    def transfer_from_ftp_to_submission(
+        self,
+        pingid: str,
+        ftp_host: str,
+        ftp_username: str,
+        remote_path: str,
+        *,
+        ftp_port: int | None = None,
+        ftp_password: str | None = None,
+        ftp_private_key: str | None = None,
+        async_transfer: bool = False,
+    ) -> t.PingVisionTransferFromFTPResponse:
+        """Transfer a document from a client-controlled FTP/SFTP server into the submission (the Everest-style ingest).
+
+        Exactly one of `ftp_password`/`ftp_private_key` is required for authentication. When `async_transfer`
+        is true the server queues the download and returns a `task_id` to poll via `get_transfer_status`.
+        """
+        assert ftp_password or ftp_private_key, "Either ftp_password or ftp_private_key is required."
+
+        url = self.api_url + f"/api/v1/submission/{pingid}/transfer-from-ftp"
+
+        ftp: dict[str, str | int] = {"host": ftp_host, "username": ftp_username}
+        if ftp_port:
+            ftp["port"] = ftp_port
+
+        data: dict[str, object] = {"ftp": ftp, "remote_path": remote_path}
+        if async_transfer:
+            data["async"] = True
+
+        headers = {}
+        if ftp_password:
+            headers["X-FTP-Password"] = ftp_password
+        if ftp_private_key:
+            headers["X-FTP-Private-Key"] = ftp_private_key
+
+        response = self.post(url, json=data, headers=headers)
+        raise_for_status(response)
+        return response.json()
+
+    def get_transfer_status(self, pingid: str, task_id: str) -> t.PingVisionTransferStatusResponse:
+        """Poll the status of an async FTP transfer (see `transfer_from_ftp_to_submission`/`transfer_to_ftp`)."""
+        url = self.api_url + f"/api/v1/submission/{pingid}/transfer-status/{task_id}"
+        response = self.get(url)
+        raise_for_status(response)
+        return response.json()
+
+    def parse_documents(
+        self,
+        pingid: str,
+        filenames: list[str],
+        sovfixer_request_type: str | None = None,
+        sovfixer_request_type_notes: str | None = None,
+    ) -> dict:
+        """Ask Ping.Extraction to parse documents that are already attached to the submission (Everest-style)."""
+        url = self.api_url + f"/api/v1/submission/{pingid}/sovfixer-parse"
+        data = {"filenames": filenames}
+        if sovfixer_request_type:
+            data["sovfixer_request_type"] = sovfixer_request_type
+        if sovfixer_request_type_notes:
+            data["sovfixer_request_type_notes"] = sovfixer_request_type_notes
+        response = self.post(url, json=data)
         raise_for_status(response)
         return response.json()
 

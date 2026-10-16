@@ -234,3 +234,21 @@ class OutputData(TypedDict):
 class PingVisionTransferToFTPResponse(TypedDict):
     message: str
     filename: NotRequired[str]
+
+
+
+class PingVisionTransferFromFTPResponse(TypedDict):
+    message: str
+    submission_id: NotRequired[str]
+    document: NotRequired[str]
+    task_id: NotRequired[str]
+
+
+
+class PingVisionTransferStatusResponse(TypedDict):
+    task_id: str
+    status: str
+    message: str
+    submission_id: NotRequired[str]
+    document: NotRequired[str]
+    filename: NotRequired[str]
