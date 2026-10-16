@@ -264,3 +264,69 @@ class OutputFormatItem(TypedDict):
 
 class OutputFormatsResponse(TypedDict):
     output_formats: list[OutputFormatItem]
+
+
+# Location filters, as accepted by the analytics endpoints and returned as each report row's `filter`.
+# Each key is a field: a value or list of values for an exact match, or a dict of operator -> value(s),
+# e.g. {"state": ["TX", "FL"], "const__bldg_year_built": {"gte": 1990, "lt": 2000}}.
+SOVAnalyticsFilters = dict[str, Any]
+
+SOV_ANALYTICS_SUMMARY_FIELD = Literal[
+    "country",
+    "state",
+    "county",
+    "const__bldg_year_built",
+    "wind_tier",
+    "fema_flood_zone",
+    "slosh_zone",
+    "ping_geo__match_level",
+]
+
+SOV_LOCATIONS_SORT = Literal["-limits__total_limit", "limits__total_limit", "building_counter", "-building_counter"]
+
+
+class SOVSummaryResponse(TypedDict):
+    sovid: str
+    kind: Literal["policy", "portfolio"]
+    status: Literal["NOT_INITIALIZED", "INITIALIZING", "READY", "FAILED"]
+    pct_complete: int
+    filename: str | None
+    insured: dict[str, Any]
+    risk_summary: str | None
+    totals: dict[str, Any]
+    fields: dict[str, list[dict[str, Any]]]
+
+
+class SOVLocationListResponse(TypedDict):
+    count: int
+    next: str | None
+    previous: str | None
+    results: list[dict[str, Any]]
+
+
+class SOVLayerRow(TypedDict):
+    key: str
+    label: str
+    attach: float
+    layer_limit: float | None
+    count: int
+    limits__total_limit_in_layer: float
+    limits__total_limit_in_layer_pct: float
+    filter: SOVAnalyticsFilters | None
+    links: dict[str, str] | None
+
+
+class SOVLayerAnalysisResponse(TypedDict):
+    tower: Literal["standard", "custom"]
+    basis: Literal["per_location"]
+    rows: list[SOVLayerRow]
+
+
+class SOVExposureReportResponse(TypedDict):
+    sovid: str
+    kind: Literal["policy", "portfolio"]
+    params: dict[str, Any]
+    totals: dict[str, Any]
+    breakdowns: list[dict[str, Any]]
+    sections: list[dict[str, Any]]
+    layers: SOVLayerAnalysisResponse

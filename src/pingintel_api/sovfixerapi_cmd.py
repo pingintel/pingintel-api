@@ -7,14 +7,16 @@ import json
 import logging
 import pathlib
 import pprint
+import re
 import time
 from timeit import default_timer as timer
-from typing import Literal
+from typing import Literal, get_args
 
 import click
 
 from pingintel_api import SOVFixerAPIClient
 from pingintel_api.api_client_base import AuthTokenNotFound
+from pingintel_api.sov_fixer.types import SOV_ANALYTICS_SUMMARY_FIELD, SOV_LOCATIONS_SORT
 from pingintel_api.utils import set_verbosity
 
 logger = logging.getLogger(__name__)
@@ -542,6 +544,241 @@ def list_output_formats(ctx, sovid, division_uuid, team_uuid, pretty):
             print(f"{fmt['output_format']:<30}{fmt['label']:<40}{ext:<12}{fmt['is_public']}")
     else:
         pprint.pprint(results)
+
+
+_FILTER_RE = re.compile(r"^(?P<field>[^\[\]=]+)(?:\[(?P<op>[^\[\]=]+)\])?=(?P<value>.*)$")
+
+
+def _filters_to_dict(ctx: click.Context, param: click.Parameter, values: tuple[str, ...]) -> dict:
+    """Click callback: `-f state=TX -f state=FL -f 'const__bldg_year_built[gte]=1990'` becomes
+    `{"state": ["TX", "FL"], "const__bldg_year_built": {"gte": ["1990"]}}`."""
+    filters: dict = {}
+    for arg in values:
+        m = _FILTER_RE.match(arg)
+        if not m:
+            raise click.BadParameter(f"Expected FIELD=VALUE or FIELD[op]=VALUE, got {arg!r}")
+        field, op, value = m["field"], m["op"], m["value"]
+        if op is None:
+            exact = filters.setdefault(field, [])
+            if not isinstance(exact, list):
+                raise click.BadParameter(f"Filter {field!r} mixes exact values with operators: {arg!r}")
+            exact.append(value)
+        else:
+            ops = filters.setdefault(field, {})
+            if not isinstance(ops, dict):
+                raise click.BadParameter(f"Filter {field!r} mixes exact values with operators: {arg!r}")
+            ops.setdefault(op, []).append(value)
+    return filters
+
+
+def _analytics_options(f):
+    """Options shared by the SOV analytics commands. Applied bottom-up, so they list in this order."""
+    f = click.option("--pretty", is_flag=True, default=False, help="Print a short table instead of JSON.")(f)
+    f = click.option(
+        "-f",
+        "--filter",
+        "filters",
+        multiple=True,
+        metavar="FIELD[op]=VALUE",
+        callback=_filters_to_dict,
+        help="Location filter, e.g. -f state=TX -f state=FL -f 'const__bldg_year_built[gte]=1990'. Repeat a field to "
+        "match any of its values. Operators: gt, gte, lt, lte, gt_or_null, gte_or_null, lt_or_null, lte_or_null, not_in, bins.",
+    )(f)
+    f = click.argument("id")(f)
+    return f
+
+
+def _layer_options(f):
+    f = click.option("--layer-limit", type=int, help="Layer limit for limits__total_limit_in_layer.")(f)
+    f = click.option("--layer-attach", type=int, help="Layer attachment point for limits__total_limit_in_layer.")(f)
+    return f
+
+
+def _echo_json(result):
+    click.echo(json.dumps(result, indent=2))
+
+
+def _fmt_money(value) -> str:
+    return "" if value is None else f"{value:,.0f}"
+
+
+def _echo_report_rows(rows: list[dict], indent: str = "  "):
+    for row in rows:
+        if "limits__total_limit" in row:
+            click.echo(
+                f"{indent}{row['label']:<40} {row['count']:>8} {_fmt_money(row['limits__total_limit']):>18} "
+                f"{row['limits__total_limit_pct']:>7.2f}%"
+            )
+        else:
+            click.echo(
+                f"{indent}{row['label']:<40} {row['count']:>8} {row['limits__building_limit_per_sqft']:>14,.2f}/sqft "
+                f"{row['limits__building_limit_with_area_pct']:>7.2f}% with area"
+            )
+
+
+def _echo_layer_rows(rows: list[dict], indent: str = "  "):
+    for row in rows:
+        click.echo(
+            f"{indent}{row['label']:<40} {row['count']:>8} {_fmt_money(row['limits__total_limit_in_layer']):>18} "
+            f"{row['limits__total_limit_in_layer_pct']:>7.2f}%"
+        )
+
+
+def _echo_totals(totals: dict):
+    click.echo(
+        f"Locations: {totals['count']} ({totals['geocoded_count']} geocoded)  "
+        f"TIV: {_fmt_money(totals['limits__total_limit'])}  "
+        f"In layer: {_fmt_money(totals['limits__total_limit_in_layer'])}"
+    )
+
+
+@cli.command()
+@click.pass_context
+@_analytics_options
+@_layer_options
+@click.option(
+    "--field",
+    "fields",
+    multiple=True,
+    type=click.Choice(list(get_args(SOV_ANALYTICS_SUMMARY_FIELD))),
+    help="Return the value distribution for this field. Can be repeated.",
+)
+def summary(ctx, id, filters, pretty, layer_attach, layer_limit, fields):
+    """Get insured details and totals for an SOV or portfolio (pingid, sovid, or portfolio id)."""
+    client = get_client(ctx)
+    result = client.get_sov_summary(
+        id, filters=filters, fields=fields, layer_attach=layer_attach, layer_limit=layer_limit
+    )
+    if not pretty:
+        _echo_json(result)
+        return
+
+    click.echo(f"{result['sovid']} ({result['kind']}) {result['status']}  {result['filename'] or ''}")
+    click.echo(f"Insured: {result['insured']['name']}")
+    _echo_totals(result["totals"])
+    for field, buckets in result["fields"].items():
+        click.echo(f"\n{field}:")
+        for bucket in buckets:
+            click.echo(
+                f"  {bucket['label']:<40} {bucket['count']:>8} {_fmt_money(bucket['limits__total_limit']):>18} "
+                f"{bucket['limits__total_limit_pct']:>7.2f}%"
+            )
+
+
+@cli.command()
+@click.pass_context
+@_analytics_options
+@_layer_options
+@click.option("-l", "--limit", type=click.IntRange(1, 1000), help="Page size. Server default 100.")
+@click.option("--offset", type=click.IntRange(0), help="Number of locations to skip.")
+@click.option("--sort", type=click.Choice(list(get_args(SOV_LOCATIONS_SORT))), help="Sort order.")
+@click.option("--all", "all_pages", is_flag=True, default=False, help="Follow `next` and return every location.")
+def locations(ctx, id, filters, pretty, layer_attach, layer_limit, limit, offset, sort, all_pages):
+    """List the locations of an SOV or portfolio that match the filters."""
+    client = get_client(ctx)
+    if all_pages:
+        if offset is not None:
+            raise click.UsageError("--offset cannot be combined with --all.")
+        results = list(
+            client.iter_sov_locations(
+                id,
+                filters=filters,
+                page_size=limit or 1000,
+                sort=sort,
+                layer_attach=layer_attach,
+                layer_limit=layer_limit,
+            )
+        )
+        if not pretty:
+            _echo_json(results)
+            return
+    else:
+        page = client.list_sov_locations(
+            id,
+            filters=filters,
+            limit=limit,
+            offset=offset,
+            sort=sort,
+            layer_attach=layer_attach,
+            layer_limit=layer_limit,
+        )
+        if not pretty:
+            _echo_json(page)
+            return
+        results = page["results"]
+        click.echo(f"{page['count']} matching locations, showing {len(results)}.")
+
+    for loc in results:
+        address = ", ".join(str(loc[k]) for k in ("street", "city", "state", "zip") if loc[k])
+        click.echo(
+            f"{loc['sovid']:<14} {loc['building_counter']:>6}  {_fmt_money(loc['limits__total_limit']):>16}  "
+            f"{loc['const__bldg_year_built'] or '':>4}  {address}"
+        )
+
+
+@cli.command()
+@click.pass_context
+@_analytics_options
+@_layer_options
+@click.option("--breakdown-limit", type=click.IntRange(1, 100), help="Max rows per country/state/county breakdown.")
+@click.option(
+    "--exposure-analysis-min-tiv",
+    "exposure_analysis_limits__total_limit__gte",
+    type=click.IntRange(0),
+    help="Minimum TIV of the locations counted by the exposure-analysis section rows.",
+)
+def exposure_report(
+    ctx, id, filters, pretty, layer_attach, layer_limit, breakdown_limit, exposure_analysis_limits__total_limit__gte
+):
+    """Get the exposure report for an SOV or portfolio: TIV breakdowns, COPE, hazard and layer sections."""
+    client = get_client(ctx)
+    result = client.get_sov_exposure_report(
+        id,
+        filters=filters,
+        breakdown_limit=breakdown_limit,
+        exposure_analysis_limits__total_limit__gte=exposure_analysis_limits__total_limit__gte,
+        layer_attach=layer_attach,
+        layer_limit=layer_limit,
+    )
+    if not pretty:
+        _echo_json(result)
+        return
+
+    click.echo(f"{result['sovid']} ({result['kind']})")
+    _echo_totals(result["totals"])
+    for group in result["breakdowns"]:
+        click.echo(f"\n{group['title']}:")
+        _echo_report_rows(group["rows"])
+    for section in result["sections"]:
+        click.echo(f"\n== {section['title']} ==")
+        for group in section["groups"]:
+            click.echo(f"  {group['title']}:")
+            _echo_report_rows(group["rows"], indent="    ")
+    click.echo(f"\nLayers ({result['layers']['tower']}):")
+    _echo_layer_rows(result["layers"]["rows"])
+
+
+@cli.command()
+@click.pass_context
+@_analytics_options
+@click.option(
+    "--layer",
+    "layers",
+    multiple=True,
+    metavar="LIMITxsATTACH",
+    help="Custom tower layer, e.g. --layer 5000000xs0 --layer xs5000000. Cannot be combined with --tower.",
+)
+@click.option("--tower", type=click.Choice(["standard"]), help="Preset tower. Server default when --layer is omitted.")
+def layers(ctx, id, filters, pretty, layers, tower):
+    """Get the TIV exposed to each layer of a tower, per location."""
+    client = get_client(ctx)
+    result = client.get_sov_layer_analysis(id, filters=filters, layers=layers, tower=tower)
+    if not pretty:
+        _echo_json(result)
+        return
+
+    click.echo(f"Tower: {result['tower']} ({result['basis']})")
+    _echo_layer_rows(result["rows"])
 
 
 def main():

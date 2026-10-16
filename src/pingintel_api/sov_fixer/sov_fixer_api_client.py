@@ -6,7 +6,7 @@ import os
 import pathlib
 import pprint
 import time
-from typing import IO, Callable, Collection, Literal
+from typing import IO, Callable, Collection, Iterator, Literal
 from datetime import timedelta, datetime
 from uuid import UUID
 import click
@@ -853,3 +853,195 @@ class SOVFixerAPIClient(APIClientBase):
         response = self.post(url, data=data)
         raise_for_status(response)
         return response.json()
+
+    @staticmethod
+    def _encode_analytics_filters(filters: t.SOVAnalyticsFilters | None) -> list[tuple[str, str | int | float]]:
+        """Convert a filters dict into query parameter pairs: `{"state": ["TX", "FL"]}` becomes
+        `state=TX&state=FL` and `{"const__bldg_year_built": {"gte": 1990}}` becomes
+        `const__bldg_year_built[gte]=1990`."""
+
+        def as_values(key: str, value) -> list[str | int | float]:
+            if isinstance(value, (list, tuple)):
+                if not value:
+                    raise ValueError(f"Filter {key!r} has an empty list of values.")
+                return [v for item in value for v in as_values(key, item)]
+            if isinstance(value, bool) or not isinstance(value, (str, int, float)):
+                raise ValueError(f"Filter {key!r} has unsupported value {value!r} ({type(value).__name__}).")
+            return [value]
+
+        pairs = []
+        for field, value in (filters or {}).items():
+            if isinstance(value, dict):
+                if not value:
+                    raise ValueError(f"Filter {field!r} has an empty dict of operators.")
+                for op, op_value in value.items():
+                    key = f"{field}[{op}]"
+                    pairs.extend((key, v) for v in as_values(key, op_value))
+            else:
+                pairs.extend((field, v) for v in as_values(field, value))
+        return pairs
+
+    def _get_sov_analytics(self, url: str, params, timeout: timedelta | None) -> dict:
+        """GET an analytics endpoint, polling while the server returns 202 (analytics still being built)."""
+        start_time = time.time()
+        while True:
+            response = self.get(url, params=params)
+            raise_for_status(response)
+            if response.status_code != 202:
+                return response.json()
+
+            not_ready = response.json()
+            if timeout and time.time() - start_time > timeout.total_seconds():
+                raise TimeoutError(
+                    f"Timeout waiting for SOV analytics to build: {url} is {not_ready['status']} "
+                    f"({not_ready['pct_complete']}% complete)"
+                )
+            self.logger.info(f"  - Analytics {not_ready['status']}: {not_ready['pct_complete']}% complete")
+            POLL_SECS = 2.5
+            time.sleep(POLL_SECS)
+
+    def _analytics_params(
+        self, filters: t.SOVAnalyticsFilters | None, layer_attach: int | None, layer_limit: int | None
+    ) -> list[tuple[str, str | int | float]]:
+        params = self._encode_analytics_filters(filters)
+        if layer_attach is not None:
+            params.append(("layer_attach", layer_attach))
+        if layer_limit is not None:
+            params.append(("layer_limit", layer_limit))
+        return params
+
+    def get_sov_summary(
+        self,
+        id: str,
+        filters: t.SOVAnalyticsFilters | None = None,
+        fields: Collection[t.SOV_ANALYTICS_SUMMARY_FIELD] | None = None,
+        layer_attach: int | None = None,
+        layer_limit: int | None = None,
+        timeout: timedelta | None = timedelta(minutes=5),
+    ) -> t.SOVSummaryResponse:
+        """Get insured details and totals for the locations of an SOV or portfolio that match `filters`.
+
+        Requesting the summary starts building analytics for the SOV if needed. This polls until they are ready.
+
+        :param id: pingid, sovid, or portfolio id.
+        :param filters: Location filters, e.g. `{"state": ["TX", "FL"], "const__bldg_year_built": {"gte": 1990}}`.
+            A report row's `filter` can be passed directly, but it is None when no single query selects the row's
+            locations, and None here selects every location.
+        :param fields: Fields to return value distributions for in the response's `fields`.
+        :param layer_attach: With `layer_limit`, the layer reported as `limits__total_limit_in_layer`.
+        :param layer_limit: Layer limit. Omit for a layer with no upper limit.
+        :param timeout: How long to poll while analytics are being built. None waits forever.
+        """
+        params = self._analytics_params(filters, layer_attach, layer_limit)
+        params.extend(("fields", f) for f in fields or [])
+        url = self.api_url + f"/api/v1/sov/{id}/summary"
+        return self._get_sov_analytics(url, params, timeout)
+
+    def list_sov_locations(
+        self,
+        id: str,
+        filters: t.SOVAnalyticsFilters | None = None,
+        limit: int | None = None,
+        offset: int | None = None,
+        sort: t.SOV_LOCATIONS_SORT | None = None,
+        layer_attach: int | None = None,
+        layer_limit: int | None = None,
+        timeout: timedelta | None = timedelta(minutes=5),
+    ) -> t.SOVLocationListResponse:
+        """List one page of the locations of an SOV or portfolio that match `filters`.
+        See `iter_sov_locations` to iterate over every page.
+
+        :param id: pingid, sovid, or portfolio id.
+        :param filters: Location filters. See `get_sov_summary`.
+        :param limit: Page size, up to 1000. Server default 100.
+        :param offset: Number of locations to skip.
+        :param sort: Sort order. Server default `-limits__total_limit`.
+        """
+        params = self._analytics_params(filters, layer_attach, layer_limit)
+        if limit is not None:
+            params.append(("limit", limit))
+        if offset is not None:
+            params.append(("offset", offset))
+        if sort is not None:
+            params.append(("sort", sort))
+        url = self.api_url + f"/api/v1/sov/{id}/locations"
+        return self._get_sov_analytics(url, params, timeout)
+
+    def iter_sov_locations(
+        self,
+        id: str,
+        filters: t.SOVAnalyticsFilters | None = None,
+        page_size: int = 1000,
+        sort: t.SOV_LOCATIONS_SORT | None = None,
+        layer_attach: int | None = None,
+        layer_limit: int | None = None,
+        timeout: timedelta | None = timedelta(minutes=5),
+    ) -> Iterator[dict]:
+        """Yield every location of an SOV or portfolio that matches `filters`, following `next` page by page."""
+        page = self.list_sov_locations(
+            id,
+            filters=filters,
+            limit=page_size,
+            sort=sort,
+            layer_attach=layer_attach,
+            layer_limit=layer_limit,
+            timeout=timeout,
+        )
+        while True:
+            yield from page["results"]
+            if not page["next"]:
+                return
+            page = self._get_sov_analytics(page["next"], None, timeout)
+
+    def get_sov_exposure_report(
+        self,
+        id: str,
+        filters: t.SOVAnalyticsFilters | None = None,
+        breakdown_limit: int | None = None,
+        exposure_analysis_limits__total_limit__gte: int | None = None,
+        layer_attach: int | None = None,
+        layer_limit: int | None = None,
+        timeout: timedelta | None = timedelta(minutes=5),
+    ) -> t.SOVExposureReportResponse:
+        """Get the exposure report for the locations of an SOV or portfolio that match `filters`: TIV by country,
+        state and county, COPE, hazard and exposure-analysis sections, and the standard layer tower.
+
+        :param id: pingid, sovid, or portfolio id.
+        :param filters: Location filters. See `get_sov_summary`.
+        :param breakdown_limit: Max rows in each country/state/county breakdown, 1-100. Server default 5.
+        :param exposure_analysis_limits__total_limit__gte: Minimum TIV of the locations counted by the
+            exposure-analysis section rows.
+        """
+        params = self._analytics_params(filters, layer_attach, layer_limit)
+        if breakdown_limit is not None:
+            params.append(("breakdown_limit", breakdown_limit))
+        if exposure_analysis_limits__total_limit__gte is not None:
+            params.append(
+                ("exposure_analysis_limits__total_limit__gte", exposure_analysis_limits__total_limit__gte)
+            )
+        url = self.api_url + f"/api/v1/sov/{id}/exposure-report"
+        return self._get_sov_analytics(url, params, timeout)
+
+    def get_sov_layer_analysis(
+        self,
+        id: str,
+        filters: t.SOVAnalyticsFilters | None = None,
+        layers: Collection[str] | None = None,
+        tower: Literal["standard"] | None = None,
+        timeout: timedelta | None = timedelta(minutes=5),
+    ) -> t.SOVLayerAnalysisResponse:
+        """Get the TIV exposed to each layer of a tower, per location, for the locations of an SOV or portfolio
+        that match `filters`.
+
+        :param id: pingid, sovid, or portfolio id.
+        :param filters: Location filters. See `get_sov_summary`.
+        :param layers: Custom tower, one layer per value as `<limit>xs<attach>`,
+            e.g. `["5000000xs0", "xs5000000"]`. Up to 20. Cannot be combined with `tower`.
+        :param tower: Preset tower. Server defaults to `standard` when `layers` is omitted.
+        """
+        params = self._encode_analytics_filters(filters)
+        params.extend(("layers", layer) for layer in layers or [])
+        if tower is not None:
+            params.append(("tower", tower))
+        url = self.api_url + f"/api/v1/sov/{id}/layers"
+        return self._get_sov_analytics(url, params, timeout)
