@@ -71,7 +71,7 @@ for output in check_job_json["result"]["outputs"]:
         )
 
 ## ...
-# 3. API URL for Fetch Outputs of SOV Parsing Job: https://api.sovfixer.com/api/v1/sov/{id}/output/{filename}
+# 3. Fetch Outputs of SOV Parsing Job: request each output's url from step 2 as returned
 for output in outputs:
     fetch_outputs_response = requests.get(output["url"], headers=headers)
     # ensure response is in a good state

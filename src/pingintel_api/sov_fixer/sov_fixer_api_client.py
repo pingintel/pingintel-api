@@ -8,6 +8,7 @@ import pprint
 import time
 from typing import IO, Callable, Collection, Literal
 from datetime import timedelta, datetime
+from urllib.parse import unquote
 from uuid import UUID
 import click
 
@@ -750,16 +751,32 @@ class SOVFixerAPIClient(APIClientBase):
         response_data = response.json()
         return response_data
 
+    def _sov_output_url(self, sov_id: str, filename: str) -> str:
+        response = self.get(self.api_url + f"/api/v1/sov/{sov_id}")
+        outputs = []
+        if response.ok:
+            outputs = (response.json().get("result") or {}).get("outputs") or []
+        for output in outputs:
+            url = output.get("url") or ""
+            last_segment = unquote(url.split("?", 1)[0].rsplit("/", 1)[-1])
+            if url and filename in (output.get("filename"), last_segment):
+                return url if url.startswith("http") else self.api_url + url
+        return self.api_url + f"/api/v1/sov/{sov_id}/output/{filename}"
+
     def fetch_sov_output(self, sov_id: str, filename: str, output_path: str | None = None) -> bytes:
         """
         Download an output file from a completed SOV parsing job.
+
+        Downloads the matching output's ``url`` from the job's status, which can name a later revision of
+        the SOV. Prefer ``fix_sov_download`` when you already have the output from
+        ``fix_sov_async_check_progress``.
 
         :param sov_id: The SOV job ID.
         :param filename: The output filename (from result.outputs[].filename).
         :param output_path: If provided, write the result to this local file path.
         :return: Raw response bytes.
         """
-        url = self.api_url + f"/api/v1/sov/{sov_id}/output/{filename}"
+        url = self._sov_output_url(sov_id, filename)
         response = self.get(url)
         raise_for_status(response)
         if output_path:
