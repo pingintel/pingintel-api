@@ -43,6 +43,7 @@ class SOVFixerAPIClient(APIClientBase):
         workflow=None,
         company: str | None = None,
         team: str | None = None,
+        is_test: bool = False,
         **kwargs,
     ):
         """
@@ -52,6 +53,7 @@ class SOVFixerAPIClient(APIClientBase):
         :param document_type: The type of document being processed.  Default is "SOV".
         :param filename: The name of the file.  If file is a file object, this is required. If file is a list of file objects, this must be a list of filenames.
         :param callback_url: The URL to call when the request is complete.
+        :param is_test: Mark the request as a test submission. Honoured only for Ping's own callers.
         """
 
         url = self.api_url + "/api/v1/sov"
@@ -68,6 +70,8 @@ class SOVFixerAPIClient(APIClientBase):
             data["output_formats"] = output_formats
         if client_ref:
             data["client_ref"] = client_ref
+        if is_test:
+            data["is_test"] = "true"
         if integrations is not None:
             data["integrations"] = integrations
         if extra_data is not None:
@@ -235,6 +239,7 @@ class SOVFixerAPIClient(APIClientBase):
         noinput=True,
         allow_ping_data_api=True,
         workflow=None,
+        is_test: bool = False,
     ) -> t.FixSOVProcessResponse:
         sov_fixer_client = self
         start_response = sov_fixer_client.fix_sov_async_start(
@@ -249,6 +254,7 @@ class SOVFixerAPIClient(APIClientBase):
             delegate_to_team=delegate_to_team,
             allow_ping_data_api=allow_ping_data_api,
             workflow=workflow,
+            is_test=is_test,
         )
 
         while 1:
@@ -831,6 +837,7 @@ class SOVFixerAPIClient(APIClientBase):
         client_ref: str | None = None,
         extra_data: dict | None = None,
         filename: str | None = None,
+        is_test: bool = False,
     ) -> t.CreateSubmissionResponse:
         """
         Create a new empty submission. Follow with update_sov_async_add_locations then update_sov_async_start.
@@ -839,6 +846,7 @@ class SOVFixerAPIClient(APIClientBase):
         :param client_ref: Optional user reference identifier.
         :param extra_data: Optional dict of extra_data_* fields (e.g. insured_name, inception_date).
         :param filename: Optional filename for the submission.
+        :param is_test: Mark the submission as a test. Honoured only for Ping's own callers.
         :return: Dict with "id" (int) and "message".
         """
         url = self.api_url + "/api/v1/submission"
@@ -850,6 +858,8 @@ class SOVFixerAPIClient(APIClientBase):
                 data["extra_data_" + k] = v
         if filename:
             data["filename"] = filename
+        if is_test:
+            data["is_test"] = "true"
         response = self.post(url, data=data)
         raise_for_status(response)
         return response.json()
